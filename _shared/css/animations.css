@@ -1,0 +1,50 @@
+@property --angulo {
+    syntax: "<angle>";
+    initial-value:0deg;
+    inherits:false;
+}
+@keyframes spin{
+    0%{
+        --angulo:0deg;
+    }
+    100%{
+        --angulo:360deg;
+    }
+}
+@keyframes moverGradiente-x {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 75% 50%;
+    }
+    40% {
+        background-position: 80% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    60% {
+        background-position: 80% 50%;
+    }
+    75% {
+        background-position: 75% 50%;
+    }
+    100% {
+        background-position: 0% 50%; 
+    }
+}
+@keyframes cambiarColor {
+    0%,100%{
+        background-color: var(--color-principal-500);
+        padding: 30px;
+        left: -10px;
+        top: -10px;
+    }
+    50% {
+        background-color: var(--color-principal-300);
+        padding: 20px;
+        left: 0px;
+        top: 0px;
+    }
+}

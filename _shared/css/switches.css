@@ -1,0 +1,97 @@
+/* transforma checkbox en chorizo */
+.switch {
+    /* -------- (modificar desde estas variables para mantener la proporción) */
+    --alto : 16px;
+    --ancho : 30px;
+    --spacing : 2px;
+    /* --------------------------- */
+    box-sizing: content-box;
+    width: var(--ancho);
+    height: var(--alto);
+    border-radius: calc( 10px + var(--alto) / 5);
+    border: calc(var(--alto) / 15) solid var(--switch-border);
+    background-color: var(--switch-back);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
+    transition: 0.2s;
+}
+.switch:focus:not(:focus-visible){
+    outline: none;
+    box-shadow: none;
+}
+/* le agrega una pelotita */
+.switch::before {
+    content: "";
+    position: absolute;
+    height: calc(var(--alto) - var(--spacing) * 2);
+    width: calc(var(--alto) - var(--spacing) * 2);
+    left: var(--spacing);
+    bottom: var(--spacing);
+    background-color: var(--switch-border);
+    color: var(--switch-back);
+    border-radius: 50%;
+    transition: 0.2s;
+    font-size: calc(var(--alto) * 2 / 3);
+    /* text-indent: 1px; */
+    font-weight: bold;
+    text-align: center;
+    vertical-align: baseline;
+}
+.switch.warning::before {
+    content: "!";
+} 
+/* lo mueve pa'l otro lado al tildar */
+.switch:checked::before {
+    transform: translateX(calc(var(--ancho) - var(--alto) ));
+}
+
+/* variantes de color */
+.switch:not(.gold):not(.red):not(.green):not(.blue):checked {
+    background-color: var(--switch-border);
+    border-color: var(--switch-back);
+}
+.switch:not(.gold):not(.red):not(.green):not(.blue):checked::before {
+    background-color: var(--switch-back);
+    color: var(--switch-border);
+}
+/* --- */
+.switch.red:checked {
+    background-color: var(--switch-red-back);
+    border-color: var(--switch-red-border);
+}
+.switch.red:checked::before {
+    background-color: var(--switch-red-border);
+    color: var(--switch-red-back);
+}
+/* --- */
+.switch.green:checked {
+    background-color: var(--switch-green-back);
+    border-color: var(--switch-green-border);
+}
+.switch.green:checked::before {
+    background-color: var(--switch-green-border);
+    color: var(--switch-green-back);
+}
+/* --- */
+.switch.blue:checked {
+    background-color: var(--switch-blue-back);
+    border-color: var(--switch-blue-border);
+}
+.switch.blue:checked::before {
+    background-color: var(--switch-blue-border);
+    color: var(--switch-blue-back);
+}
+/* --- */
+.switch.gold:checked {
+    background-color: var(--switch-gold-back);
+    border-color: var(--switch-gold-border);
+}
+.switch.gold:checked::before {
+    background-color: var(--switch-gold-border);
+    color: var(--switch-gold-back);
+}

@@ -1,0 +1,1 @@
+select * from ccg_info_prod(:idProd, :idLista);

@@ -1,0 +1,47 @@
+# este archivo forma parte del contrato compartido de las aplicaciones web
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+ServerSignature Off
+
+# el acceso se cierra por defecto si apache no puede aplicar las reglas
+<IfModule !mod_rewrite.c>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # los archivos ocultos son internos; .well-known queda disponible para validaciones estándar
+    RewriteRule "(^|/)\.(?!well-known(?:/|$))" - [F,L,NC]
+
+    # composer contiene código de servidor y nunca forma parte de la superficie web
+    RewriteRule "^vendor(?:/|$)" - [F,L,NC]
+    RewriteRule "^tests(?:/|$)" - [F,L,NC]
+
+    # estas carpetas se consumen mediante includes o desde el servidor
+    RewriteRule "^(?:app|_shared)/(?:html|sql)(?:/|$)" - [F,L,NC]
+    RewriteRule "^app/compatibilidad/.*\.(?:php[0-9]*|phtml|phar)$" - [F,L,NC]
+    RewriteRule "^app/php/carga_inicial\.php$" - [F,L,NC]
+    RewriteRule "^_shared/certs(?:/|$)" - [F,L,NC]
+    RewriteRule "^app/config(?:[._-][^/]*)?(?:$|/)" - [F,L,NC]
+
+    # sólo estos subdirectorios legacy de src contienen recursos públicos
+    RewriteRule "^src/(?!(?:audio|fonts|img|images|media|pdf|video)(?:/|$))" - [F,L,NC]
+    RewriteRule "^src/(?:audio|fonts|img|images|media|pdf|video)/.*\.(?:php[0-9]*|phtml|phar)(?:$|/)" - [F,L,NC]
+
+    # lib permanece público, pero únicamente para recursos estáticos del navegador
+    RewriteRule "^lib/(?!.*\.(?:avif|css|eot|gif|ico|jpe?g|js|json|map|mjs|otf|png|svg|ttf|wasm|webp|woff2?)(?:$|[?#]))" - [F,L,NC]
+
+    # estos php compartidos son parciales internos, no endpoints
+    RewriteRule "^_shared/php/(?:contexto_app|info_adicional-header|redireccion_inicial)\.php$" - [F,L,NC]
+
+    # metadatos de herramientas, documentación y material sensible o recuperable
+    RewriteRule "(^|/)(?:composer\.(?:json|lock)|package(?:-lock)?\.json|bower\.json|phpunit\.xml(?:\.dist)?|web\.config)$" - [F,L,NC]
+    RewriteRule "\.(?:bak|bat|cmd|conf|crt|db|dist|env|example|inc|ini|key|lock|log|markdown|md|old|orig|pem|pfx|p12|ps1|psd1|psm1|rst|save|sh|sql|sqlite|swp|tpl|twig|yaml|yml)(?:$|/)" - [F,L,NC]
+</IfModule>

@@ -1,0 +1,49 @@
+/* cursor solo en columnas ordenables
+table thead th.tablesorter-header { 
+	cursor: pointer; 
+	position: relative; 
+	padding-left: 4ch;
+}
+table thead th.sorter-false { cursor: default; }
+
+table thead th.tablesorter-header::after {
+	content: "↕";
+	position: absolute;
+	left: .35em;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: .9em;
+	opacity: .4;
+	pointer-events: none;
+    color:black;
+}
+
+table thead th.tablesorter-headerAsc::after  { content: "▲"; opacity: 1; }
+table thead th.tablesorter-headerDesc::after { content: "▼"; opacity: 1; }
+
+th .tablesorter-header-inner { display: contents; } */
+
+table.tablesorter-null thead th.tablesorter-header {
+	cursor: pointer;
+}
+
+/* columnas no ordenables sin pointer */
+table.tablesorter-null thead th.sorter-false { cursor: default; }
+
+/* usá el wrapper interno como fila con gap */
+table.tablesorter-null thead th .tablesorter-header-inner {
+	display: inline-flex;
+	align-items: center;
+	gap: 2ch;             /* distancia icono ↔ texto */
+}
+
+/* icono delante del texto (estados) */
+table.tablesorter-null thead th.tablesorter-header  .tablesorter-header-inner::after { 
+	content: "↕"; 
+	opacity: .5; 
+	color: var(--black);
+	flex: 0 0 1.1em;       /* ancho fijo p/que no salte al cambiar ↕/▲/▼ */
+	text-align: center;
+}
+table.tablesorter-null thead th.tablesorter-headerAsc  .tablesorter-header-inner::after { content: "▲"; opacity: 1; }
+table.tablesorter-null thead th.tablesorter-headerDesc .tablesorter-header-inner::after { content: "▼"; opacity: 1; }

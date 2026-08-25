@@ -1,0 +1,59 @@
+.swal2-popup{
+    max-width: 550px;
+    border-radius: 20px;
+}
+div:where(.swal2-container) h2:where(.swal2-title) {
+    padding-top: 10px;
+    padding-bottom:10px;
+    font-size:1.5em;
+    border-bottom: 2px solid var(--gris-30);
+    margin-bottom:10px;
+    text-transform: uppercase;
+    color:var(--color-principal-500);
+}
+div:where(.swal2-container) div:where(.swal2-actions) {
+    width:100%;
+}
+div:where(.swal2-container) button:where(.swal2-styled) {
+    margin-top: -10px;
+    width:calc(90% - 0px);
+}
+
+div.swal2-html-container#swal2-html-container div.input-container{
+    display: inline-block;
+    width:100%;
+    margin-bottom:5px;
+}
+div.swal2-html-container#swal2-html-container div.input-container label{
+    float:left;
+    text-align: right;
+    width:130px;
+    font-weight: bold;
+    position:relative;
+    top:5px;
+    margin-right:10px;
+    text-transform: uppercase;
+}
+div.swal2-html-container#swal2-html-container div.input-container input{
+    float:right;
+    text-align: left;
+    width:calc(100% - 160px);
+    padding: 8px;
+    border: 1px solid var(--gris-80);
+    border-radius: 4px;
+}
+div .swal2-confirm.swal2-styled{
+    text-transform: uppercase;
+}
+
+div.swal2-container:not(.error, .confirmacion) .swal2-confirm.swal2-styled{
+    background-color: var(--color-principal-500);
+}
+@media (max-width: 700px) {
+    div.swal2-html-container#swal2-html-container div.input-container label{
+        width:90px;
+    }
+    div.swal2-html-container#swal2-html-container div.input-container input{
+        width:calc(100% - 120px);
+    }
+}

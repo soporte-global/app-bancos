@@ -1,0 +1,15 @@
+<?php
+// copiar como config.local.php y declarar solamente los valores que cambian en esta instalacion
+return [
+    'entorno' => 'tunel',
+    'ftweb_password' => '',
+    'ftweb_persistent' => true,
+    'rrhh_password' => '',
+    'zetti_token_url' => '',
+    'zetti_token_user' => '',
+    'zetti_token_password' => '',
+    'zetti_token_secret' => '',
+    'apis_v2_user' => '',
+    'apis_v2_password' => '',
+    'apis_v2_diagnostic_api' => 'comisiones',
+];

@@ -1,0 +1,278 @@
+@charset "utf-8";
+/* ------------------------------------------------------------------------------------------ */
+/* General: */
+/* ------------------------------------------------------------------------------------------ */
+	:root {
+		--vh: 100vh; 
+	}
+	html {
+		background-color: var(--gris-40);
+		background-color: var(--gris-10); /*hwb(207 50% 13%);*/
+		margin: 0;
+		padding: 0;
+		height: 100%; 
+		width: 100vw;
+		overflow-x: hidden;	
+		overflow-y: hidden;
+	}
+	body{
+		background-color: var(--white); 
+		color: var(--black);
+		padding:0;
+		margin:0;
+		/* margin-left: calc(10vw - 25px);
+		width: 80vw; */
+		width:100vw;
+		height: 100%;
+		/* font-family: "Arial Unicode MS", "Lucida Sans Unicode", Arial, sans-serif; */
+		/* font-family: Open Sans, Arial, sans-serif; */
+		font-family: 'Roboto Mono', monospace;
+	} 
+	p, span {
+		display:inline;
+	}
+
+/* ------------------------------------------------------------------------------------------ */
+/* CLASES: */
+/* ------------------------------------------------------------------------------------------ */
+	/* cambia el efecto del focus a una linea azul que contempla objetos redondos, 
+	pero queda feo con tablesorter */
+	.foco_rojo:focus {
+		outline: none;
+		box-shadow: 	
+			1px 1px 1px var(--color-red-strong),
+			-1px -1px 1px var(--color-red-strong),
+			1px -1px 1px var(--color-red-strong),
+			-1px 1px 1px var(--color-red-strong)
+		;
+	}
+
+	/* */
+	.centrado {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		-webkit-transform: translate(-50%, -50%);
+		transform: translate(-50%, -50%);
+	}
+	.centrado-x {
+		position: absolute;
+		left: 50%;
+		-webkit-transform: translate(-50%);
+		transform: translate(-50%);
+	}
+	.centrado-y {
+		position: absolute;
+		top: 50%;
+		-webkit-transform: translate(0, -50%);
+		transform: translate(0, -50%);
+	}
+	.gradiente {
+		background: var(--white);
+		background: -moz-linear-gradient(45deg, var(--white) 0%, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -webkit-gradient(left bottom, right top, color-stop(0%, var(--white)), 
+		color-stop(35%, var(--white)), color-stop(100%, var(--color-principal-300)));
+		background: -webkit-linear-gradient(45deg, var(--white) 0%, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -o-linear-gradient(45deg, var(--white) 0%, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -ms-linear-gradient(45deg, var(--white) 0%, var(--white) 35%, var(--color-principal-300) 100%);
+		background: linear-gradient(45deg, var(--white) 0%, var(--white) 35%, var(--color-principal-300) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='var(--white)', endColorstr='var(--color-principal-300)', GradientType=1 );
+	}
+	.gradiente_inv {
+		background: var(--color-principal-300);
+		background: -moz-linear-gradient(45deg, var(--color-principal-300) 0%, var(--white) 65%, var(--white) 100%);
+		background: -webkit-gradient(left bottom, right top, color-stop(0%, var(--color-principal-300)), 
+		color-stop(65%, var(--white)), color-stop(100%, var(--white)));
+		background: -webkit-linear-gradient(45deg, var(--color-principal-300) 0%, var(--white) 65%, var(--white) 100%);
+		background: -o-linear-gradient(45deg, var(--color-principal-300) 0%, var(--white) 65%, var(--white) 100%);
+		background: -ms-linear-gradient(45deg, var(--color-principal-300) 0%, var(--white) 65%, var(--white) 100%);
+		background: linear-gradient(45deg, var(--color-principal-300) 0%, var(--white) 65%, var(--white) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='var(--color-principal-300)', endColorstr='var(--white)', GradientType=1 );
+	}
+	.gradiente_inv2 { 
+		background: var(--white);
+		background: -moz-linear-gradient(-45deg, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -webkit-gradient(left top, right bottom, 
+		color-stop(35%, var(--white)), color-stop(100%, var(--color-principal-300)));
+		background: -webkit-linear-gradient(-45deg, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -o-linear-gradient(-45deg, var(--white) 35%, var(--color-principal-300) 100%);
+		background: -ms-linear-gradient(-45deg, var(--white) 35%, var(--color-principal-300) 100%);
+		background: linear-gradient(135deg, var(--white) 35%, var(--color-principal-300) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='var(--white)', endColorstr='var(--color-principal-300)', GradientType=1 );
+	}	
+	.gradiente.oscuro { 
+		background: var(--color-principal-700) ;
+		background: -moz-linear-gradient(45deg, var(--color-principal-700) 0%, var(--color-principal-700) 35%, var(--color-principal-700) 100%);
+		background: -webkit-gradient(left bottom, right top, color-stop(0%, var(--color-principal-700)), 
+		color-stop(35%, rgbavar(--color-principal-700)), color-stop(100%, var(--color-principal-700)));
+		background: -webkit-linear-gradient(45deg, var(--color-principal-700) 0%, var(--color-principal-700) 35%, var(--color-principal-700) 100%);
+		background: -o-linear-gradient(45deg, var(--color-principal-700) 0%, var(--color-principal-700) 35%, var(--color-principal-700) 100%);
+		background: -ms-linear-gradient(45deg, var(--color-principal-700) 0%, var(--color-principal-700) 35%, var(--color-principal-700) 100%);
+		background: linear-gradient(45deg, var(--color-principal-700) 0%, var(--color-principal-700) 35%, var(--color-principal-700) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='var(--black)', endColorstr='var(--color-principal-700)', GradientType=1 );
+	}
+	.gradiente_inv.oscuro { 
+		background: var(--color-principal-700);
+		background: -moz-linear-gradient(-45deg, var(--color-principal-700) 35%, var(--color-principal-alt3) 100%);
+		background: -webkit-gradient(left top, right bottom, 
+		color-stop(35%, var(--color-principal-700)), color-stop(100%, var(--color-principal-alt3)));
+		background: -webkit-linear-gradient(-45deg, var(--color-principal-700) 35%, var(--color-principal-alt3) 100%);
+		background: -o-linear-gradient(-45deg, var(--color-principal-700) 35%, var(--color-principal-alt3) 100%);
+		background: -ms-linear-gradient(-45deg, var(--color-principal-700) 35%, var(--color-principal-alt3) 100%);
+		background: linear-gradient(135deg, var(--color-principal-700) 35%, var(--color-principal-alt3) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='var(--black)', endColorstr='var(--color-principal-700)', GradientType=1 );
+	}
+
+	.contenedor_tabla {
+		position: relative;
+		width:90%;
+		left:5%;
+		height: 100%;
+		top:10px;
+		margin-top:0px;
+		padding:0;
+		overflow:visible;
+	}
+	.busqueda{ 
+		position:relative; 
+		height:25px; 
+		top:0px; 
+		width:100%; 
+		left:0%; 
+		padding:0px;
+		margin-bottom:2px;
+	}
+	.busqueda > input[autocomplete="off"] { 
+		position:absolute; 
+		width:calc(98% - 20px); 
+		height:20px;
+		left:3px; 
+		top:0px;
+		font-size: 0.8em;
+		display:inline-block;
+		border-radius:10px;
+		border:none;
+		background-color: var(--gris-90);
+		color: var(--gris-20);
+		width:100%;
+		border: 1px solid var(--color-principal-500);
+		display:inline-block;
+		text-align:center;
+		margin:0px;
+	}
+	.busqueda > i { 
+		display:inline-block; 
+		position:absolute; 
+		top:3px;
+		right: 0px;
+		z-index:5;
+	}
+	.div_tabla{ /*div contenedor de tabla_scrolleable*/
+		overflow-y:auto; /* scroll */
+		overflow-x:auto; 
+		width:100%; 
+		left:6px; 
+		margin:0px;
+		display:inline-block;
+		background-color: transparent;
+		/*con altura autoajustada*/
+		height: auto; 
+		border:none; 
+		min-height: 35px;
+		max-height:100%; 
+		position:relative; 
+		top:0;
+		border-radius: 10px 10px 0 0;
+	}
+	.div_button {
+		float:right;
+		position:relative;
+		top:1px;
+		padding:3px;
+		font-size:0.9em;
+		border-radius:10px;
+		text-align: center;
+		vertical-align: middle;
+		width:150px;
+		background-color:var(--white); /*#7A85FF;*/
+		border:2px solid black;
+		cursor:pointer;
+		box-shadow:inset 0 0 0 99999px var(--color-principal-alt5);
+		color: black;
+	}
+	.div_button:hover {
+		border-color: var(--color-principal-alt1);	
+		color:var(--color-principal-alt1);
+	}
+
+	.wraper {
+		height:100vh; 
+		width:100%; 
+		margin:0; 
+		padding:0;
+	}
+
+	.title {
+		margin:0;
+		text-align:center;
+		color: var(--color-principal-500);
+		font-weight: bold;
+	}
+	
+	.titulo {
+		margin:0;
+		position: absolute;
+		top:0;
+		left:2px;
+		right:0;
+		text-align: center;
+		width: calc(100% - 4px);
+		height: 50px;
+		border-radius: 10px 10px 0 0;
+		border-bottom: 2px solid var(--gris-10);
+		overflow: hidden;
+	}
+
+	.fade_to_black{
+		position: fixed;
+		width:100%;
+		height: 100%;
+		background-color: var(--black-a50);
+		top:0;
+		left:0;
+	}
+	.disabled {
+		pointer-events: none; 
+		cursor: not-allowed; 	
+	}
+
+	a.href {
+		all: unset;
+		display: contents;
+	}
+	
+	/* CSS general particular del proyecto */
+	body.bloqueo-activo *:not(header.top):not(header.top *):not(.excepcion-bloqueo):not(.excepcion-bloqueo *) {
+		pointer-events: none !important;
+		user-select: none !important;
+		touch-action: none !important;
+	}
+
+	html, body {
+		height: calc( (var(--vh, 1vh) * 100) - 0px); 
+	}
+
+	html, body, .botonera, #appContainer {
+		overflow-x: hidden;	
+		overflow-y: hidden;
+	}
+	body.swal2-height-auto.color_variable {
+		height: 100vh !important;
+	}
+	input:focus {
+		outline: none;
+		box-shadow: inset 0 0 0 2px darkgoldenrod;
+	}
+	.mensaje_carga {
+		color:white;
+	}

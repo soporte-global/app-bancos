@@ -1,0 +1,20 @@
+{
+    "require-dev": {
+        "symfony/var-dumper": "^5.4"
+    },
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.25",
+        "phpseclib/phpseclib": "~3.0",
+        "smalot/pdfparser": "^2.11",
+        "spatie/pdf-to-text": "^1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "GlobalApps\\Core\\": "src/Model/Core/",
+            "GlobalApps\\Legacy\\": "src/Model/Legacy/"
+        },
+        "classmap": [
+            "src/Model/Legacy/"
+        ]
+    }
+}

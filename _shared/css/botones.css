@@ -1,0 +1,83 @@
+/* botones clasicos  */
+.boton {
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: none;
+    color: var(--white);
+    background-color: var(--color-principal-500);
+    cursor: pointer;
+    position:relative;
+    display:inline-block;
+    border-radius: 5px;
+}
+.boton.disabled{
+    border:none;
+    /* filter: grayscale(100%); */
+    filter: saturate(0%) opacity(100%)  brightness(100%) hue-rotate(0deg);
+    cursor:context-menu;	
+    line-height: 1.6;
+    text-transform: uppercase;
+    padding: 5px 10px;
+}
+.boton:hover:not(.disabled){
+    box-shadow: 
+        inset 0px 0px 100px var(--white-a10),
+        inset 0px 0px 3px var(--white-a20)
+    ;
+    text-shadow: 
+        0 0 3px var(--white-a60),
+        0 0 6px var(--white-a33)
+    ;
+
+    filter:brightness(1.25);
+}
+.boton.disabled:hover{
+    background-color: inherit;
+}
+.boton:active:not(.disabled) {
+    transform : perspective(1000px) translateZ(-15px);
+}
+
+
+/* botones en iconitos */
+.boton2 {
+    border: none;
+    color:inherit;
+    cursor: pointer;
+    display:inline-block;
+    font-weight:bold;
+}
+.boton2.disabled{
+    border: none;
+    filter: saturate(0%) opacity(100%)  brightness(100%) hue-rotate(0deg);
+    cursor:context-menu;	
+    display:inline-block;
+    font-weight:bold;
+}
+.boton2:not(.nohover):hover:not(.disabled) {
+    -webkit-text-fill-color: var(--white);
+    -webkit-text-stroke: 2px var(--color-principal-500);
+    text-shadow: -3px -3px 2px var(--color-principal-alt1), 3px 3px 2px var(--color-principal-alt1), -3px 3px 2px var(--color-principal-alt1), 3px -3px 2px var(--color-principal-alt1);
+} 
+
+
+/* ver propio.css en el motor de grupos las sub-clases de esta clase, y su uso en los html/js de ese desarrollo, y completar esto */ 
+.contenedor_botoncitos { 
+    position:relative; 
+    display:inline-block;
+    width:50px; 
+    height: 25px;
+    border-radius: 5px;
+    padding:0px;
+    /*float:right; */
+    top:0px; 
+    margin:0px 0px 0px 5px; 
+    cursor:pointer;	
+    border:2px solid var(--switch-blue-back);
+    background-color: var(--switch-blue-back);
+    color: black;
+}
+.contenedor_botoncitos:hover {
+    border-color: var(--white);
+    color: var(--white);
+}

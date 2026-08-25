@@ -1,0 +1,143 @@
+.swal2-html-container,
+.swal2-content, 
+.swal2-title, 
+.swal2-confirm, 
+.swal2-cancel {
+    font-family: 'Roboto Mono', monospace;
+}
+
+.swal2-confirm, 
+.swal2-cancel {
+    text-transform: uppercase;
+}
+
+div:where(.swal2-icon).swal2-warning.swal2-icon-show{
+    width:3.5em;
+    height: 3.5em;
+}
+
+.swal2-content,
+div.swal2-html-container.swal-personalizado-html  {
+    margin-top:0.5em;
+    font-size:0.95em;
+}
+div.swal2-html-container.swal-personalizado-html span  {
+    font-size:0.85em;
+}
+
+div:where(.swal2-container) h2:where(.swal2-title) {
+    padding-top: 4px;
+}
+
+button.swal2-confirm.swal-personalizado-boton-aceptar,
+button.swal2-cancel.swal-personalizado-boton-cancelar {
+    color: var(--white);
+    background-color: var(--color-principal-500);
+    border: 2px solid var(--color-principal-alt3);
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.swal2-icon {
+    margin-top: 20px; 
+}
+
+.html_swal_info p{
+    text-align: left;
+    font-size: 0.85em;
+    text-indent: 0px;
+    width: 100%;
+    margin:0;
+    margin-bottom:20px;
+    display: inline-block;
+}
+.html_swal_info p:first-child{
+    text-align: center;
+    margin-bottom: 30px;
+    text-indent: initial;
+}
+.html_swal_info p:last-child{
+    margin-bottom: 20px;
+}
+
+div:where(.swal2-icon).swal2-info {
+    border-color: var(--color-principal-500);
+    color: var(--color-principal-500);
+}
+
+div:where(.swal2-container) button:where(.swal2-close){
+    transition: none;
+    border:none;
+    box-shadow:none;
+    position:relative;
+    top:-5px;
+}
+
+div:where(.swal2-container) button:where(.swal2-close):focus {
+    transition: none;
+    border:none;
+    box-shadow:none;
+}
+div:where(.swal2-container) button:where(.swal2-close):hover {
+    color: var(--color-principal-500);
+}
+
+div:where(.swal2-icon){
+    width: 4em;
+    height: 4em;
+    border-width: 0.4em;
+}
+
+div:where(.swal2-icon) div.swal2-icon-content{
+    font-size: 2.75em;
+    font-weight: bold;
+}
+
+div:where(.swal2-container).swal2-center>.swal2-popup {
+    box-shadow: 0px 0px 30px 6px var(--black);
+}
+.swal2-footer {
+    margin-top:0;
+}
+.swal2-container ~ .ui-autocomplete {
+    z-index: 2500;
+}
+.swal2-container.error .swal2-icon.swal2-warning{
+    color:var(--color-gold-strong);
+    border-color:var(--color-gold-strong);
+}
+.swal2-container.error .swal2-title{
+    color:var(--color-gold-strong);
+}
+.swal2-container.error button{
+    background-color:var(--color-gold-strong);
+}
+.swal2-container.error .swal2-popup {
+    background-color: var(--color-gold-back);
+}
+.swal2-container.confirmacion .swal2-icon.swal2-warning{
+    color:var(--color-green-strong);
+    border-color:var(--color-green-strong);
+}
+.swal2-container.confirmacion .swal2-title{
+    color:var(--color-green-strong);
+}
+.swal2-container.confirmacion button{
+    background-color:var(--color-green-strong);
+}
+.swal2-container.confirmacion .swal2-popup {
+    background-color: var(--color-green-back);
+}
+div:where(.swal2-icon).swal2-success [class^=swal2-success-line]{
+    font-size: small;
+    font-weight: bold;
+}
+
+.swal2-actions:has(.swal2-confirm, .swal2-cancel) .swal2-cancel {
+    margin-top: 5px;
+}
+
+.swal2-container.continuar .swal2-html-container{
+    white-space: pre-wrap;
+    padding-top: 0;
+}

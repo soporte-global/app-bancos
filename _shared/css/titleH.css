@@ -1,0 +1,60 @@
+.titleH{ 
+	position:relative !important; 
+}
+.titleH{
+    --top: 	calc(var(--titleH-y, 0px) - 5px); /* un poco por encima del cursor */
+    --left: var(--titleH-x, 50%);
+}
+.titleH::after,
+.titleH::before{
+	position:fixed;
+	opacity:0;
+	visibility:hidden;
+	pointer-events:none;
+	transition:opacity .15s ease;
+	z-index:9999;
+}
+
+/* cuadro del "title" siguiendo al mouse */
+.titleH::after{
+	content: attr(data-titleH);
+	/* usar X/Y dinámicos */
+	left: var(--left);
+	top: var(--top);
+	transform: translate(-50%, -100%);
+	padding:5px 20px;
+	background-color: var(--white-a90);
+	border:1px solid var(--black); 
+	color: var(--black);
+	border-radius:5px;
+	box-shadow:0 0 10px var(--black);
+	font-size:0.9em;
+	line-height:1.25;
+	max-width:min(30rem, calc(100vw - 16px));
+	text-align:left;
+	white-space: pre-wrap;
+	width: max-content;
+}
+
+/* flechita en la posición exacta del mouse */
+.titleH::before{
+	content:"";
+	left: var(--left);
+	top: var(--top);
+	transform:translateX(-50%);
+	width:0; height:0;
+	border-left:6px solid transparent;
+	border-right:6px solid transparent;
+	border-top:6px solid var(--black);
+}
+
+/* mostrar con pequeña demora */
+.titleH:hover{
+	cursor:help;
+}
+.titleH:hover::after,
+.titleH:hover::before{
+	opacity:1;
+	visibility:visible;
+	transition-delay:1250ms;
+}

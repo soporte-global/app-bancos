@@ -1,0 +1,61 @@
+.divLector {
+    display: inline-block;
+    height: calc(100% - 26px);
+    width: auto;
+    padding: 5px 15px 5px 5px;
+    margin: 8px 0px;
+    background-color: var(--color-principal-alt1);
+    vertical-align: middle;
+    color: var(--gris-90);
+    border-radius: 5px;
+}
+.divLector div:has(i.fas.fa-barcode){
+    position:relative; 
+    display:inline-block;
+    width: 40px;
+    top:-7px;
+    margin-right: 5px;
+}
+.divLector div:has(i.fas.fa-barcode) span {
+    font-weight:bold; 
+    font-size:0.75em; 
+    position:relative; 
+    left:4px; 
+
+}
+.divLector div i.fas.fa-barcode {
+    font-size: 1.75em;
+    margin:0; 
+    position:relative; 
+    left:10px; 
+    top:-5px; 
+    color:inherit;
+}
+.divLector input[type="text"]{
+    position:relative; 
+    display:inline-block;
+    border-radius:5px; 
+    height:calc(100% - 5px); 
+    width:130px; 
+    margin-top:0;
+    top:-22px;
+}
+.divSecundarioLector {
+    position: relative;
+    display: inline-block;
+    width:45px;
+    text-align: center;
+    border-radius: 5px;
+    height: calc(100% - 5px);
+    margin-top: 0;
+    top: -14px;
+}
+.divSecundarioLector > span {
+    font-size:0.75em; 
+}
+.divSecundarioLector > label {
+    margin-left:8px;
+}
+.divSecundarioLector {
+    display:none; /* habra que activarlo en las secciones donde vaya */
+}

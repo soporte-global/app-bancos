@@ -1,0 +1,89 @@
+input#selectorNodo {
+    width: 100%;
+    height: 30px;
+}
+.swal2-container.selector_nodos ~ .ui-autocomplete{
+    max-height: calc( var(--vh, 1vh) * 40);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0px 2px 8px var(--black-a20);
+}
+.swal2-container.selector_nodos ~ .ui-autocomplete .ui-menu-item{
+    font-size:0.8em;
+}
+
+.swal2-container.selector_nodos div.swal2-popup {
+    max-height: calc( var(--vh, 1vh) * 90);
+    margin-bottom:0;
+}
+.swal2-container.selector_nodos h2.swal2-title {
+    margin-bottom:0;
+}
+.swal2-container.selector_nodos div.swal2-html-container {
+    padding:0;
+    margin:0;
+}
+.swal2-container.selector_nodos div.swal2-html-container div.busqueda{
+    left:0;
+    border-radius: 0;
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+.swal2-container.selector_nodos div.swal2-html-container div.busqueda input{
+    left:0;
+    border-radius: 0;
+    margin:0;
+    box-sizing: border-box;
+    height: 26px;
+    border-left:none;
+    border-right: none;
+    /* width: calc(100% - 6px) */
+}
+.swal2-container.selector_nodos div.swal2-html-container div.busqueda > i.fas.fa-search{
+    right:10px;
+    margin-top:1px;
+}
+.swal2-container.selector_nodos div.swal2-html-container div.div_tabla{
+    left:0;
+    border-radius: 0;
+    width:calc(100% - 8px);
+    border-left:8px solid var(--color-principal-500);
+    max-height: calc( var(--vh, 1vh) * 60);
+}
+.swal2-container.selector_nodos div.swal2-html-container div.div_tabla table{
+    top:0;
+    margin-top: 0;
+    border-radius: 0;
+    border-collapse: collapse;
+}
+.swal2-container.selector_nodos div.swal2-html-container div.div_tabla table thead tr th{
+    border:none;
+    border-radius: 0;
+    text-align: center;
+    padding: 5px 0;
+    font-weight: bold;
+    color:var(--white);
+}
+.swal2-container.selector_nodos div.swal2-html-container div.div_tabla table tbody tr td{
+    text-align: center;
+    height: 35px;
+    cursor:pointer;
+}
+.swal2-container.selector_nodos div.swal2-html-container div.div_tabla ~ div.postabla{
+    position:relative;
+    top:-5px;
+    display: block;
+    margin:0;
+    padding:0;
+    height: 3px;
+    width:100%;
+    background-color:var(--color-principal-500);
+}
+
+@media (orientation: portrait) {
+    .swal2-container.selector_nodos div.swal2-html-container div.div_tabla table tbody tr td{
+        height: 45px;
+        font-size: 0.8em;
+    }
+}

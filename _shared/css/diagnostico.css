@@ -1,0 +1,108 @@
+.afterheader.diagnostico {
+    box-sizing: border-box;
+    min-height: calc(100vh - 90px);
+    padding: 28px;
+    overflow-y: auto;
+    background: #f3f5f7;
+    color: #242424;
+}
+
+.diagnostico-encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto 24px;
+}
+
+.diagnostico-encabezado h1,
+.diagnostico-rendimiento h2 {
+    margin: 0 0 8px;
+}
+
+.diagnostico-encabezado p,
+.diagnostico-rendimiento p,
+.diagnostico-prueba p {
+    margin: 0;
+}
+
+.diagnostico-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.diagnostico-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    max-width: 1200px;
+    margin: 0 auto 24px;
+}
+
+.diagnostico-prueba,
+.diagnostico-rendimiento {
+    border: 1px solid #d9dde2;
+    border-left: 5px solid #68737d;
+    border-radius: 6px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.diagnostico-prueba.estado-ok {
+    border-left-color: #2a9d57;
+}
+
+.diagnostico-prueba.estado-warning {
+    border-left-color: #d99a16;
+}
+
+.diagnostico-prueba.estado-error {
+    border-left-color: #c83d3d;
+}
+
+.diagnostico-prueba-titulo,
+.diagnostico-metricas div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.diagnostico-prueba p {
+    min-height: 42px;
+    margin: 12px 0;
+}
+
+.diagnostico-prueba small {
+    font-weight: bold;
+}
+
+.diagnostico-rendimiento {
+    max-width: 1163px;
+    margin: 0 auto;
+    border-left-color: var(--color-primario, #168eea);
+}
+
+.diagnostico-metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px 18px;
+    margin: 16px 0;
+}
+
+.diagnostico-metricas div {
+    border-bottom: 1px solid #e5e7ea;
+    padding: 6px 0;
+}
+
+@media (max-width: 700px) {
+    .afterheader.diagnostico {
+        padding: 18px;
+    }
+
+    .diagnostico-encabezado {
+        flex-direction: column;
+    }
+}

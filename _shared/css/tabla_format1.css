@@ -1,0 +1,157 @@
+/* cuadro de busqueda para filtros de tabla */
+.busqueda.tabla_format1 {
+    position: relative;
+    top:42px;
+    background-color: var(--color-principal-500-a75);
+    padding:2px;
+    left: 6px;
+    width:calc(100% - 4px);
+    height: 25px;
+    border-radius: 10px 10px 0 0;
+}
+.busqueda.tabla_format1 input[autocomplete="off"]{
+    display:inline-block;
+    left:auto;
+    right: 4px;
+    top:4px;
+    width:280px;
+    border-radius: 8px;
+    height: 15px;
+    background-color:var(--white-a75);
+}
+.busqueda.tabla_format1 > i{
+    top:8px;
+    right: 8px;
+    color:var(--black-a75);
+    font-size: 0.8em;
+}
+.busqueda.tabla_format1 div {
+    float:right;
+    margin-right: 300px;
+}
+.busqueda.tabla_format1 div label{
+    position:relative;
+    right: 2px;
+    top:1px;
+    font-size: 0.9em;
+}
+.busqueda.tabla_format1 div input[type="checkbox"]{
+    position:relative;
+    right: 2px;
+    top:3px;
+}
+.busqueda.tabla_format1 div i{
+    margin:0;
+    padding: 0;
+}
+
+/* table, dentro de div_scrolleable, usa tablesorter */
+.div_tabla > table.tabla_format1{ 
+    position:relative; 
+    padding:0;
+    text-align:left; 
+    font-size:0.8em; 
+    left: 0px;
+    top:0px; 
+    margin:0;
+    width:calc(100%); 
+}
+.div_tabla > table.tabla_format1 td{
+    vertical-align: middle;
+    height: 30px;
+    background-color: var(--white-a33);
+    border-bottom:1px solid var(--black-a10);
+}
+.div_tabla > table.tabla_format1 thead th:first-child{
+    border-radius:10px 0px 0px 0px;
+}
+.div_tabla > table.tabla_format1 thead th:last-child{
+    border-radius:0px 10px 0px 0px;
+}
+.div_tabla > table.tabla_format1 tbody tr.disabled td{
+    border: none;
+    opacity: 0.8; 
+}
+table.tabla_format1 thead th:first-child{
+    border-radius:10px 0 0 0;
+}
+table.tabla_format1 thead th:last-child{
+    border-radius:0 10px 0 0;
+}
+table.tabla_format1 thead tr th{
+    border-top:2px solid var(--black-a10);
+    padding-right: 30px; 
+    background-color: var(--color-principal-500);
+}
+table.tabla_format1 thead th:first-child{
+    border-radius:10px 0 0 0;
+}
+table.tabla_format1 thead th:last-child{
+    border-radius:0 10px 0 0;
+}
+table.tabla_format1 thead th p{
+    position:relative;
+    left:25px;
+    display:block;
+    font-size:0.9em;
+    margin:0;
+    padding:0;
+    text-align: center;
+}
+table.tabla_format1 thead th.sorter-false{
+    padding-right:5px;
+    text-align: center;
+}
+table.tabla_format1 thead th.sorter-false p{
+    left:0;
+}
+table.tabla_format1 tbody tr > td button {
+    font-size:0.8em;
+    background-color: var(--color-principal-500);
+    border-radius:5px;
+    color:var(--white);
+    height: 20px;
+    border-color: var(--black-a33);
+}
+table.tabla_format1 tbody tr > td select, table.tabla_format1 tbody tr > td input:not(input[type=checkbox]) {
+    background-color:inherit; 
+    border: 1px solid var(--black-a10); 
+    border-radius:5px; 
+    font-size:0.9em;
+    box-shadow: inset 0 0 999px var(--white-a90); 
+    text-align-last:center;
+    width:95%;
+    margin:auto;
+}
+table.tabla_format1 tbody tr td:has(input), table.tabla_format1 tbody tr td:has(select){
+    text-align: center;
+    padding:0;
+}
+table.tabla_format1 tbody tr > td:has(button) input:not(input[type=checkbox]) {
+    width: calc( 95% - 70px);
+}
+table.tabla_format1 tbody tr > td:has(input) button {
+    max-width: 70px;
+}
+table.tabla_format1 thead{
+    position: sticky;
+    top: 0; /* Fija el encabezado en la parte superior del contenedor */
+}
+
+/* fix para hover de tablesorter */
+.div_tabla > table.tabla_format1 tbody > tr:not(.nohover).hover > td,
+.div_tabla > table.tabla_format1 tbody > tr:not(.nohover):hover > td,
+.div_tabla > table.tabla_format1 tbody > tr:not(.nohover).even:hover > td,
+.div_tabla > table.tabla_format1 tbody > tr:not(.nohover).odd:hover > td {
+	box-shadow: inset 0 0 99999px var(--color-principal-500-a25);
+    background-color: inherit;
+	color: inherit;
+}
+
+/* fix para tabla con busqueda */
+.busqueda.tabla_format1 + .div_tabla table.tabla_format1 thead th:first-child{
+    border-radius:0;
+}
+.busqueda.tabla_format1 + .div_tabla table.tabla_format1 thead th:last-child{
+    border-radius:0;
+}

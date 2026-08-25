@@ -1,0 +1,169 @@
+/* errores pagina de error */
+.div_error-f1 {
+    padding: 15px 20px; 
+    border:2px solid var(--error-accent); 
+    background-color: var(--error-inner);
+    border-radius:5px; 
+    max-width:50vw; 
+    width:auto;
+    margin:auto;
+    color:var(--black);
+    /* me arrepentí de hacerlo en amarillo, mejor rojo */
+    filter:hue-rotate(-30deg);
+}
+.div_error-f1 *{
+    font-size:12px;
+    margin:0;
+    margin-bottom:5px;
+
+}
+.div_error-f1 .div_error-head {
+    border-radius:5px;
+    border: 1px solid var(--error-accent); 
+    background-color: var(--error-panel);
+    padding:10px;
+    margin-top:5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.div_error-f1 p {
+    display:block;
+    width:100%;
+}
+.div_error-f1 p i.fas {
+    color: var(--error-accent);
+    font-size: 35px;
+}
+.div_error-f1 p.title-i {
+    text-align: center;
+    font-weight: bold; 
+    font-size:14px;
+    margin-bottom: 10px;
+    color: var(--error-accent); 
+}
+.div_error-f1 table.info_error {
+    border-collapse: collapse;
+    border: none;
+    width:calc(100% - 0px);
+}
+.div_error-f1 table.info_error tr td:first-child{
+    width:120px;
+    font-weight: bold;
+    vertical-align: baseline;
+}
+.div_error-f1 .div_tabla {
+    margin-bottom:0px;
+    max-height: 400px;
+    height: auto;
+}
+.div_error-f1 table {
+    border-collapse: collapse;
+    border: 1px solid var(--error-accent);
+    width:100%;
+}
+.div_error-f1 table tr{
+    height: 20px;
+    vertical-align: middle;
+}
+/* .div_error-f1 .div_tabla table tr:first-child, .div_error-f1 .div_tabla table tr:nth-child(2){
+    display: none;
+} */
+.div_error-f1 table tr td, .div_error-f1 table tr th{
+    padding: 5px;
+    text-align: left;
+    vertical-align: middle;
+    padding-left:10px;
+}
+.div_error-f1 table tr td{
+    background-color: transparent;
+}
+.div_error-f1 table tr th{
+    background-color: var(--error-panel);
+}
+.div_error-f1 table tr th[colspan="5"]{
+    text-align: center;
+}
+.div_error-f1 table a{
+    text-decoration: none;
+    font-weight: bold;
+    /* text-shadow: 0px 0px 2px #64A6DB; */
+}
+
+/* errores del login */
+.error-message:not(.login > form .error-message) {
+    font-weight: bold; 
+    user-select: none;
+    font-size: 20px;
+}
+.error-message:not(.login > form .error-message) i {
+    color:var(--error-accent);
+}
+
+div.afterheader.error{
+    background-color: var(--error-bg);
+}
+
+a.error_title {
+    position:absolute;
+    display: inline-block;
+    text-align: center;
+    width:100%;
+    top: 65px;
+    text-decoration: none;
+    font-weight: bold;
+    z-index:1001;
+    color:var(--white);
+}
+
+.afterheader.error div.centrado, div.centrado:has(span.error-message) {
+    width: 100vw;
+    padding:0;
+    text-align: center;
+    margin-top: 0px;
+}
+
+.afterheader.error div.centrado span.error-message, div.centrado:has(span.error-message) span.error-message  {
+    display:block;
+    width:80vw;
+    margin-left:10vw;
+}
+
+body:has(header.error){
+    filter:hue-rotate(-210deg);
+}
+body:has(header.error.warning){
+    filter: hue-rotate(-150deg) brightness(1.15);
+}
+body:has(header.error) .afterheader.error {
+    filter:hue-rotate(210deg);
+}
+body:has(header.error.warning) .afterheader.error{
+    filter: hue-rotate(150deg);
+}
+/* header.error::before {
+    background-color: var(--error-panel);
+} */
+
+
+@media (max-width: 1000px) {
+    .div_error-f1 {
+        max-width: unset;
+        max-height: calc(100vh - 150px);
+        width: 90%;
+        margin-top: 25px;
+        margin-left: calc(5% - 22px);
+    }
+}
+@media (max-width: 550px) {
+    .div_error-f1 {
+        width: calc(100% - 30px);
+        margin-left: 7.5px;
+        padding: 5px;
+    }
+}
+@media (max-height: 900px) {
+    .div_error-f1 .div_tabla {
+        max-height: calc(100vh - 290px);
+        width: calc(100% - 10px);
+    }
+}

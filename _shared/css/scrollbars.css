@@ -1,0 +1,27 @@
+	/* la barrita en sí, en su conjunto */
+    body::-webkit-scrollbar,
+	body *::-webkit-scrollbar {
+		width: 10px; 
+		height: 10px; 
+		padding:0;
+	}
+
+    /* el fondo de la barrita */
+	body::-webkit-scrollbar-track,
+	body *::-webkit-scrollbar-track {
+		background-color: var(--color-principal-alt2);
+	}
+
+    /* la cosita que se desplaza */
+	body::-webkit-scrollbar-thumb,
+	body *::-webkit-scrollbar-thumb {
+		border-radius: 15px; 
+		background-color: var(--white-a60); 
+		border: 2px solid var(--color-principal-500);
+	}
+
+    /* el bordecito que se forma al haber desplazamiento horizontal Y vertical */
+	body::-webkit-scrollbar-corner,
+	body *::-webkit-scrollbar-corner {
+		background-color: var(--color-principal-alt2);
+	}

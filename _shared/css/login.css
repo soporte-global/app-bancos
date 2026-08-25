@@ -1,0 +1,212 @@
+.loginwraper{
+    color:var(--color-red-strong);
+}
+.login {
+    background-color: var(--white);
+    vertical-align: middle;
+    padding: 20px;
+    text-align: center;
+    border-radius: 1rem;
+    /* overflow:hidden; */
+    position:relative;
+    top:45px; /* mitad del alto total del header */
+}
+.login > form {
+    margin:50px 10px 0 10px;
+    /* margin-top:50px; */
+    display: flex;
+    flex-direction: column;
+    accent-color: var(--color-principal-500);
+}
+
+.login > form label {
+    display: flex;
+    align-items: center;
+    /* font-weight: bold; */
+    margin-bottom: 5px;
+    color: var(--color-principal-alt4);
+    font-size: 0.95rem;
+    margin-left:2px;
+}
+
+.login > form input, .login > form select{
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid var(--gris-80);
+    border-radius: 4px;
+    margin-right:2px;
+}
+.login h1.title{
+    margin-top:8px;
+}
+
+.login > form button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--color-principal-500);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.login > form button:hover {
+    background-color: var(--color-principal-500);
+}
+
+/* Estilos para lograr que los campos estén en la misma línea */
+.login > form div {
+    display: flex;
+    align-items: center;
+}
+
+.login > form div label {
+    margin-right: 10px;
+}
+
+.login > form div input, .login > form div select {
+    flex: 1;
+}
+
+.login > form div select option {
+    line-height: 35px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 0.8em;
+    color:var(--gris-50);
+}
+.login > form div select option:checked {
+    color:var(--black);
+    font-weight: bold;
+}
+.login > form .input-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.login > form .input-container label {
+    margin-right: 10px;
+    width: 150px; /* Ancho deseado para los labels */
+}
+.login > form .input-container input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--gris-80);
+    border-radius: 4px;
+    width: 250px;
+}
+.login > form .error-message {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: transparent;
+    color: var(--color-red-strong);
+    text-align: center;
+    display: none; 
+}
+.login .boton{
+    background-color: var(--color-principal-500);
+}
+
+/* megaborrrrrde (requiere animations.css) */
+.login::after, .login::before {
+    --ancho_borde: 10px;
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: conic-gradient(from var(--angulo), transparent 30%, var(--color-principal-500) , transparent );
+    inset: 0;
+    z-index: -1;
+    top: calc(0px - var(--ancho_borde));
+    left: calc(0px - var(--ancho_borde));
+    padding: var(--ancho_borde);
+    border-radius: 1.3rem;
+    animation: 3s spin linear infinite;
+    filter: blur(0.5em);
+}
+.login::before{
+    filter:blur(1.5rem);
+    opacity: 0.95;
+}
+body:has(div.loginWraper) header:not(.footer)::before, body:has(div.loginWraper) header:not(.footer)::after{
+    content: '';
+    width: 100vw;
+    height: 30px;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background: linear-gradient(90deg, var(--color-principal-desde), var(--color-principal-hasta));
+    background-size: 1000% 100%; 
+    animation: 5s moverGradiente-x linear infinite; /* Controla la duración y el tipo de animación */
+}
+body:has(div.loginWraper) header:not(.footer)::after{
+    height: 15px;
+    top: 85px;
+    filter: blur(1rem);
+    opacity: 0.75;
+}
+
+body:has(div.loginWraper) {
+    background-color: transparent;
+}
+.login form .input-container input[type=number]::-webkit-inner-spin-button, 
+.login form .input-container input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+}
+.login form .input-container input[type=number].ui-spinner-input{ 
+    border:none;
+    padding:0 5px;
+    position: relative;
+    top:3px;
+}
+.login form .input-container div:has(.ui-widget input[type=number]){ 
+    position: relative;
+    top:-2px;
+}
+.login > form .input-container {
+    justify-content: flex-start;
+}
+
+/* Estas reglas tienen prioridad cuando el ancho de la pantalla es menor a 550px */
+@media (max-width: 550px) {
+    .login > form .input-container label {
+        width: 100px; 
+    }
+    .login > form .input-container input {
+        width: 150px;
+    }
+}
+/* Estas reglas tienen prioridad cuando el ancho de la pantalla es menor a 390px */
+@media (max-width: 390px) {
+    .login > form .input-container label {
+        width: 80px; 
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block; /* o block */
+        top:3px;
+    }
+    .login > form .input-container input {
+        width: 100px;
+    }
+}
+
+/* Estas reglas tienen prioridad cuando el ALTO de la pantalla es menor a 330px */
+@media (max-height: 330px) {
+    header::before, header::after {
+        height: 10px !important;
+    }
+    .login {
+        top:35px;
+    }
+}
+
+/* aflacar el login para celulares */
+.login{
+    padding:15px;
+}
+.login > form button {
+    margin-top: 5px;
+}
+.login > form .error-message {
+    padding: 0px;
+}

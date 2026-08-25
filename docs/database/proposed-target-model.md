@@ -25,8 +25,9 @@ El ERP sigue siendo dueño de `cuenta_bancaria`, `cuenta`, `valor`, `asiento`, `
 ## Modelo lógico propuesto
 
 ```text
-global_prod.bancos_configuracion_cuenta -> bancos_regla_clasificacion
-global_prod.bancos_configuracion_cuenta -> bancos_mapeo_cuenta_contable
+global_prod.bancos_configuracion -> bancos_configuracion_cuenta
+global_prod.bancos_configuracion -> bancos_regla_clasificacion
+global_prod.bancos_configuracion -> bancos_mapeo_cuenta_contable
 
 global_prod.bancos_importacion_extracto -> bancos_movimiento_extracto -> bancos_historial_asignacion
 global_prod.bancos_movimiento_extracto -> bancos_asociacion_movimiento
@@ -41,8 +42,9 @@ global_prod.bancos_movimiento_extracto -> 0..1 bancos_conciliacion_cheque -> val
 
 | Tabla objetivo | Responsabilidad | Claves y reglas mínimas |
 | --- | --- | --- |
-| `global_prod.bancos_configuracion_cuenta` | contexto de una cuenta bancaria ERP, banco y nodo | PK; FK a cuenta bancaria; único por cuenta bancaria activa |
-| `global_prod.bancos_regla_clasificacion` | clasifica una línea de extracto por cuenta/configuración, subtipo y código de extracto | PK; FK a configuración; `UNIQUE(configuracion_cuenta_id, subtipo_valor_id, sentido)`; `validar_automaticamente boolean` |
+| `global_prod.bancos_configuracion` | configuración de clasificación y mapeo, con alcance global o por cuenta | PK; `alcance` controlado; banco/nodo cuando correspondan; no se fuerza una única cuenta |
+| `global_prod.bancos_configuracion_cuenta` | aplica una configuración a una cuenta bancaria ERP | PK; FK a configuración y cuenta bancaria; `UNIQUE(configuracion_id, cuenta_bancaria_id)` |
+| `global_prod.bancos_regla_clasificacion` | clasifica una línea de extracto por cuenta/configuración, subtipo y código de extracto | PK; FK a configuración; `UNIQUE(configuracion_id, subtipo_valor_id, sentido)`; `validar_automaticamente boolean` |
 | `global_prod.bancos_mapeo_cuenta_contable` | cuenta contable por banco/configuración y subtipo | PK; FKs tipadas; unicidad según regla funcional acordada |
 | `global_prod.bancos_regla_asignacion_usuario` | regla de asignación automática (RAAU) | PK; FK a configuración, subtipo y usuario/identidad Hub; clave natural única, no un `identificador` libre |
 
@@ -52,12 +54,12 @@ La configuración mensual y la de cheques no deben duplicar cinco tablas iguales
 
 | Tabla objetivo | Responsabilidad | Claves y reglas mínimas |
 | --- | --- | --- |
-| `global_prod.bancos_importacion_extracto` | lote recibido para una cuenta y período | PK; FK a configuración; `inicio_periodo date`; archivo/origen, hash, usuario, fecha y estado; clave de idempotencia por cuenta, período, hash y versión |
+| `global_prod.bancos_importacion_extracto` | lote recibido para una cuenta y período | PK; FKs a configuración y cuenta bancaria; `inicio_periodo date`; archivo/origen, hash, usuario, fecha y estado; clave de idempotencia por cuenta, período, hash y versión |
 | `global_prod.bancos_movimiento_extracto` | fila normalizada del extracto | PK; FK a importación; fecha, referencia, descripción, crédito, débito y campos fuente; `UNIQUE(importacion_id, numero_fila_origen)`; `CHECK` para que sólo uno de crédito/débito sea positivo, salvo que negocio admita otra convención |
 | `global_prod.bancos_historial_asignacion` | responsable y transiciones de estado | PK; FK a movimiento y usuario Hub; estado controlado, motivo y fecha; una vista o columna derivada puede exponer el estado actual |
 | `global_prod.bancos_asociacion_movimiento` | vínculo de un movimiento con valor ERP, asiento existente o borrador | PK; FK a movimiento; destino modelado de manera exclusiva y tipada; monto `numeric`; regla que impida destinos incompatibles |
 | `global_prod.bancos_reserva_recurso` | reserva exclusiva de valor/asiento para evitar reutilización | PK; FK a movimiento; FK al recurso reservado; unicidad parcial sobre reserva activa; estado y expiración/auditoría |
-| `global_prod.bancos_mensaje_movimiento` | conversación y eventos de sistema | PK; FK a movimiento y emisor; cuerpo, tipo de mensaje y `emitido_en`; las lecturas se modelan con `bancos_recepcion_mensaje` o `leido_en`, no con dos enteros anulables |
+| `global_prod.bancos_mensaje_movimiento` | conversación y eventos de sistema | PK; FK a movimiento y emisor; cuerpo, tipo de mensaje y `emitido_en`; las lecturas se modelan con `global_prod.bancos_recepcion_mensaje` o `leido_en`, no con dos enteros anulables |
 
 El período se representa una vez, por ejemplo como `period_start` (primer día del mes), en vez de `num_mes`, `mes`, `ano` e `id_periodo` textuales. La cantidad de movimientos se calcula o se mantiene como dato derivado verificable, no como fuente independiente de verdad.
 
@@ -74,24 +76,24 @@ El efecto sobre ERP debe ejecutarse en una única unidad transaccional cuando la
 ## Reglas de integridad e índices
 
 1. Cada tabla `global_prod.bancos_*` tiene PK y cada relación obligatoria tiene FK con acción de borrado explícita. No se usa `CASCADE` sobre historial contable sin validación de retención.
-2. `bancos_movimiento_extracto`, sus asociaciones, mensajes, reservas y eventos se unen por PK interna; el identificador de fila origen se conserva como atributo, no como relación.
-3. La asociación vigente se restringe con un índice único parcial, por ejemplo una sola asociación activa por línea, si ese es el comportamiento confirmado.
+2. `bancos_movimiento_extracto`, sus asociaciones, mensajes, reservas y eventos se unen por PK interna; `id_movimiento` heredado no se reutiliza como clave. La clave de migración es `(id_periodo, serial_seq)`, que resultó única en producción.
+3. La asociación vigente se restringe con un índice único parcial para valor o para una asociación exclusiva; la posibilidad de varias asociaciones de asiento debe validarse funcionalmente antes de fijar esa restricción.
 4. Las reservas activas se protegen con índices únicos parciales sobre el recurso ERP reservado; esto expresa la exclusividad que hoy intenta resolver `bancos_mes_exclusiones`.
-5. Índices iniciales: `bancos_importacion_extracto(configuracion_cuenta_id, inicio_periodo)`, `bancos_movimiento_extracto(importacion_id, numero_fila_origen)`, asociaciones y reservas activas, historial por movimiento y mensajes por movimiento/fecha. Agregar índices de búsqueda por referencia o monto sólo después de medir consultas reales.
+5. Índices iniciales: `bancos_importacion_extracto(cuenta_bancaria_id, inicio_periodo)`, `bancos_movimiento_extracto(importacion_id, numero_fila_origen)`, asociaciones y reservas activas, historial por movimiento y mensajes por movimiento/fecha. Agregar índices de búsqueda por referencia o monto sólo después de medir consultas reales.
 6. Eliminar duplicados técnicos durante la migración: una única restricción para la clave elegida de cada entidad. En particular, nunca reproducir las 121 UNIQUE actuales sobre `id_periodo`.
 
 ## Correspondencia de origen a destino
 
 | Origen | Destino propuesto | Tratamiento |
 | --- | --- | --- |
-| `bancos_guardado_*` y `bancos_mes_guardado_*` | `global_prod.bancos_configuracion_cuenta`, `bancos_regla_clasificacion`, `bancos_mapeo_cuenta_contable` | consolidar y deduplicar por clave funcional validada |
+| `bancos_guardado_*` y `bancos_mes_guardado_*` | `global_prod.bancos_configuracion`, `global_prod.bancos_configuracion_cuenta`, `global_prod.bancos_regla_clasificacion`, `global_prod.bancos_mapeo_cuenta_contable` | consolidar y deduplicar por clave funcional validada |
 | `bancos_extracto_config` | `global_prod.bancos_regla_clasificacion` o retirar | confirmar que su consulta desde `codigos.sql` sigue activa y validar semántica de `codigo` |
 | `bancos_mes_periodos_cargados_cuenta` | `global_prod.bancos_importacion_extracto` | normalizar período y conservar lote/origen/versionado |
 | `bancos_mes_movimientos_cargados_periodo` | `global_prod.bancos_movimiento_extracto` | preservar fila y orden fuente; generar PK interna estable |
 | `bancos_mes_usuario_asignado_movimiento` | `global_prod.bancos_historial_asignacion` | convertir estado actual en eventos auditables |
 | asignaciones de valor/asiento | `global_prod.bancos_asociacion_movimiento` | normalizar destino, importe y vigencia |
 | `bancos_mes_exclusiones` | `global_prod.bancos_reserva_recurso` | conservar motivo/fecha si existe; validar exclusividad efectiva |
-| asientos creados y movimientos creados | `global_prod.bancos_borrador_asiento` y `bancos_linea_borrador_asiento` | conservar relación entre borrador, líneas y asiento ERP final |
+| asientos creados y movimientos creados | `global_prod.bancos_borrador_asiento` y `global_prod.bancos_linea_borrador_asiento` | conservar relación entre borrador, líneas y asiento ERP final |
 | `bancos_mes_raau` | `global_prod.bancos_regla_asignacion_usuario` | reemplazar identificador libre por clave funcional y FKs |
 | `bancos_mensajeria` | `global_prod.bancos_mensaje_movimiento` y recibos de lectura | separar mensaje, emisor y lectura |
 
@@ -104,10 +106,17 @@ El efecto sobre ERP debe ejecutarse en una única unidad transaccional cuando la
 5. Preparar migraciones versionadas, reversibles donde sea posible, y un proceso de backfill que conserve una tabla de correspondencias de IDs.
 6. Ejecutar primero una migración de copia y validación; no cambiar lecturas/escrituras legacy hasta conciliar conteos y casos caracterizados.
 
-## Decisiones pendientes
+## Decisiones resueltas con evidencia productiva
 
-- ¿Una cuenta contable por banco es global, por cuenta bancaria o por nodo?
-- ¿Puede una línea tener múltiples valores/asientos? Las columnas `mult_valor` y `mult_asiento` lo sugieren, pero las restricciones actuales son 1:1.
-- ¿Qué estados y transiciones son válidos para asignación, cierre, reversa y fusión?
-- ¿Qué precisión monetaria, moneda y criterio de redondeo usa el ERP?
-- ¿Cuánto tiempo deben retenerse extractos, mensajes y borradores para auditoría?
+1. **Clave de migración de movimientos.** `id_movimiento` no es apta: tiene 1.055 valores duplicados y afecta asignaciones existentes. Se adopta `(id_periodo, serial_seq)` como clave de migración, ya que no presenta duplicados en 979.308 filas. El destino genera además una PK interna estable.
+2. **Alcance de configuración.** No es sólo global ni sólo por cuenta. En BANCOS, las 19 asignaciones de cuentas bancarias usan `cuenta = 'N/A'`; en BANCOS_MENSUAL no hay ese valor y existen 85-86 cuentas distintas. Por ello se adopta `bancos_configuracion` con alcance explícito y `bancos_configuracion_cuenta` como vínculo opcional por cuenta.
+3. **Estados actuales.** Se adopta como catálogo inicial `ABIERTO`, `PARA_CERRAR` y `CERRADO`, normalizando el espacio de `PARA CERRAR`. Son los únicos tres valores presentes en 977.476 asignaciones; no hay estados nulos.
+4. **Precisión monetaria.** Los importes productivos relevados tienen hasta dos decimales. El destino usará `numeric(18,2)` para importes del módulo, sujeto a confirmar moneda y redondeos de ERP antes del DDL definitivo.
+5. **Lote y período.** `total_movs` es derivado: no coincide con el conteo real en tres períodos. El destino no lo tratará como fuente de verdad y conservará el lote de importación como entidad inmutable y versionada.
+
+## Definiciones funcionales que los datos no pueden resolver
+
+1. **Múltiples valores o asientos.** Cada tabla heredada impone una fila por `id_movimiento`. `mult_valor` nunca es verdadero, pero `mult_asiento` sí lo es en 468.501 filas. La bandera no tiene una tabla hija que materialice varias asociaciones, por lo que no prueba la regla futura. Se requiere decisión contable antes de restringir `bancos_asociacion_movimiento` a una asociación de asiento.
+2. **Transiciones, cierre, reversa y fusión.** La tabla actual sólo conserva el estado final; no hay historial de transiciones. El catálogo inicial está confirmado, pero las transiciones permitidas y sus autorizaciones deben acordarse con negocio.
+3. **Conciliación forzada e identidad del operador.** Las tablas auxiliares de BANCOS no registran la evidencia, el motivo ni el usuario real de la conciliación. El destino debe exigirlos; los datos existentes no permiten reconstruirlos de forma fiable.
+4. **Retención.** Hay movimientos desde 2015 y mensajes entre 2019 y 2020, pero no existe política o marca de archivado. La política de retención debe definirla Contabilidad/Legal; no se infiere del contenido actual.

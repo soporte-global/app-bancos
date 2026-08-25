@@ -26,7 +26,7 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 | impacto de IDs duplicados | 1.055 asignaciones de usuario, 53 de valor, 871 de asiento y 924 exclusiones referencian IDs duplicados | requieren correspondencia explícita a la fila `(id_periodo, serial_seq)` durante la migración |
 | estado | `CERRADO`: 898.879; `PARA CERRAR`: 60.085; `ABIERTO`: 18.512; sin nulos | catálogo inicial de tres estados; faltan transiciones históricas |
 | importe de extracto | 0 filas con crédito y débito simultáneos; 0 sin importe; 38 con importe negativo | crear `CHECK` de exclusividad; caracterizar las 38 excepciones antes de rechazar negativos |
-| escala monetaria | máximo de dos decimales en crédito, débito, debe y haber | usar `numeric(18,2)` como estándar inicial |
+| escala monetaria | máximo de dos decimales en crédito, débito, debe y haber; ERP contable en `numeric(20,5)` | usar `numeric(20,5)` cuando el importe se asocie o genere efectos ERP |
 | total del período | 3 de 2.358 períodos no coinciden con el conteo de movimientos; diferencia absoluta acumulada 1.627 | tratar `total_movs` como derivado, no como dato rector |
 | valor asignado | 18.060 filas; sin `id_valor` ni monto nulos; `mult_valor` nunca verdadero | asociación a valor es actualmente 0..1 por ID heredado |
 | asiento asignado | 917.688 filas; sin `id_asiento` ni monto nulos; `mult_asiento` verdadero en 468.501; `debita` nulo en todas las filas | no trasladar `debita`; validar la semántica de `mult_asiento` |
@@ -45,7 +45,7 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 - `bancos_configuracion` modelará el alcance `GLOBAL` o `CUENTA`; `bancos_configuracion_cuenta` sólo se usará cuando corresponda una cuenta explícita.
 - `bancos_asociacion_movimiento` y `bancos_reserva_recurso` conservarán el tipo de destino y su vigencia, en lugar de sobrecargar exclusiones.
 - `bancos_historial_asignacion` reemplazará el único estado mutable y permitirá auditar las transiciones futuras.
-- Los importes nuevos usarán `numeric(18,2)` y una regla de crédito/débito exclusiva, excepto si el relevamiento funcional de los importes negativos define otra convención.
+- Los importes nuevos que puedan asociar o generar efectos ERP usarán `numeric(20,5)`, igual que el ERP. La entrada de extractos se validará a dos decimales cuando ese sea su formato de origen.
 
 ## Límites y acciones restantes
 

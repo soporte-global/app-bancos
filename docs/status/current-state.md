@@ -5,3 +5,5 @@ Descubrimiento estático completado para BANCOS, GESTION_USUARIOS y BANCOS_MENSU
 También se incorporó la base de estructura de `nueva_app` dentro de `app-bancos` (directorios `_shared`, `app`, `src`, `lib`, `vendor`, `tests`, configuración de bootstrap y entrypoints), sin modificar los legados ni sobreescribir documentación preexistente.
 
 Alcance confirmado: BANCOS concilia cheques; BANCOS_MENSUAL gestiona extractos mensuales, asignación, asociación y cierre. La futura identidad/permisos se basará en `nueva_app` y las funciones JavaScript comunes en hQuery; SGUA no se adopta como integración.
+
+También se avanzó con el primer paquete de DDL de dominio en `global_prod`: `app/sql/migraciones/004_bancos_tablas_auxiliares.sql`, que define las tablas auxiliares canónicas (configuración, importación de extracto, movimientos, historial, asociaciones, reservas, mensajes y conciliación de cheque), aplicado exitosamente en `ftweb` (`localhost:5500`) para dejar materializada la base del siguiente ciclo funcional.

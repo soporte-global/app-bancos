@@ -1,6 +1,6 @@
 # Estado de migración
 
-Actualizado: 2026-08-18.
+Actualizado: 2026-08-25.
 
 Este archivo lleva la cuenta del trabajo sobre `nueva_app`. La primera aplicación
 real construida con este core sigue siendo el objetivo; la replicación hacia las
@@ -68,6 +68,7 @@ demás aplicaciones comenzará después de validarla.
 - adaptar gradualmente las clases HClasses con consumidores reales para que deleguen en el Core;
 - retirar del template las clases sin consumidores confirmados después de revisar cada aplicación;
 - desplegar la migración de permisos Zweb por empleado después de su preflight de datos;
+- ya aplicada `app/sql/migraciones/004_bancos_tablas_auxiliares.sql` en `ftweb` (`localhost:5500`), con conexión `postgres` y rollback disponible en `004_bancos_tablas_auxiliares_rollback.sql`;
 - construir la primera pantalla funcional de consulta RRHH con las APIs de liquidaciones;
 - crear la nueva versión de hQuery y revisar allí el contrato de sus funciones, sin mezclarlo con esta migración.
 

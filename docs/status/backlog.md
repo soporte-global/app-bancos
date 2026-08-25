@@ -8,3 +8,4 @@
 - Acordar con Contabilidad las transiciones de estado, asociaciones múltiples de asiento, reversas/fusiones, retención y criterio de redondeo/moneda.
 - Diseñar migraciones y contratos API antes de toda escritura ERP.
 - Configurar permisos de aplicación/sesión en Hub y definir `id_aplicacion` en la nueva base.
+- Ejecutar revisión de la migración `004_bancos_tablas_auxiliares.sql` con negocio/TI para validar restricciones antes de la migración de producción.

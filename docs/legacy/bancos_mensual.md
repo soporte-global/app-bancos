@@ -12,7 +12,7 @@ Aplicación PHP procedimental para gestionar extractos bancarios mensuales. Tien
 2. El administrador importa extractos por cuenta y período mensual. El nodo y banco se derivan de la cuenta conocida, no del texto importado.
 3. Se aplican reglas de clasificación, validación automática y RAAU (reglas de asignación automática de usuarios).
 4. Cada movimiento puede asociarse a un valor ERP, a un asiento existente o a un asiento nuevo; se registran exclusiones para intentar evitar reutilización.
-5. Los responsables trabajan estados —al menos `ABIERTO` y `PARA CERRAR`— e intercambian mensajes por movimiento. El administrador efectúa cierre y operaciones contables avanzadas, incluida fusión de asientos.
+5. Los responsables trabajan estados (al menos `ABIERTO` y `PARA CERRAR`) e intercambian mensajes por movimiento. El administrador efectúa cierre y operaciones contables avanzadas, incluida fusión de asientos.
 
 ## Endpoints representativos
 

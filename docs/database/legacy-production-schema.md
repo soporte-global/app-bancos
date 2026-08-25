@@ -32,7 +32,7 @@ El núcleo mensual acumula 979.308 movimientos, 977.476 asignaciones de usuario,
 | mensual / extracto | `bancos_mes_movimientos_cargados_periodo` | 979.308 | `id_movimiento varchar`, `id_periodo varchar`, `nodo`, `banco`, `num_cuenta`, `tipo_valor`, `referencia`, `observacion` (`varchar`); `fecha date`; `credito numeric`; `debito numeric`; `serial_seq bigint` con secuencia | sin PK, FK, índice ni unicidad |
 | mensual / responsable | `bancos_mes_usuario_asignado_movimiento` | 977.476 | `id_movimiento varchar`, `id_usuario varchar`, `estado varchar` | `UNIQUE(id_movimiento)`; sin FK |
 | mensual / valor | `bancos_mes_valor_asignado_movimiento` | 18.060 | `id_movimiento varchar`, `id_valor bigint`, `mult_valor boolean default false`, `monto_asignado double precision` | `UNIQUE(id_movimiento)` e índices sobre `id_valor`; sin FK |
-| mensual / asiento existente | `bancos_mes_asiento_asignado_movimiento` | 917.688 | `id_movimiento varchar`, `id_asiento bigint`, `mult_asiento boolean default false`, `monto_asignado double precision`, `debita boolean`, `id_interno_asiento bigint` | `UNIQUE(id_movimiento)` y FK `id_asiento → asiento(id)`; cuatro índices |
+| mensual / asiento existente | `bancos_mes_asiento_asignado_movimiento` | 917.688 | `id_movimiento varchar`, `id_asiento bigint`, `mult_asiento boolean default false`, `monto_asignado double precision`, `debita boolean`, `id_interno_asiento bigint` | `UNIQUE(id_movimiento)` y FK `id_asiento -> asiento(id)`; cuatro índices |
 | mensual / asiento nuevo | `bancos_mes_asientos_creados_movimiento` | 5.148 | `id_movimiento varchar`, `id_interno_asiento integer` con secuencia, `nombre varchar`, `numero bigint`, `fecha_creacion date`, `nodo_creacion`, `usuario_creacion`, `asiento_modelo` (`bigint`) | sin PK, FK ni índice |
 | mensual / líneas de asiento nuevo | `bancos_mes_movimientos_creados_asiento` | 10.762 | `id_movimiento varchar`, `id_interno_asiento bigint`, `fecha date`, `nombre`, `cuenta`, `codigo_cuenta` (`varchar`), `numero bigint`, `haber`, `debe` (`numeric`), `cuenta_banco boolean` | sin PK, FK ni índice |
 | mensual / reserva | `bancos_mes_exclusiones` | 935.700 | `id_movimiento varchar`, `id_asiento bigint`, `id_valor bigint`, `timestamp timestamp`, `id_interno_asiento bigint` | `UNIQUE(id_movimiento)`; FK a `asiento(id)` y `valor(id)`; cuatro índices |
@@ -44,12 +44,12 @@ Salvo donde se indica, las columnas son anulables. Los `varchar` no declaran lon
 ## Relaciones que el modelo intenta expresar
 
 ```text
-período cargado ──< movimiento de extracto ── 0..1 responsable / estado
-                                          ├─ 0..1 valor ERP
-                                          ├─ 0..1 asiento ERP
-                                          ├─ 0..1 borrador de asiento + líneas
-                                          ├─ 0..1 reserva/exclusión
-                                          └─ 0..N mensajes
+periodo cargado -> movimientos de extracto -> 0..1 responsable / estado
+                                              -> 0..1 valor ERP
+                                              -> 0..1 asiento ERP
+                                              -> 0..1 borrador de asiento + lineas
+                                              -> 0..1 reserva/exclusion
+                                              -> 0..N mensajes
 ```
 
 La mayoría de estas relaciones se codifica sólo mediante valores textuales repetidos de `id_movimiento`; no hay FK desde las tablas dependientes hacia `bancos_mes_movimientos_cargados_periodo`. Los únicos FKs encontrados son desde asignación/exclusión de asiento a `asiento(id)` y desde exclusiones a `valor(id)`.

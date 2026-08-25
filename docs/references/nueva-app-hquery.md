@@ -18,7 +18,7 @@ Configuración relevante para la futura app: `id_aplicacion`, requisitos de empl
 
 Funciones/capacidades identificadas: validación de formularios, selector de nodo, overlays y modales, solicitudes AJAX controladas (`consultar_bbdd`/promesas), manejo de carga/error, tablas/búsqueda/autocomplete, carga de fragmentos y utilidades de formato/objetos. Requiere jQuery y, según la función utilizada, componentes como SweetAlert/jQuery UI.
 
-El contrato actual de la rama de trabajo encapsula el estado técnico en `vars.hquery` —metadatos, configuración, diagnóstico y estados de solicitudes/emergentes/animación— y preserva los datos de aplicación ya presentes en `vars`. Las funciones de negocio no deben alojarse en hQuery ni mutar su estado técnico. Incluye una prueba Node de este contrato (`tests/hquery-vars.test.js`).
+El contrato actual de la rama de trabajo encapsula el estado técnico en `vars.hquery` (metadatos, configuración, diagnóstico y estados de solicitudes/emergentes/animación) y preserva los datos de aplicación ya presentes en `vars`. Las funciones de negocio no deben alojarse en hQuery ni mutar su estado técnico. Incluye una prueba Node de este contrato (`tests/hquery-vars.test.js`).
 
 ## Límites de adopción
 

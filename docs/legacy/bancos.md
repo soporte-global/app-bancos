@@ -48,7 +48,7 @@ No hay procesos batch, colas ni scheduler identificables. La conciliación se di
 
 - Una regla `GENERAL` aplica a todos los bancos; una configuración específica para un banco prevalece sobre la general.
 - Cada subtipo de valor se mapea a un texto del extracto y a un sentido `CRÉDITO`/`DÉBITO`; en ausencia de configuración se inicializa como crédito y con una abreviatura del tipo/subtipo.
-- El dominio funcional es la conciliación de cheques. Los tipos 4 y 5 —cheques propios y de terceros— se tratan explícitamente; cualquier otro subtipo mostrado funciona como soporte de configuración, no como evidencia de conciliación bancaria general.
+- El dominio funcional es la conciliación de cheques. Los tipos 4 y 5 (cheques propios y de terceros) se tratan explícitamente; cualquier otro subtipo mostrado funciona como soporte de configuración, no como evidencia de conciliación bancaria general.
 - Sólo se propone conciliación para valores no conciliados (estado distinto de `7`), de tipos admitidos para entidades de cuenta bancaria, más los tipos 4 y 5.
 - Para ser candidato, un importado debe corresponder a la misma cuenta bancaria, su tipo debe contener el código configurado y debe coincidir en monto dentro de ±1% **o** la referencia del valor debe contener la referencia importada.
 - La propuesta se puntúa: monto dentro de tolerancia (+1), monto exacto (+1), referencia contenida (+2), referencia exacta (+2) y fecha exacta (+2). Sólo se autoselecciona un candidato con al menos 4 puntos; siempre se ofrece la alternativa de forzar la conciliación.

@@ -1,3 +1,3 @@
 # Progreso de migración
 
-Fase actual: descubrimiento. Se documentaron legados e incertidumbres; no hay módulos migrados ni validación funcional ejecutada.
+Fase actual: habilitación estructural. Se documentaron legados e incertidumbres y se incorporó la base de `nueva_app` en `app-bancos` para identidad/autorización y composición de código; aún no hay migración funcional ni integraciones en producción.

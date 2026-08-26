@@ -8,4 +8,5 @@ Este proyecto quedó inicializado a partir de la estructura de `nueva_app` para 
 
 - Descubrimiento y levantamiento de datos completado.
 - Estructura de `nueva_app` copiada de forma incremental (sin sobrescritura).
+- Arquitectura objetivo definida como monolito modular para extractos mensuales y conciliación de cheques; el plan de consultas e índices está en `docs/database/query-plan.md`.
 - Pendiente: configuración de permisos de Hub, contratos de API y flujo funcional.

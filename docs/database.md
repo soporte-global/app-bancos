@@ -10,6 +10,8 @@ El mapa de las entidades ERP que intervienen en los procesos bancarios está en 
 
 La propuesta para reemplazarlas está en [proposed-target-model.md](database/proposed-target-model.md). Las tablas nuevas se crearán en el esquema `global_prod`, conservarán el prefijo `bancos_` y usarán nombres en español. Es un diseño objetivo, no una migración ejecutable ni una autorización para modificar producción.
 
+El plan de acceso para el modelo nuevo está en [query-plan.md](database/query-plan.md): define CTEs acotadas, joins por PK, paginación por cursor, reservas concurrentes y los índices que deben validarse con `EXPLAIN (ANALYZE, BUFFERS)`. La versión productiva relevada es PostgreSQL 9.6: las CTE se materializan y se usan para reducir conjuntos, no para encadenar tablas grandes.
+
 La identidad y permisos nuevos deben consumir el Hub de `ftweb.global_prod`, en particular el catálogo y las concesiones `hub_*` y su vista de permisos efectivos. No se deben crear tablas de credenciales equivalentes a `login_users`.
 
 El DDL heredado se ejecuta desde requests y no debe ser el diseño canónico. La migración debe partir del esquema productivo real, con integridad referencial, índices, unicidad, auditoría y migraciones reversibles cuando sea posible.

@@ -79,8 +79,9 @@ El efecto sobre ERP debe ejecutarse en una única unidad transaccional cuando la
 2. `bancos_movimiento_extracto`, sus asociaciones, mensajes, reservas y eventos se unen por PK interna; `id_movimiento` heredado no se reutiliza como clave. La clave de migración es `(id_periodo, serial_seq)`, que resultó única en producción.
 3. La asociación vigente se restringe con un índice único parcial para valor o para una asociación exclusiva; la posibilidad de varias asociaciones de asiento debe validarse funcionalmente antes de fijar esa restricción.
 4. Las reservas activas se protegen con índices únicos parciales sobre `valor_erp_id` o `asiento_erp_id`; esto expresa la exclusividad que hoy intenta resolver `bancos_mes_exclusiones`.
-5. Índices iniciales: `bancos_importacion_extracto(cuenta_bancaria_id, inicio_periodo)`, `bancos_movimiento_extracto(importacion_id, numero_fila_origen)`, asociaciones y reservas activas, historial por movimiento y mensajes por movimiento/fecha. Agregar índices de búsqueda por referencia o monto sólo después de medir consultas reales.
+5. Índices de acceso iniciales: `bancos_importacion_extracto(cuenta_bancaria_zetti_id, inicio_periodo, id)`, `bancos_movimiento_extracto(importacion_id, fecha_operacion NULLS LAST, id)`, historial por `(movimiento_id, registrado_en DESC, id DESC)`, asociación y reserva activas por `movimiento_id`, y mensajes por `(movimiento_id, emitido_en DESC, id DESC)`. Se conservan además los únicos parciales que protegen recursos. Cada índice se incorpora sólo luego de medir su consulta con `EXPLAIN (ANALYZE, BUFFERS)` y costo de escritura.
 6. Eliminar duplicados técnicos durante la migración: una única restricción para la clave elegida de cada entidad. En particular, nunca reproducir las 121 UNIQUE actuales sobre `id_periodo`.
+7. Las consultas usan CTE para acotar y reutilizar conjuntos pequeños —lote, página, regla efectiva o recurso bloqueado— y joins por PK. PostgreSQL 9.6 materializa CTEs, por lo que no se encadenan CTEs voluminosas ni se reemplazan índices con ellas. El patrón SQL, paginación y concurrencia está en [query-plan.md](query-plan.md).
 
 ## Correspondencia de origen a destino
 

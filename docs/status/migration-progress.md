@@ -7,4 +7,4 @@ Luego se ejecutó `app/sql/migraciones/006_bancos_campos_timestamps_zetti.sql` p
 
 Estado de ejecución desde este entorno: aplicada `004` el 2026-08-25 en `ftweb` (`localhost:5500`) y `005` y `006` el 2026-08-26 en el mismo entorno, ambas con PHP CLI + `pdo_pgsql`.
 
-Verificación siguiente sugerida: correr nuevamente checklist de presencia de tablas e índices en `global_prod` antes de comenzar el siguiente paquete funcional.
+Verificación siguiente sugerida: correr nuevamente checklist de presencia de tablas e índices en `global_prod` antes de comenzar el siguiente paquete funcional. Antes de crear índices adicionales o habilitar autoasignación, validar el plan de CTEs, joins y paginación definido en `docs/database/query-plan.md` con `EXPLAIN (ANALYZE, BUFFERS)` sobre volumen representativo.

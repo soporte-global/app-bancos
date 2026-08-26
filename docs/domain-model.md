@@ -1,9 +1,9 @@
 # Modelo de dominio: estado de descubrimiento
 
 - **Cuenta bancaria**: cuenta ERP, banco, nodo y jerarquía.
-- **Período mensual** y **movimiento de extracto**: importación, crédito/débito, fecha, referencia, tipo y observación.
+- **Importación de extracto** y **movimiento de extracto**: lote inmutable por cuenta/período, fila de origen estable, crédito/débito, fecha, referencia, tipo y observación. El movimiento posee PK propia; `(id_periodo, serial_seq)` sólo se conserva para migración.
 - **Regla de clasificación** y **asignación de responsable**: tipo de extracto, subtipo/contabilidad, validación y usuario.
-- **Propuesta de asociación**: movimiento con valor, asiento existente o nuevo, monto y reserva.
+- **Propuesta de asociación y reserva**: movimiento con valor, asiento existente o nuevo, monto y reserva exclusiva activa; la reserva protege concurrencia y la asociación expresa la decisión vigente.
 - **Mensaje**: conversación vinculada a movimiento.
 - **Conciliación de cheque**: efecto sobre cheque, operación, valor y asiento ERP.
 - **Cuenta/Sesión/Permiso de acceso**: modelo transversal proveniente del Core de `nueva_app`; una sesión reúne cuenta, empleado opcional, identidad Zweb/cliente opcionales y permisos efectivos por aplicación.

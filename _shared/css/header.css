@@ -248,11 +248,10 @@ header.footer::before {
 .afterheader{
     padding:20px;
     background-color: var(--gris-20);
-    padding-left:0px; 
-    padding-right:0px; 
-    width:calc(100% - 0px); 
-    height: calc( (var(--vh, 1vh) * 100) -  145px);
-    overflow:hidden;
+    padding: 0px;
+    width: calc(100% - 0px);
+    height: calc( (var(--vh, 1vh) * 100) -  90px);
+    overflow: hidden;
 }
 .afterheader.title-in{
     margin-top: -45px;

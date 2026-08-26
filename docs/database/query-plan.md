@@ -128,7 +128,7 @@ FROM reserva
 RETURNING id;
 ```
 
-La transacción debe revertirse si no se inserta asociación o si falla la transición de estado. Para asientos y borradores se repite el mismo patrón cambiando el recurso y su índice parcial. La conciliación de cheque agrega la clave de idempotencia antes de escribir en ERP y guarda todos los IDs resultantes en la misma transacción cuando ambos esquemas comparten conexión.
+La transacción debe revertirse si no se inserta asociación o si falla la transición de estado. Para asientos y borradores se repite el mismo patrón cambiando el recurso y su índice parcial. Un movimiento puede conservar filas activas para valor y asiento a la vez; los límites de una asociación de cada tipo por movimiento se validan en la transacción y se reforzarán con índices parciales específicos en una migración posterior. Preparar esas filas para `PARA_CERRAR` no escribe ERP. La conciliación de cheque agrega la clave de idempotencia antes de escribir en ERP y guarda todos los IDs resultantes en la misma transacción cuando ambos esquemas comparten conexión.
 
 ## Índices propuestos por acceso
 
@@ -138,6 +138,7 @@ La transacción debe revertirse si no se inserta asociación o si falla la trans
 | paginar movimientos del lote | `bancos_movimiento_extracto(importacion_id, fecha_operacion NULLS LAST, id)` | filtra por lote y entrega la página en orden estable sin ordenar toda la importación. |
 | último estado/responsable | `bancos_historial_asignacion(movimiento_id, registrado_en DESC, id DESC) INCLUDE (estado_id, usuario_hub_id)` | resuelve el `LATERAL ... LIMIT 1`; `INCLUDE` requiere PostgreSQL 11+, por lo que en 9.6 se omiten las columnas incluidas. |
 | asociación vigente por movimiento | `bancos_asociacion_movimiento(movimiento_id) WHERE activo` | evita escaneo al armar la bandeja y complementa los únicos por recurso. |
+| límite por tipo de asociación | índices únicos parciales sobre `(movimiento_id)` para `activo AND valor_zetti_id IS NOT NULL`, `activo AND asiento_zetti_id IS NOT NULL` y `activo AND borrador_asiento_id IS NOT NULL` | permite valor más asiento, pero limita a uno de cada tipo por movimiento según la regla confirmada. |
 | último mensaje | `bancos_mensaje_movimiento(movimiento_id, emitido_en DESC, id DESC)` | resuelve conversación y última actividad por movimiento. |
 | mensajes sin leer del receptor | `bancos_recepcion_mensaje(receptor_hub_id, mensaje_id) WHERE leido_en IS NULL` | permite contador sin recorrer lecturas ya confirmadas. |
 | candidato ERP por entidad/subtipo/estado | validar con DBA un índice compuesto en `public.valor(entidad, subtipo_valor, estado, monto_principal)` | las tablas ERP no se alteran desde esta app; se mide selectividad y costo de escritura antes de proponer una migración ERP. |

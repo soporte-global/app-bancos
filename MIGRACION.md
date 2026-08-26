@@ -60,6 +60,12 @@ demás aplicaciones comenzará después de validarla.
 - compatibilidad PHP incluida en el scope del header y la página para reconstruir variables legacy;
 - código compartido desacoplado de la forma final de `vars` mediante `window.contextoApp`;
 - caso nuevo y caso legacy sin namespace `app` cubiertos por prueba JavaScript.
+- renombre de campos `*_erp_*` a `*_zetti_*` en `global_prod` mediante
+  `app/sql/migraciones/005_bancos_campos_zetti.sql`, con rollback en
+  `app/sql/migraciones/005_bancos_campos_zetti_rollback.sql`;
+- renombre de columnas de marca temporal y usuario en `global_prod.bancos_*` mediante
+  `app/sql/migraciones/006_bancos_campos_timestamps_zetti.sql`, con rollback en
+  `app/sql/migraciones/006_bancos_campos_timestamps_zetti_rollback.sql`;
 
 ## Pendiente inmediato
 
@@ -68,7 +74,8 @@ demás aplicaciones comenzará después de validarla.
 - adaptar gradualmente las clases HClasses con consumidores reales para que deleguen en el Core;
 - retirar del template las clases sin consumidores confirmados después de revisar cada aplicación;
 - desplegar la migración de permisos Zweb por empleado después de su preflight de datos;
-- ya aplicada `app/sql/migraciones/004_bancos_tablas_auxiliares.sql` en `ftweb` (`localhost:5500`), con conexión `postgres` y rollback disponible en `004_bancos_tablas_auxiliares_rollback.sql`;
+- ya aplicadas `app/sql/migraciones/004_bancos_tablas_auxiliares.sql` y
+  `app/sql/migraciones/005_bancos_campos_zetti.sql` y `app/sql/migraciones/006_bancos_campos_timestamps_zetti.sql` en `ftweb` (`localhost:5500`), con conexión `postgres`; rollback disponible en `004_bancos_tablas_auxiliares_rollback.sql`, `005_bancos_campos_zetti_rollback.sql` y `006_bancos_campos_timestamps_zetti_rollback.sql`;
 - construir la primera pantalla funcional de consulta RRHH con las APIs de liquidaciones;
 - crear la nueva versión de hQuery y revisar allí el contrato de sus funciones, sin mezclarlo con esta migración.
 

@@ -3,7 +3,7 @@
 - Confirmar reglas contables y tratamiento de excepciones de cheques.
 - Configurar la aplicación, roles y permisos internos en el Hub de `nueva_app`.
 - Elegir y fijar una versión publicada de hQuery, validando sus dependencias y contrato `vars`.
-- Caracterizar los 38 importes negativos, las asociaciones sin exclusión y los IDs de movimiento duplicados con ejemplos anonimizados, antes de definir el backfill. La validación agregada de claves, nulos y huérfanos ya fue completada.
+- Completar el mapa manual de las cuentas legacy cuyo formato no coincide exactamente con `entidad.codigo`, antes de ejecutar el backfill. La preparación está en la migración 007.
 - Detallar las validaciones futuras para `PARA_CERRAR`, el permiso especial de cierre en Hub y la secuencia contable definitiva de fusión/generación de asiento.
 - Diseñar migraciones y contratos API antes de toda escritura ERP.
 - Validar con `EXPLAIN (ANALYZE, BUFFERS)` el plan de CTEs e índices propuestos sobre volumen representativo, antes de crear índices adicionales o habilitar autoasignación.

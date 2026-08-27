@@ -19,13 +19,13 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 
 | Control | Resultado | Implicación para el destino |
 | --- | --- | --- |
-| unicidad de `id_movimiento` | 1.055 IDs duplicados, 2.407 filas afectadas y 1.352 filas excedentes | no usarlo como PK ni FK destino |
+| unicidad de `id_movimiento` | 1.055 IDs duplicados, 2.407 filas afectadas y 1.352 filas excedentes | son repeticiones exactas de negocio; conservar sólo el menor `serial_seq` y mantener trazabilidad |
 | unicidad de `(id_periodo, serial_seq)` | 0 duplicados en 979.308 movimientos | adoptar como clave de migración y conservar `numero_fila_origen` |
 | períodos de los IDs duplicados | ningún ID repetido aparece en períodos distintos | la ambigüedad está dentro del período y no se resuelve sólo con el ID |
 | relaciones heredadas | 0 movimientos sin período; 0 asignaciones, valores, asientos o exclusiones sin movimiento | respaldar el backfill, pero crear FKs nuevas |
 | impacto de IDs duplicados | 1.055 asignaciones de usuario, 53 de valor, 871 de asiento y 924 exclusiones referencian IDs duplicados | requieren correspondencia explícita a la fila `(id_periodo, serial_seq)` durante la migración |
 | estado | `CERRADO`: 898.879; `PARA CERRAR`: 60.085; `ABIERTO`: 18.512; sin nulos | catálogo inicial de tres estados; faltan transiciones históricas |
-| importe de extracto | 0 filas con crédito y débito simultáneos; 0 sin importe; 38 con importe negativo | crear `CHECK` de exclusividad; caracterizar las 38 excepciones antes de rechazar negativos |
+| importe de extracto | 0 filas con crédito y débito simultáneos; 0 sin importe; 38 con importe negativo | error confirmado de carga: invertir columna y signo durante el backfill |
 | escala monetaria | máximo de dos decimales en crédito, débito, debe y haber; ERP contable en `numeric(20,5)` | usar `numeric(20,5)` cuando el importe se asocie o genere efectos ERP |
 | total del período | 3 de 2.358 períodos no coinciden con el conteo de movimientos; diferencia absoluta acumulada 1.627 | tratar `total_movs` como derivado, no como dato rector |
 | valor asignado | 18.060 filas; sin `id_valor` ni monto nulos; `mult_valor` nunca verdadero | asociación a valor es actualmente 0..1 por ID heredado |
@@ -46,6 +46,8 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 - `bancos_asociacion_movimiento` y `bancos_reserva_recurso` conservarán el tipo de destino y su vigencia, en lugar de sobrecargar exclusiones.
 - `bancos_historial_asignacion` reemplazará el único estado mutable y permitirá auditar las transiciones futuras.
 - Los importes nuevos que puedan asociar o generar efectos ERP usarán `numeric(20,5)`, igual que el ERP. La entrada de extractos se validará a dos decimales cuando ese sea su formato de origen.
+- El backfill normaliza `debito < 0` a `credito = abs(debito)` y `credito < 0` a `debito = abs(credito)`. La traza conserva ambos importes originales.
+- Para cada grupo duplicado por `id_movimiento`, se conserva la fila de menor `serial_seq`; las demás se vinculan al movimiento canónico mediante la tabla de trazabilidad.
 
 ## Límites y acciones restantes
 

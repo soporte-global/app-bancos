@@ -34,6 +34,8 @@ CREATE TABLE global_prod.bancos_migracion_periodo_legacy (
     num_mes integer,
     ano integer,
     total_movimientos_legacy integer,
+    omitir boolean NOT NULL DEFAULT false,
+    motivo_omision text,
     importacion_id bigint REFERENCES global_prod.bancos_importacion_extracto(id)
 );
 
@@ -71,12 +73,13 @@ FROM (
 ) origen
 WHERE cuenta IS NOT NULL AND btrim(cuenta) <> '' AND cuenta <> 'N/A';
 
--- Se resuelven solamente coincidencias exactas y univocas contra entidad.codigo.
--- Las diferencias de formato quedan pendientes para una decision explicita.
+-- Se resuelven coincidencias univocas contra entidad.codigo. Se normalizan
+-- separadores y ceros iniciales, pero nunca se usa similitud aproximada.
 WITH candidatos AS (
     SELECT m.cuenta_legacy, min(cb.id) AS cuenta_bancaria_zetti_id
     FROM global_prod.bancos_migracion_cuenta_legacy m
-    JOIN public.entidad e ON e.codigo = m.cuenta_legacy
+    JOIN public.entidad e ON ltrim(regexp_replace(e.codigo, '[^[:alnum:]]', '', 'g'), '0')
+        = ltrim(regexp_replace(m.cuenta_legacy, '[^[:alnum:]]', '', 'g'), '0')
     JOIN public.cuenta_bancaria cb ON cb.id = e.id
     GROUP BY m.cuenta_legacy
     HAVING count(*) = 1
@@ -88,10 +91,45 @@ SET cuenta_bancaria_zetti_id = c.cuenta_bancaria_zetti_id,
 FROM candidatos c
 WHERE c.cuenta_legacy = m.cuenta_legacy;
 
+-- Excepción verificada: el segundo código omite un cero respecto de la cuenta
+-- CREDICOOP de SOC DON BOSCO. No se generaliza esta transformación.
+UPDATE global_prod.bancos_migracion_cuenta_legacy
+SET cuenta_bancaria_zetti_id = 103500000000013341,
+    metodo = 'MANUAL',
+    observacion = 'Código legado con un cero omitido; equivale a 19116800059191.',
+    actualizado_en = now()
+WHERE cuenta_legacy = '0191-168-005919/1';
+
+-- La normalización vuelve equivalente a la cuenta CREDICOOP en pesos y a su
+-- cuenta dólar. Se conserva la coincidencia literal del legado, que identifica
+-- la cuenta en pesos BCO CREDICOOP - GLOBAL.
+UPDATE global_prod.bancos_migracion_cuenta_legacy
+SET cuenta_bancaria_zetti_id = 103500000000002952,
+    metodo = 'MANUAL',
+    observacion = 'Coincidencia literal con BCO CREDICOOP - GLOBAL en pesos; se descarta la cuenta dólar de formato equivalente.',
+    actualizado_en = now()
+WHERE cuenta_legacy = '1911680119736';
+
+-- Placeholder confirmado: no representa una cuenta ERP. La carga de
+-- configuración lo traducirá a alcance GLOBAL limitado a sus diez bancos.
+UPDATE global_prod.bancos_migracion_cuenta_legacy
+SET omitir = true,
+    metodo = 'MANUAL',
+    observacion = 'Configuración global limitada a 10 bancos; no corresponde a una cuenta bancaria ERP.',
+    actualizado_en = now()
+WHERE cuenta_legacy = 'NNNNN';
+
 INSERT INTO global_prod.bancos_migracion_periodo_legacy
     (id_periodo_legacy, cuenta_legacy, num_mes, ano, total_movimientos_legacy)
 SELECT id_periodo, num_cuenta, num_mes, ano, total_movs
 FROM public.bancos_mes_periodos_cargados_cuenta;
+
+-- El período no fue validado y su cuenta no existe en ERP; sus movimientos se
+-- conservan en la traza, pero no deben generar una importación canónica.
+UPDATE global_prod.bancos_migracion_periodo_legacy
+SET omitir = true,
+    motivo_omision = 'Error histórico de importación: cuenta legacy inexistente y período no validado.'
+WHERE id_periodo_legacy = '191168194623122022';
 
 INSERT INTO global_prod.bancos_migracion_movimiento_legacy (
     id_periodo_legacy, serial_seq_legacy, id_movimiento_legacy,

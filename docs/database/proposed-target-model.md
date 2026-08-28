@@ -42,13 +42,15 @@ global_prod.bancos_movimiento_extracto -> 0..1 bancos_conciliacion_cheque -> val
 
 | Tabla objetivo | Responsabilidad | Claves y reglas mínimas |
 | --- | --- | --- |
-| `global_prod.bancos_configuracion` | configuración de clasificación y mapeo, con alcance global o por cuenta | PK; `alcance` controlado; `banco_erp_id bigint` y `nodo_erp_id integer` cuando correspondan; no se fuerza una única cuenta |
+| `global_prod.bancos_configuracion` | configuración de clasificación y mapeo, con alcance global o por cuenta | PK; `alcance` controlado; banco/nodo cuando correspondan; `cuenta_contable_zetti_id` para la cuenta base del banco; no se fuerza una única cuenta bancaria |
 | `global_prod.bancos_configuracion_cuenta` | aplica una configuración a una cuenta bancaria ERP | PK; FK a configuración y `public.cuenta_bancaria(id bigint)`; `UNIQUE(configuracion_id, cuenta_bancaria_id)` |
-| `global_prod.bancos_regla_clasificacion` | clasifica una línea de extracto por cuenta/configuración, subtipo y código de extracto | PK; FK a configuración; `subtipo_valor_erp_id smallint`; `UNIQUE(configuracion_id, subtipo_valor_id, sentido)`; `validar_automaticamente boolean` |
+| `global_prod.bancos_regla_clasificacion` | clasifica una línea de extracto por cuenta/configuración, subtipo y código de extracto | PK; FK a configuración; `subtipo_valor_erp_id smallint`; `sentido` `C`, `D` o `A` (ambos); `UNIQUE(configuracion_id, subtipo_valor_id, sentido)`; `validar_automaticamente boolean` |
 | `global_prod.bancos_mapeo_cuenta_contable` | cuenta contable por banco/configuración y subtipo | PK; FK `cuenta_erp_id bigint` a `public.cuenta(id)` y FKs tipadas; unicidad según regla funcional acordada |
 | `global_prod.bancos_regla_asignacion_usuario` | regla de asignación automática (RAAU) | PK; FK a configuración, subtipo y usuario/identidad Hub; clave natural única, no un `identificador` libre |
 
 La configuración mensual y la de cheques no deben duplicar cinco tablas iguales. Si hay una diferencia funcional real, debe expresarse con una columna de alcance o con una entidad específica; no con un segundo conjunto de tablas clonado.
+
+La cuenta contable base de `*_cuentasbanco` se conserva en `bancos_configuracion.cuenta_contable_zetti_id`. No se la fuerza dentro del mapeo por subtipo: 1.463 relaciones legacy no aparecen en `*_cuentasvalores` y perderían semántica.
 
 ### Importación y flujo mensual
 
@@ -57,7 +59,7 @@ La configuración mensual y la de cheques no deben duplicar cinco tablas iguales
 | `global_prod.bancos_importacion_extracto` | lote recibido para una cuenta y período | PK; FKs a configuración y `cuenta_bancaria_erp_id bigint`; `inicio_periodo date`; archivo/origen, hash, usuario, fecha y estado; clave de idempotencia por cuenta, período, hash y versión |
 | `global_prod.bancos_movimiento_extracto` | fila normalizada del extracto | PK; FK a importación; fecha, referencia, descripción, crédito, débito `numeric(20,5)` y campos fuente; `UNIQUE(importacion_id, numero_fila_origen)`; `CHECK` para que sólo uno de crédito/débito sea positivo, salvo que negocio admita otra convención |
 | `global_prod.bancos_historial_asignacion` | responsable y transiciones de estado | PK; FK a movimiento y usuario Hub; estado controlado, motivo y fecha; una vista o columna derivada puede exponer el estado actual |
-| `global_prod.bancos_asociacion_movimiento` | vínculo de un movimiento con valor ERP, asiento existente o borrador | PK; FK a movimiento; cada fila refiere exactamente un destino (`valor_zetti_id`, `asiento_zetti_id` o borrador), pero el movimiento puede tener valor y asiento en filas distintas; monto `numeric(20,5)`; cada recurso activo es exclusivo |
+| `global_prod.bancos_asociacion_movimiento` | vínculo de un movimiento con valor ERP, asiento existente o borrador | PK; FK a movimiento; cada fila refiere exactamente un destino; monto `numeric(20,5)`; un asiento puede marcarse compartido cuando resulta de una fusión |
 | `global_prod.bancos_reserva_recurso` | reserva exclusiva de valor/asiento para evitar reutilización | PK; FK a movimiento; `valor_erp_id bigint`, `asiento_erp_id bigint` o borrador; unicidad parcial sobre reserva activa; estado y expiración/auditoría |
 | `global_prod.bancos_mensaje_movimiento` | conversación y eventos de sistema | PK; FK a movimiento y emisor; cuerpo, tipo de mensaje y `emitido_en`; las lecturas se modelan con `global_prod.bancos_recepcion_mensaje` o `leido_en`, no con dos enteros anulables |
 
@@ -97,6 +99,8 @@ Al pasar a `PARA_CERRAR`, el módulo sólo persiste asociaciones, reservas y bor
 | asientos creados y movimientos creados | `global_prod.bancos_borrador_asiento` y `global_prod.bancos_linea_borrador_asiento` | conservar relación entre borrador, líneas y asiento ERP final |
 | `bancos_mes_raau` | `global_prod.bancos_regla_asignacion_usuario` | reemplazar identificador libre por clave funcional y FKs |
 | `bancos_mensajeria` | `global_prod.bancos_mensaje_movimiento` y recibos de lectura | separar mensaje, emisor y lectura |
+
+Las reglas de `bancos_mes_guardado_listareglas` cuyo sentido es nulo se migran con `sentido = 'A'`. No se duplican en `C` y `D`: el legado no expresa esa distinción y los subtipos no permiten inferirla de manera determinista.
 
 ## Plan de validación antes de migrar
 

@@ -333,7 +333,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS bancos_reserva_recurso_asiento_activo_uk
 CREATE TABLE IF NOT EXISTS global_prod.bancos_mensaje_movimiento (
     id bigserial PRIMARY KEY,
     movimiento_id bigint NOT NULL,
-    emisor_hub_id bigint NOT NULL,
+    emisor_hub_id bigint,
     tipo_mensaje varchar(60) NOT NULL,
     cuerpo text NOT NULL,
     emitido_en timestamptz NOT NULL DEFAULT now(),

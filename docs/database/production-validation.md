@@ -29,7 +29,7 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 | escala monetaria | máximo de dos decimales en crédito, débito, debe y haber; ERP contable en `numeric(20,5)` | usar `numeric(20,5)` cuando el importe se asocie o genere efectos ERP |
 | total del período | 3 de 2.358 períodos no coinciden con el conteo de movimientos; diferencia absoluta acumulada 1.627 | tratar `total_movs` como derivado, no como dato rector |
 | valor asignado | 18.060 filas; sin `id_valor` ni monto nulos; `mult_valor` nunca verdadero | asociación a valor es actualmente 0..1 por ID heredado |
-| asiento asignado | 917.688 filas; sin `id_asiento` ni monto nulos; `mult_asiento` verdadero en 468.501; `debita` nulo en todas las filas | no trasladar `debita`; validar la semántica de `mult_asiento` |
+| asiento asignado | 917.688 filas; sin `id_asiento` ni monto nulos; `mult_asiento` verdadero en 468.501; `debita` nulo en todas las filas | no trasladar `debita`; la semántica de fusión se aplica por recurso: si algún vínculo del asiento es múltiple, el asiento queda compartido |
 | asociaciones incompatibles | 1 ID con valor y asiento; 2 valores y 78 asientos sin exclusión | la exclusividad no es perfecta y debe expresarse en reservas activas auditables |
 | borradores | 5.148 cabeceras y 10.762 líneas; 0 cabeceras o líneas huérfanas | migrar a borrador y líneas con FK obligatoria |
 | exclusiones | 935.700 filas; 15.864 con valor y asiento, 202 con borrador, ninguna sin recurso | una exclusión mezcla varias clases de recurso; separar reserva y tipo de recurso |
@@ -48,7 +48,19 @@ No se detectaron huérfanos entre movimientos, períodos, asignaciones, valores,
 - Los importes nuevos que puedan asociar o generar efectos ERP usarán `numeric(20,5)`, igual que el ERP. La entrada de extractos se validará a dos decimales cuando ese sea su formato de origen.
 - El backfill normaliza `debito < 0` a `credito = abs(debito)` y `credito < 0` a `debito = abs(credito)`. La traza conserva ambos importes originales.
 - Para cada grupo duplicado por `id_movimiento`, se conserva la fila de menor `serial_seq`; las demás se vinculan al movimiento canónico mediante la tabla de trazabilidad.
+- El mapa de cuentas acepta sólo normalización determinista de separadores y ceros iniciales. El relevamiento resolvió así 15 de 16 configuraciones con formato distinto; no se habilita similitud aproximada.
+- La excepción `0191-168-005919/1` se asocia manualmente con `19116800059191` (CREDICOOP, SOC DON BOSCO): ambos registros pertenecen a la configuración `001/GENERAL` y sólo difieren por un cero omitido.
+- El período `191168194623122022` se excluye del destino: no fue validado, su cuenta no existe en ERP y contiene 748 movimientos que se preservan sólo en la trazabilidad.
+- `NNNNN` es un placeholder confirmado: se migra como configuración de alcance `GLOBAL`, limitada a los diez bancos que le están asociados, y no como cuenta bancaria ERP.
+- Las 4.673 reglas mensuales tienen el sentido nulo. El subtipo no permite inferirlo: algunos subtipos aparecen como crédito y débito en BANCOS. Se conserva la semántica mediante `sentido = 'A'` (ambos).
+- Las tablas legacy `*_cuentasbanco` contienen cuentas contables base que no son redundantes con los mapeos por subtipo: 19 de 19 filas en BANCOS y 1.444 de 1.603 en BANCOS_MENSUAL no aparecen en `*_cuentasvalores`. El destino las conserva en `bancos_configuracion.cuenta_contable_zetti_id`.
 
 ## Límites y acciones restantes
 
-Los datos permiten responder claves, alcance, estados observados, escala monetaria e integridad básica. No permiten inferir transiciones de estados, política de retención, autorización de reversas/fusiones ni la regla de una o varias asociaciones de asiento. Esas decisiones deben validarse con los responsables contables antes de implementar DDL o migraciones.
+Los datos permiten responder claves, alcance, estados observados, escala monetaria e integridad básica. La fusión de asientos fue confirmada: entre los recursos usados por más de un movimiento hay 9.081 totalmente marcados como múltiples y 389 mixtos; en los mixtos se conserva la semántica de recurso compartido cuando exista alguna marca múltiple. De los 58 asientos reutilizados sin ninguna marca múltiple, 20 tienen un único movimiento cuyo importe coincide con sus líneas ERP y se conserva sólo esa asociación; los otros 38 no tienen coincidencia y se omiten sus 124 asociaciones. El único valor ERP duplicado (`103500000012894309`) se resuelve explícitamente como duplicación o rectificación operativa: se conserva el débito del 16/03/2020 y se traza/omite la imputación del 01/06/2020. El preflight de `012` bloquea cualquier otro valor duplicado no declarado. El asiento legacy `0` se trata como centinela y no se migra.
+
+Para los borradores de asiento, la cuenta se resuelve por `codigo_cuenta` sin imponer el nodo de creación: las 10.798 líneas tienen una cuenta ERP única por código, tras resolver cuatro líneas sin código desde su contrapartida gemela del mismo borrador (mismo nombre, importes invertidos y único código no vacío). El preflight bloquea cualquier otra línea que no resulte unívoca.
+
+Los IDs de emisor de los 13 mensajes legacy corresponden a `public.login_users.idu`, no a `global_prod.rrhh_login.id`. Se verificaron por alias `1003`/`NCAROL` → login `34` y `1007`/`CMARCHANT` → login `307`; ambos se guardan en un mapa auditable. El emisor `1001` fue eliminado y se migra como evento de sistema, sin atribuirlo a una persona: `emisor_hub_id` admite `NULL` para este caso y el mensaje queda con tipo `SISTEMA`.
+
+La cuenta legacy `1911680119736` se resuelve manualmente a `103500000000002952` (BCO CREDICOOP - GLOBAL, pesos). La normalización la hacía ambigua con la cuenta dólar `0191-168-011973/6`, pero el código en pesos coincide literalmente con el legado. Las reservas legacy con `id_asiento = 0` se omiten como centinela técnico y no como asiento ERP.

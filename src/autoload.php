@@ -14,6 +14,20 @@ spl_autoload_register(function ($clase) {
     }
 });
 
+// El código específico de BANCOS se mantiene fuera del Core compartido.
+spl_autoload_register(function ($clase) {
+    $prefijo = 'AppBancos\\';
+    if (strncmp($clase, $prefijo, strlen($prefijo)) !== 0) {
+        return;
+    }
+
+    $relativa = substr($clase, strlen($prefijo));
+    $archivo = RUTA . '/app/' . str_replace('\\', '/', $relativa) . '.php';
+    if (is_file($archivo)) {
+        require_once $archivo;
+    }
+});
+
 // la capa de compatibilidad también se carga bajo demanda y queda fuera del core
 spl_autoload_register(function ($clase) {
     $prefijo = 'GlobalApps\\Legacy\\';

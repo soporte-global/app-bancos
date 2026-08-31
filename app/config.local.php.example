@@ -4,6 +4,8 @@ return [
     'entorno' => 'tunel',
     'ftweb_password' => '',
     'ftweb_persistent' => true,
+    // true usa global_temp para BANCOS y sus referencias ERP; dejar false para producción.
+    'bancos_debug' => true,
     'rrhh_password' => '',
     'zetti_token_url' => '',
     'zetti_token_user' => '',

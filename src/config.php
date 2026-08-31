@@ -132,6 +132,12 @@ define('DBASE', $app_config['ftweb_database']);
 define('USER', $app_config['ftweb_user']);
 define('PASS', $app_config['ftweb_password']);
 define('FTWEB_PERSISTENT', (bool) ($app_config['ftweb_persistent'] ?? true));
+define('BANCOS_DEBUG', (bool) ($app_config['bancos_debug'] ?? false));
+define('BANCOS_ESQUEMA_OPERATIVO', BANCOS_DEBUG ? 'global_temp' : 'global_prod');
+define('BANCOS_ESQUEMA_ZETTI', BANCOS_DEBUG ? 'global_temp' : 'public');
+if (BANCOS_DEBUG && CONEXION === 'prod') {
+    throw new RuntimeException('bancos_debug no puede habilitarse en el entorno prod.');
+}
 // --
 define('HOST2', $app_config['rrhh_host'] ?? $defaults['rrhh_host']);
 define('PORT2', $app_config['rrhh_port'] ?? $defaults['rrhh_port']);

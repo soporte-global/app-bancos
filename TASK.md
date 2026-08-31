@@ -9,4 +9,6 @@ Diseño vigente:
 
 Próximo paso: emitir la conciliación de corte (conteos, importes, claves, trazabilidad y excepciones), conservar un respaldo recuperable y acordar la ventana de convivencia. Con esa evidencia, implementar primero los repositorios de lectura y la consulta paginada sobre las tablas nuevas, manteniendo las escrituras ERP y los automatismos deshabilitados.
 
+Antes de desarrollar esas pantallas, ejecutar `014_bancos_preparar_debug_global_temp.sql` en el ambiente de depuración y configurar un usuario de base de datos sin permisos de escritura sobre `public` ni `global_prod`. Activar `bancos_debug` sólo en `app/config.local.php`; desactivarlo es el cambio controlado que dirige los repositorios al esquema productivo después de validar el corte.
+
 Antes de habilitar escritura funcional: configurar el permiso de cierre en Hub, definir la secuencia contable de fusión/generación, validar `EXPLAIN (ANALYZE, BUFFERS)` en volumen representativo y completar pruebas de integración, idempotencia y concurrencia. El detalle operativo está en `docs/migration-strategy.md`.

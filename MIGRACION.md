@@ -70,6 +70,9 @@ demás aplicaciones comenzará después de validarla.
   `global_prod.bancos_*`, mediante las migraciones `007` a `013`: trazabilidad,
   configuración, períodos, movimientos, historial, asociaciones, reservas,
   borradores, mensajes y asientos compartidos.
+- selector de esquema BANCOS y migración `014` preparados para depurar contra
+  `global_temp` sin escribir filas ni secuencias en producción; su ejecución y
+  el usuario restringido de depuración siguen pendientes.
 
 ## Pendiente inmediato
 

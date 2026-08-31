@@ -30,4 +30,10 @@ Compartido: sesión, permisos, configuración, movimientos de extracto, reservas
 
 La interfaz consume contratos API y no conoce IDs heredados, SQL ni códigos ERP. `hQuery` queda limitado a funciones UI; su estado técnico vive en `vars.hquery` y el contexto funcional bajo `sesion`, `app`, `data` y `estado`. El detalle de CTEs, joins, paginación, reservas concurrentes e índices está en [query-plan.md](database/query-plan.md).
 
+## Modo debug de datos
+
+`bancos_debug` controla el acceso de datos operativos. Con `false` (producción), los repositorios usan `global_prod.bancos_*` y `public.*`; con `true`, deben obtener los nombres exclusivamente mediante `AppBancos\Infrastructure\EsquemaBancos`, que resuelve ambos a `global_temp.*`. Así un repositorio no puede mezclar esquemas ni interpolar `public`/`global_prod` directamente. El bootstrap rechaza `bancos_debug = true` cuando `entorno = prod`. El Hub de identidad y permisos continúa en `global_prod.hub_*` en ambos modos: no es un dato operativo de BANCOS.
+
+La migración `014_bancos_preparar_debug_global_temp.sql` crea clones **vacíos** de las tablas bancarias y ERP requeridas, recrea las FK operativas y reemplaza los defaults de secuencias por secuencias de `global_temp`; por eso insertar datos de prueba no modifica filas ni avanza secuencias productivas. El perfil de conexión de debug debe recibir escritura sólo sobre `global_temp`; esa restricción de privilegios la administra el DBA.
+
 El flujo de trabajo mensual conserva en las tablas propias las asociaciones, reservas y borradores cuando pasa a `PARA_CERRAR`; no produce todavía efectos ERP. Sólo un caso de uso de cierre, autorizado por Hub, aplica el efecto definitivo. Volver a `ABIERTO` descarta esa preparación mediante una transacción y deja auditoría; `CERRADO` es terminal. La consulta y exportación del histórico no son responsabilidad de esta aplicación.

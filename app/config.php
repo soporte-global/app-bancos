@@ -24,6 +24,9 @@ return [
     'ftweb_user' => 'postgres',
     'ftweb_password' => '',
     'ftweb_persistent' => true,
+    // En true, los datos operativos de BANCOS y las referencias ERP se leen y
+    // escriben exclusivamente en global_temp. Nunca habilitarlo en producción.
+    'bancos_debug' => false,
     'rrhh_database' => 'rrhh_new',
     'rrhh_user' => 'root',
     'rrhh_password' => '',

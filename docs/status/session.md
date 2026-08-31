@@ -21,3 +21,7 @@ Se resolvieron las ambigüedades funcionales principales: todos los usuarios aut
 ## Actualización post-migración - 2026-08-31
 
 Se informó completada la carga de datos legacy a `global_prod.bancos_*`, incluyendo las migraciones `007` a `013`. La continuación no es otra carga: se debe conciliar el corte, conservar respaldo recuperable, definir convivencia con un único escritor y adoptar primero lecturas con comparación en sombra. Las escrituras ERP permanecen fuera de alcance hasta configurar el permiso de cierre, cerrar el diseño contable y validar integración, idempotencia, concurrencia y rendimiento.
+
+## Modo debug de datos - 2026-08-31
+
+Se preparó el modo `bancos_debug`, desactivado por defecto. Al activarlo, los futuros repositorios BANCOS resolverán tanto tablas operativas como referencias ERP en `global_temp`; la identidad y permisos Hub permanecen en `global_prod`. La migración `014_bancos_preparar_debug_global_temp.sql` crea clones vacíos de las estructuras necesarias y secuencias independientes, sin copiar ni modificar datos productivos. Antes de usarlo falta ejecutar esa migración y configurar un usuario de depuración sin privilegios de escritura sobre `public` ni `global_prod`.

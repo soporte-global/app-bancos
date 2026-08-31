@@ -14,4 +14,6 @@ El plan de acceso para el modelo nuevo está en [query-plan.md](database/query-p
 
 La identidad y permisos nuevos deben consumir el Hub de `ftweb.global_prod`, en particular el catálogo y las concesiones `hub_*` y su vista de permisos efectivos. No se deben crear tablas de credenciales equivalentes a `login_users`.
 
+Para depurar sin escribir en producción existe la migración pendiente de ejecución [014_bancos_preparar_debug_global_temp.sql](../app/sql/migraciones/014_bancos_preparar_debug_global_temp.sql). Crea en `global_temp` estructuras vacías equivalentes a las tablas operativas BANCOS y sus dependencias ERP/legacy; también independiza las secuencias copiadas. Con `bancos_debug = true`, la aplicación debe usar `global_temp` para esos datos. El Hub no se replica: autenticación y permisos permanecen de sólo lectura en `global_prod`.
+
 El DDL heredado se ejecuta desde requests y no debe ser el diseño canónico. La migración debe partir del esquema productivo real, con integridad referencial, índices, unicidad, auditoría y migraciones reversibles cuando sea posible.

@@ -8,7 +8,7 @@ La validación adicional de datos productivos, también en modo de solo lectura,
 
 El mapa de las entidades ERP que intervienen en los procesos bancarios está en [erp-structure.md](database/erp-structure.md). Documenta las claves y tipos reales que deben respetar las futuras referencias desde `global_prod.bancos_*`.
 
-La propuesta para reemplazarlas está en [proposed-target-model.md](database/proposed-target-model.md). Las tablas nuevas se crearán en el esquema `global_prod`, conservarán el prefijo `bancos_` y usarán nombres en español. Es un diseño objetivo, no una migración ejecutable ni una autorización para modificar producción.
+La propuesta que definió el reemplazo está en [proposed-target-model.md](database/proposed-target-model.md). Las tablas canónicas ya están en `global_prod`, conservan el prefijo `bancos_` y usan nombres en español. La carga fue finalizada; resta la conciliación y el corte controlado descritos en [migration-strategy.md](migration-strategy.md).
 
 El plan de acceso para el modelo nuevo está en [query-plan.md](database/query-plan.md): define CTEs acotadas, joins por PK, paginación por cursor, reservas concurrentes y los índices que deben validarse con `EXPLAIN (ANALYZE, BUFFERS)`. La versión productiva relevada es PostgreSQL 9.6: las CTE se materializan y se usan para reducir conjuntos, no para encadenar tablas grandes.
 

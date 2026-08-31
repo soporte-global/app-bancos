@@ -102,14 +102,9 @@ Al pasar a `PARA_CERRAR`, el módulo sólo persiste asociaciones, reservas y bor
 
 Las reglas de `bancos_mes_guardado_listareglas` cuyo sentido es nulo se migran con `sentido = 'A'`. No se duplican en `C` y `D`: el legado no expresa esa distinción y los subtipos no permiten inferirla de manera determinista.
 
-## Plan de validación antes de migrar
+## Validación y corte posteriores a la carga
 
-1. Acordar con negocio los estados, transiciones, definición de período, regla de reimportación y política de cierre/reversas.
-2. Medir en producción, en modo lectura, nulos, duplicados, huérfanos y conflictos de exclusividad para cada clave propuesta.
-3. Confirmar que el consumidor legado `codigos.sql` de `bancos_extracto_config` sigue activo y validar las diferencias reales entre configuraciones de BANCOS y BANCOS_MENSUAL.
-4. Definir la frontera transaccional con ERP y la clave de idempotencia de cada operación contable.
-5. Preparar migraciones versionadas, reversibles donde sea posible, y un proceso de backfill que conserve una tabla de correspondencias de IDs.
-6. Ejecutar primero una migración de copia y validación; no cambiar lecturas/escrituras legacy hasta conciliar conteos y casos caracterizados.
+La carga está finalizada, pero este diseño no considera concluida la adopción hasta que se concilien los resultados. Se debe emitir un informe reproducible que compare conteos, importes, estados, asociaciones, reservas, borradores, mensajes, claves y trazabilidad de origen/destino; las omisiones y excepciones deben coincidir con las reglas documentadas. Sólo entonces se cambian las lecturas de forma gradual y con comparación en sombra. El detalle del orden de corte, respaldo y propiedad de escritura está en [migration-strategy.md](../migration-strategy.md).
 
 ## Decisiones resueltas con evidencia productiva
 

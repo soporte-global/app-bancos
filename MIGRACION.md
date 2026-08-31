@@ -1,6 +1,6 @@
 # Estado de migración
 
-Actualizado: 2026-08-25.
+Actualizado: 2026-08-31.
 
 Este archivo lleva la cuenta del trabajo sobre `nueva_app`. La primera aplicación
 real construida con este core sigue siendo el objetivo; la replicación hacia las
@@ -66,6 +66,10 @@ demás aplicaciones comenzará después de validarla.
 - renombre de columnas de marca temporal y usuario en `global_prod.bancos_*` mediante
   `app/sql/migraciones/006_bancos_campos_timestamps_zetti.sql`, con rollback en
   `app/sql/migraciones/006_bancos_campos_timestamps_zetti_rollback.sql`;
+- carga completa de datos BANCOS/BANCOS_MENSUAL a las tablas canónicas
+  `global_prod.bancos_*`, mediante las migraciones `007` a `013`: trazabilidad,
+  configuración, períodos, movimientos, historial, asociaciones, reservas,
+  borradores, mensajes y asientos compartidos.
 
 ## Pendiente inmediato
 
@@ -74,8 +78,8 @@ demás aplicaciones comenzará después de validarla.
 - adaptar gradualmente las clases HClasses con consumidores reales para que deleguen en el Core;
 - retirar del template las clases sin consumidores confirmados después de revisar cada aplicación;
 - desplegar la migración de permisos Zweb por empleado después de su preflight de datos;
-- ya aplicadas `app/sql/migraciones/004_bancos_tablas_auxiliares.sql` y
-  `app/sql/migraciones/005_bancos_campos_zetti.sql` y `app/sql/migraciones/006_bancos_campos_timestamps_zetti.sql` en `ftweb` (`localhost:5500`), con conexión `postgres`; rollback disponible en `004_bancos_tablas_auxiliares_rollback.sql`, `005_bancos_campos_zetti_rollback.sql` y `006_bancos_campos_timestamps_zetti_rollback.sql`;
+- emitir la conciliación formal de la carga `007` a `013`, verificar un respaldo recuperable y acordar el corte controlado de consumidores; los rollbacks se reservan para una reversión explícita;
+- adoptar inicialmente sólo lecturas sobre el destino, con comparación en sombra frente al legado; mantener deshabilitadas las escrituras ERP y los automatismos hasta validar contratos, permisos, idempotencia y concurrencia;
 - construir la primera pantalla funcional de consulta RRHH con las APIs de liquidaciones;
 - crear la nueva versión de hQuery y revisar allí el contrato de sus funciones, sin mezclarlo con esta migración.
 

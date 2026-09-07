@@ -24,4 +24,8 @@ Se informó completada la carga de datos legacy a `global_prod.bancos_*`, incluy
 
 ## Modo debug de datos - 2026-08-31
 
-Se preparó el modo `bancos_debug`, desactivado por defecto. Al activarlo, los futuros repositorios BANCOS resolverán tanto tablas operativas como referencias ERP en `global_temp`; la identidad y permisos Hub permanecen en `global_prod`. La migración `014_bancos_preparar_debug_global_temp.sql` crea clones vacíos de las estructuras necesarias y secuencias independientes, sin copiar ni modificar datos productivos. Antes de usarlo falta ejecutar esa migración y configurar un usuario de depuración sin privilegios de escritura sobre `public` ni `global_prod`.
+Se preparó el modo `bancos_debug`, desactivado por defecto. Al activarlo, los futuros repositorios BANCOS leerán el ERP en `public`, pero dirigirán mutaciones ERP y tablas operativas a `global_temp`; la identidad y permisos Hub permanecen en `global_prod`. El 2026-09-04 se ejecutó `014_bancos_preparar_debug_global_temp.sql`, creando las estructuras vacías necesarias; se verificaron 49 tablas `bancos_*` y cinco dependencias ERP antes faltantes. Sólo queda configurar un usuario de depuración sin privilegios de escritura sobre `public` ni `global_prod`.
+
+## Validación del sandbox - 2026-09-07
+
+La auditoría de defaults se completó en una transacción de solo lectura: no hay secuencias de `global_temp.bancos_*` que apunten a `public` o `global_prod`. El próximo incremento debe crear fixtures versionados y mínimos en `global_temp` e implementar la primera consulta paginada de extractos usando `EsquemaBancos`; las lecturas ERP seguirán en `public`. Sólo queda como prerrequisito de infraestructura el usuario de depuración con permisos de escritura exclusivos en `global_temp`.

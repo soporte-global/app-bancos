@@ -11,6 +11,7 @@ DECLARE
     columna record;
     secuencia text;
     definicion record;
+    creada boolean;
 BEGIN
     -- Se clonan todas las tablas operativas BANCOS, incluso las de trazabilidad
     -- que ya existan al ejecutar esta migración. Las dependencias directas del
@@ -37,6 +38,7 @@ BEGIN
               OR c.relname LIKE 'bancos\_%' ESCAPE E'\\'
           )
     LOOP
+        creada := false;
         IF to_regclass(format('global_temp.%I', origen.tabla)) IS NULL THEN
             EXECUTE format(
                 'CREATE TABLE global_temp.%I (LIKE %I.%I INCLUDING ALL)',
@@ -44,11 +46,13 @@ BEGIN
                 origen.esquema,
                 origen.tabla
             );
+            creada := true;
         END IF;
 
         -- LIKE copia el DEFAULT de los bigserial. Se lo reemplaza siempre por
         -- una secuencia de global_temp para que un INSERT de debug no avance
-        -- una secuencia productiva.
+        -- una secuencia productiva. Las tablas existentes no se alteran.
+        IF creada THEN
         FOR columna IN
             SELECT a.attname,
                    pg_get_expr(d.adbin, d.adrelid) AS expresion
@@ -80,6 +84,7 @@ BEGIN
                 );
             END IF;
         END LOOP;
+        END IF;
     END LOOP;
 
     -- LIKE no traslada FKs. Se recrean sólo para las tablas operativas BANCOS;

@@ -17,12 +17,14 @@ function comprobarEsquema($condicion, $mensaje)
 $debug = EsquemaBancos::desdeConfiguracion(['bancos_debug' => true]);
 comprobarEsquema($debug->esDebug(), 'El perfil debug no quedó habilitado.');
 comprobarEsquema($debug->tablaBancos('bancos_movimiento_extracto') === 'global_temp.bancos_movimiento_extracto', 'Debug no usa global_temp para BANCOS.');
-comprobarEsquema($debug->tablaZetti('valor') === 'global_temp.valor', 'Debug no usa global_temp para Zetti.');
+comprobarEsquema($debug->tablaLecturaErp('valor') === 'public.valor', 'Debug debe leer el ERP desde public.');
+comprobarEsquema($debug->tablaEscrituraErp('valor') === 'global_temp.valor', 'Debug no redirige las escrituras ERP a global_temp.');
 
 $produccion = EsquemaBancos::desdeConfiguracion(['bancos_debug' => false]);
 comprobarEsquema(!$produccion->esDebug(), 'El perfil de producción quedó en debug.');
 comprobarEsquema($produccion->tablaBancos('bancos_movimiento_extracto') === 'global_prod.bancos_movimiento_extracto', 'Producción no usa global_prod para BANCOS.');
-comprobarEsquema($produccion->tablaZetti('valor') === 'public.valor', 'Producción no usa public para Zetti.');
+comprobarEsquema($produccion->tablaLecturaErp('valor') === 'public.valor', 'Producción no lee el ERP desde public.');
+comprobarEsquema($produccion->tablaEscrituraErp('valor') === 'public.valor', 'Producción no escribe el ERP en public.');
 
 try {
     $debug->tablaBancos('valor');
@@ -31,7 +33,7 @@ try {
 }
 
 try {
-    $debug->tablaZetti('valor; drop table public.valor');
+    $debug->tablaEscrituraErp('valor; drop table public.valor');
     throw new RuntimeException('Se aceptó un identificador SQL inválido.');
 } catch (InvalidArgumentException $error) {
 }

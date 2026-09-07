@@ -4,19 +4,21 @@ namespace AppBancos\Infrastructure;
 use InvalidArgumentException;
 
 /**
- * Centraliza la elección de esquemas de BANCOS. Los repositorios nunca deben
- * interpolar `public` o `global_prod` por su cuenta.
+ * Centraliza la elección de esquemas de BANCOS. Las lecturas ERP siempre se
+ * hacen en public; en debug, sólo las mutaciones ERP se redirigen a global_temp.
  */
 final class EsquemaBancos
 {
     private $operativo;
-    private $zetti;
+    private $lecturaErp;
+    private $escrituraErp;
     private $debug;
 
-    private function __construct($operativo, $zetti, $debug)
+    private function __construct($operativo, $lecturaErp, $escrituraErp, $debug)
     {
         $this->operativo = $operativo;
-        $this->zetti = $zetti;
+        $this->lecturaErp = $lecturaErp;
+        $this->escrituraErp = $escrituraErp;
         $this->debug = $debug;
     }
 
@@ -25,6 +27,7 @@ final class EsquemaBancos
         $debug = (bool) ($configuracion['bancos_debug'] ?? false);
         return new self(
             $debug ? 'global_temp' : 'global_prod',
+            'public',
             $debug ? 'global_temp' : 'public',
             $debug
         );
@@ -44,9 +47,14 @@ final class EsquemaBancos
         return $this->operativo . '.' . $tabla;
     }
 
-    public function tablaZetti($tabla)
+    public function tablaLecturaErp($tabla)
     {
-        return $this->zetti . '.' . $this->validarTabla($tabla);
+        return $this->lecturaErp . '.' . $this->validarTabla($tabla);
+    }
+
+    public function tablaEscrituraErp($tabla)
+    {
+        return $this->escrituraErp . '.' . $this->validarTabla($tabla);
     }
 
     private function validarTabla($tabla)

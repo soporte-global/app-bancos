@@ -9,7 +9,7 @@ Este proyecto quedó inicializado a partir de la estructura de `nueva_app` para 
 - Descubrimiento, levantamiento y migración de datos a las tablas canónicas completados.
 - Estructura de `nueva_app` copiada de forma incremental (sin sobrescritura).
 - Arquitectura objetivo definida como monolito modular para extractos mensuales y conciliación de cheques; el plan de consultas e índices está en `docs/database/query-plan.md`.
-- Base de modo debug incluida: `bancos_debug` dirige datos BANCOS/ERP a `global_temp` y deja el Hub de identidad en sólo lectura.
+- Base de modo debug incluida: `bancos_debug` mantiene lecturas ERP en `public` y dirige mutaciones BANCOS/ERP a `global_temp`; el Hub de identidad queda en sólo lectura.
 - Siguiente fase: conciliación post-migración, corte controlado de lecturas y construcción del flujo funcional.
 
 El plan de continuidad, los controles de corte y los criterios de rollback están en

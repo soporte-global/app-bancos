@@ -134,7 +134,8 @@ define('PASS', $app_config['ftweb_password']);
 define('FTWEB_PERSISTENT', (bool) ($app_config['ftweb_persistent'] ?? true));
 define('BANCOS_DEBUG', (bool) ($app_config['bancos_debug'] ?? false));
 define('BANCOS_ESQUEMA_OPERATIVO', BANCOS_DEBUG ? 'global_temp' : 'global_prod');
-define('BANCOS_ESQUEMA_ZETTI', BANCOS_DEBUG ? 'global_temp' : 'public');
+define('BANCOS_ESQUEMA_LECTURA_ERP', 'public');
+define('BANCOS_ESQUEMA_ESCRITURA_ERP', BANCOS_DEBUG ? 'global_temp' : 'public');
 if (BANCOS_DEBUG && CONEXION === 'prod') {
     throw new RuntimeException('bancos_debug no puede habilitarse en el entorno prod.');
 }

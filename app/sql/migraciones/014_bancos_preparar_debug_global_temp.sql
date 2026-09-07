@@ -93,15 +93,25 @@ BEGIN
     FOR definicion IN
         SELECT con.conname,
                rel.relname AS tabla,
-               regexp_replace(
-                   replace(pg_get_constraintdef(con.oid), 'REFERENCES public.', 'REFERENCES global_temp.'),
-                   E'REFERENCES global_prod\\.(bancos_[a-z0-9_]+)',
-                   E'REFERENCES global_temp.\\1',
-                   'g'
-               ) AS sql
+               CASE
+                   WHEN refns.nspname = 'public' THEN replace(
+                       pg_get_constraintdef(con.oid),
+                       'REFERENCES ' || quote_ident(ref.relname),
+                       'REFERENCES global_temp.' || quote_ident(ref.relname)
+                   )
+                   WHEN refns.nspname = 'global_prod'
+                    AND ref.relname LIKE 'bancos\_%' ESCAPE E'\\' THEN replace(
+                       pg_get_constraintdef(con.oid),
+                       'REFERENCES ' || quote_ident(ref.relname),
+                       'REFERENCES global_temp.' || quote_ident(ref.relname)
+                   )
+                   ELSE pg_get_constraintdef(con.oid)
+               END AS sql
         FROM pg_constraint con
         JOIN pg_class rel ON rel.oid = con.conrelid
         JOIN pg_namespace ns ON ns.oid = rel.relnamespace
+        JOIN pg_class ref ON ref.oid = con.confrelid
+        JOIN pg_namespace refns ON refns.oid = ref.relnamespace
         WHERE con.contype = 'f'
           AND ns.nspname = 'global_prod'
           AND rel.relname LIKE 'bancos\_%' ESCAPE E'\\'

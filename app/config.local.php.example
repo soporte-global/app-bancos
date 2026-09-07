@@ -6,6 +6,8 @@ return [
     'ftweb_persistent' => true,
     // true aísla escrituras BANCOS/ERP en global_temp; las lecturas ERP siguen en public.
     'bancos_debug' => true,
+    // Firma el cursor paginado; usar un secreto aleatorio propio de esta instalación.
+    'bandeja_cursor_secret' => '',
     'rrhh_password' => '',
     'zetti_token_url' => '',
     'zetti_token_user' => '',

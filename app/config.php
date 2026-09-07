@@ -27,6 +27,8 @@ return [
     // En true, BANCOS escribe en global_temp; las consultas ERP siguen en public.
     // Nunca habilitarlo en producción.
     'bancos_debug' => false,
+    // Se recomienda declararlo sólo en config.local.php para firmar cursores HTTP.
+    'bandeja_cursor_secret' => '',
     'rrhh_database' => 'rrhh_new',
     'rrhh_user' => 'root',
     'rrhh_password' => '',

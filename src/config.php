@@ -136,6 +136,11 @@ define('BANCOS_DEBUG', (bool) ($app_config['bancos_debug'] ?? false));
 define('BANCOS_ESQUEMA_OPERATIVO', BANCOS_DEBUG ? 'global_temp' : 'global_prod');
 define('BANCOS_ESQUEMA_LECTURA_ERP', 'public');
 define('BANCOS_ESQUEMA_ESCRITURA_ERP', BANCOS_DEBUG ? 'global_temp' : 'public');
+$bandeja_cursor_secret = (string) ($app_config['bandeja_cursor_secret'] ?? '');
+if ($bandeja_cursor_secret === '') {
+    $bandeja_cursor_secret = hash('sha256', 'bancos-bandeja|' . PASS . '|' . SESSION_NAME);
+}
+define('BANCOS_BANDEJA_CURSOR_SECRET', $bandeja_cursor_secret);
 if (BANCOS_DEBUG && CONEXION === 'prod') {
     throw new RuntimeException('bancos_debug no puede habilitarse en el entorno prod.');
 }

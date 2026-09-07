@@ -73,8 +73,11 @@ demás aplicaciones comenzará después de validarla.
 - selector de esquema BANCOS y migración `014` ejecutada el 2026-09-04 para
   depurar contra `global_temp`, con 49 tablas `bancos_*` y cinco dependencias
   ERP verificadas; la auditoría del 2026-09-07 confirmó que sus secuencias no
-  apuntan a producción. Falta el usuario restringido de depuración y los
-  fixtures versionados para iniciar la primera consulta paginada.
+  apuntan a producción. Falta el usuario restringido de depuración para
+  completar el aislamiento operativo.
+- fixtures `015` aplicados en `global_temp` y repositorio de bandeja mensual
+  paginada validado con dos páginas consecutivas; queda exponer la lectura y
+  compararla en sombra con el legado.
 
 ## Pendiente inmediato
 

@@ -1,3 +1,24 @@
+.afterheader.bandeja-page {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    background: #eef3f8;
+}
+
+html.bandeja-scroll {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+body.bandeja-scroll {
+    height: auto;
+    min-height: 100%;
+    width: 100%;
+    overflow: visible;
+}
+
 .bandeja-mensual {
     --bandeja-border: #c5d2e0;
     --bandeja-muted: #58677a;
@@ -8,6 +29,11 @@
     color: #172033;
     background: #eef3f8;
     padding: clamp(16px, 3vw, 32px);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.bandeja-mensual code {
+    font-family: "Roboto Mono", Consolas, monospace;
 }
 
 .bandeja-mensual *,
@@ -42,7 +68,7 @@
 .bandeja-contexto {
     position: sticky;
     z-index: 20;
-    top: 8px;
+    top: 98px;
     display: flex;
     gap: 16px;
     align-items: center;
@@ -149,6 +175,10 @@
 }
 
 .bandeja-filtros-lista[hidden] {
+    display: none;
+}
+
+.bandeja-contexto [hidden] {
     display: none;
 }
 
@@ -365,11 +395,23 @@
 
 .bandeja-tabla {
     width: 100%;
-    min-width: 1080px;
+    min-width: 1280px;
     border-collapse: collapse;
+    table-layout: fixed;
     color: #172033;
     background: #ffffff;
 }
+
+.bandeja-col-fecha { width: 7.5%; }
+.bandeja-col-referencia { width: 6.5%; }
+.bandeja-col-descripcion { width: 20%; }
+.bandeja-col-credito { width: 9.5%; }
+.bandeja-col-debito { width: 8.5%; }
+.bandeja-col-estado { width: 9.5%; }
+.bandeja-col-asociacion { width: 13.5%; }
+.bandeja-col-borrador { width: 8%; }
+.bandeja-col-mensaje { width: 8%; }
+.bandeja-col-detalle { width: 9%; }
 
 .bandeja-tabla th {
     background: #0b3d75;
@@ -385,6 +427,20 @@
     padding: 10px 12px;
     vertical-align: top;
     line-height: 1.4;
+}
+
+.bandeja-tabla th:first-child,
+.bandeja-tabla td:first-child,
+.bandeja-tabla th:nth-child(4),
+.bandeja-tabla td:nth-child(4),
+.bandeja-tabla th:nth-child(5),
+.bandeja-tabla td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.bandeja-tabla td:nth-child(3),
+.bandeja-tabla td:nth-child(7) {
+    overflow-wrap: anywhere;
 }
 
 .bandeja-tabla tbody tr:nth-child(even) {
@@ -429,7 +485,7 @@
 
 .bandeja-detalle-fondo {
     position: fixed;
-    z-index: 90;
+    z-index: 2000;
     inset: 0;
     background: rgba(15, 29, 45, 0.48);
 }
@@ -441,7 +497,7 @@
 
 .bandeja-detalle {
     position: fixed;
-    z-index: 100;
+    z-index: 2100;
     top: 0;
     right: 0;
     bottom: 0;
@@ -463,6 +519,10 @@
     padding: 16px 20px;
     border-bottom: 1px solid var(--bandeja-border);
     background: #ffffff;
+    width: auto;
+    height: auto;
+    border-left: 0;
+    box-shadow: none;
 }
 
 .bandeja-detalle-cabecera h2 {
@@ -494,6 +554,14 @@
     border: 1px solid var(--bandeja-border);
     border-radius: 10px;
     background: #ffffff;
+}
+
+.bandeja-detalle-resumen {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    box-shadow: none;
 }
 
 .bandeja-detalle-resumen h2 {
@@ -566,6 +634,7 @@
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
+    white-space: nowrap;
 }
 
 .estado-etiqueta--abierto {
@@ -655,7 +724,7 @@
     }
 
     .bandeja-contexto {
-        top: 4px;
+        top: 94px;
         margin-top: 16px;
         padding: 10px 12px;
     }
@@ -717,6 +786,7 @@
 
     .bandeja-tabla {
         min-width: 0;
+        table-layout: auto;
         background: transparent;
     }
 
@@ -751,6 +821,7 @@
         padding: 8px 0;
         border-bottom: 1px solid #dce5ef;
         text-align: left;
+        white-space: normal;
     }
 
     .bandeja-tabla td::before {

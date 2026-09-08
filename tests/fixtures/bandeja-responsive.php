@@ -36,13 +36,23 @@ $movimientoConSeguimiento['borrador_total_haber'] = '18.250,00';
 $movimientoConSeguimiento['ultimo_mensaje_tipo'] = 'OBSERVACION';
 $movimientoConSeguimiento['ultimo_mensaje_cuerpo'] = 'Pendiente de revisión documental por Tesorería.';
 
+$movimientosFixture = [$movimientoBase, $movimientoConSeguimiento];
+$cantidadFilasFixture = max(2, min(20, (int) ($_GET['fixture_filas'] ?? 2)));
+for ($indice = 3; $indice <= $cantidadFilasFixture; $indice++) {
+    $movimientoAdicional = $indice % 2 === 0 ? $movimientoConSeguimiento : $movimientoBase;
+    $movimientoAdicional['referencia'] = 'MOV-' . str_pad((string) $indice, 3, '0', STR_PAD_LEFT);
+    $movimientoAdicional['descripcion'] = 'Movimiento representativo para prueba visual de desplazamiento y densidad';
+    $movimientosFixture[] = $movimientoAdicional;
+}
+
 $estadoFixture = $_GET['fixture_estado'] ?? 'resultados';
+$limiteFixture = max(1, min(100, (int) ($_GET['limite'] ?? 25)));
 $bandejaFixture = (object) [
     'resultado' => (object) [
         'cuenta_bancaria_id' => 1042,
         'inicio_periodo' => '2026-07-01',
-        'limite' => 25,
-        'movimientos' => [$movimientoBase, $movimientoConSeguimiento],
+        'limite' => $limiteFixture,
+        'movimientos' => $movimientosFixture,
         'siguiente_cursor' => 'cursor-opaco-de-ejemplo',
     ],
 ];
@@ -71,14 +81,21 @@ $contextoApp = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Evidencia de bandeja responsive</title>
+    <link rel="stylesheet" href="../../_shared/css/paleta_colores.css">
+    <link rel="stylesheet" href="../../_shared/css/general.css">
+    <link rel="stylesheet" href="../../_shared/css/header.css">
     <link rel="stylesheet" href="../../app/css/shared.css">
     <script defer src="../../app/js/shared.js"></script>
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background: #eef3f8; }
         .afterheader { width: 100%; }
+        .fixture-menu { color: #1597e5; font-size: 28px; padding-left: 16px; }
+        .fixture-logo { color: #fff; font-family: Arial, sans-serif; font-size: 28px; padding-right: 20px; }
     </style>
 </head>
-<body>
+<body class="bandeja-fixture">
+<header class="top"><span class="fixture-menu">☰</span><span class="fixture-logo">NUEVA APP</span></header>
+<div class="espaciador"></div>
 <?php include __DIR__ . '/../../app/html/bandeja-mensual.php'; ?>
 </body>
 </html>

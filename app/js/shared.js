@@ -231,6 +231,10 @@
 
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
+        if (bandejas.length > 0) {
+            document.documentElement.classList.add('bandeja-scroll');
+            document.body.classList.add('bandeja-scroll');
+        }
         Array.prototype.forEach.call(bandejas, function (bandeja) {
             iniciarBarraContexto(bandeja);
             iniciarPaginacion(bandeja);

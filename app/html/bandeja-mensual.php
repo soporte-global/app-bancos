@@ -30,7 +30,7 @@ if (($bandeja->error ?? null) !== null) {
     $estadoContexto = 'espera';
 }
 ?>
-<main class="afterheader">
+<main class="afterheader bandeja-page">
 <div class="bandeja-mensual" data-bandeja>
     <div class="bandeja-shell">
         <h1>Bandeja mensual</h1>
@@ -120,6 +120,18 @@ if (($bandeja->error ?? null) !== null) {
             <p class="bandeja-resumen" id="bandeja-resultados-titulo"><?php echo count($resultado->movimientos); ?> movimientos en esta página.</p>
             <div class="bandeja-table-region" tabindex="0" role="region" aria-label="Movimientos de la bandeja">
             <table class="bandeja-tabla">
+            <colgroup>
+                <col class="bandeja-col-fecha">
+                <col class="bandeja-col-referencia">
+                <col class="bandeja-col-descripcion">
+                <col class="bandeja-col-credito">
+                <col class="bandeja-col-debito">
+                <col class="bandeja-col-estado">
+                <col class="bandeja-col-asociacion">
+                <col class="bandeja-col-borrador">
+                <col class="bandeja-col-mensaje">
+                <col class="bandeja-col-detalle">
+            </colgroup>
             <thead>
                 <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th><th>Crédito</th><th>Débito</th><th>Estado</th><th>Asociación</th><th>Borrador</th><th>Último mensaje</th><th>Detalle</th></tr>
             </thead>

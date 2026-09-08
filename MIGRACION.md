@@ -76,8 +76,10 @@ demás aplicaciones comenzará después de validarla.
   apuntan a producción. Falta el usuario restringido de depuración para
   completar el aislamiento operativo.
 - fixtures `015` aplicados en `global_temp` y repositorio de bandeja mensual
-  paginada validado con dos páginas consecutivas; queda exponer la lectura y
-  compararla en sombra con el legado.
+  paginada validado con dos páginas consecutivas.
+- lote sombra `016` aplicado en `global_temp` con 51 movimientos y 47
+  asociaciones de la importación canónica `35333`; la pantalla de lectura
+  ya está expuesta y queda contrastar su paridad con el legado.
 
 ## Pendiente inmediato
 

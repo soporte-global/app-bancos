@@ -7,9 +7,9 @@ Diseño vigente:
 - `nueva_app` queda definida como plantilla de referencia para identidad/permisos; SGUA se descarta.
 - hQuery queda definida como librería compartida de UI/infraestructura cliente (versión externa publicada).
 
-Avance funcional: `015_bancos_debug_fixtures.sql` cargó cinco movimientos de prueba en `global_temp` sin escribir datos productivos. `BandejaMensualRepository` y `ConsultarBandejaMensual` exponen la consulta keyset como pantalla interna `?pag=bandeja-mensual`, con límite de 1 a 100 y cursor firmado ligado a cuenta/período. La prueba de integración confirmó dos páginas consecutivas sobre ese fixture.
+Avance funcional: `015_bancos_debug_fixtures.sql` cargó cinco movimientos de prueba en `global_temp` sin escribir datos productivos. `016_bancos_debug_cargar_lote_sombra_2026_07.sql` agregó un lote real y acotado: 51 movimientos y 47 asociaciones de una cuenta/período ya migrados desde `global_prod`, sin DML sobre `public` ni `global_prod`. `BandejaMensualRepository` y `ConsultarBandejaMensual` exponen la consulta keyset como pantalla interna `?pag=bandeja-mensual`, con límite de 1 a 100 y cursor firmado ligado a cuenta/período.
 
-Próximo paso funcional: comparar esta bandeja en sombra con la consulta legacy sobre períodos representativos antes de adoptar consumidores.
+Próximo paso funcional: comparar este lote de sombra con la consulta legacy y luego repetir con períodos representativos antes de adoptar consumidores.
 
 La migración `014_bancos_preparar_debug_global_temp.sql` se ejecutó el 2026-09-04 en el ambiente de depuración: se verificó la presencia de 49 tablas `bancos_*`, las cinco dependencias ERP que faltaban y, el 2026-09-07, que no hay defaults de secuencias que apunten a `public` o `global_prod`. Falta configurar un usuario de base de datos sin permisos de escritura sobre esos esquemas. Activar `bancos_debug` sólo en `app/config.local.php`; desactivarlo es el cambio controlado que dirige los repositorios al esquema productivo después de validar el corte.
 

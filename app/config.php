@@ -1,7 +1,7 @@
 <?php
 return [
     'nombre' => 'NUEVA APP',
-    'carpeta' => 'nueva_app', // debe coincidir con el directorio publicado, no con el nombre del repositorio
+    'carpeta' => 'app-bancos', // debe coincidir con el directorio publicado, no con el nombre del repositorio
     'entorno' => 'prod', // tunel | testing | prod
     'id_aplicacion' => 0, // sin aplicación asignada: la plantilla abre sin login hasta definir un id
     'permisos_todas_las_apps' => false, // true publica el alcance completo, como necesitaría un hub

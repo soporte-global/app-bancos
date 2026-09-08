@@ -32,7 +32,11 @@ $comprobar(strpos($vista, 'data-reintentar-consulta') !== false, 'Falta la acci√
 $comprobar(strpos($vista, 'data-contenido-bandeja') !== false, 'Los estados deben permanecer dentro de la bandeja.');
 $comprobar(strpos($vista, 'estado-etiqueta--') !== false, 'El estado de cada movimiento debe tener etiqueta textual.');
 $comprobar(strpos($javascript, 'formulario.requestSubmit') !== false, 'Reintentar debe reutilizar la consulta preservada.');
-$comprobar(strpos($css, '.bandeja-cargando') !== false && strpos($css, 'position: fixed') === false, 'La carga no debe bloquear la pantalla completa.');
+$comprobar(
+    preg_match('/\.bandeja-cargando\s*\{([^}]*)\}/s', $css, $reglaCarga) === 1
+    && strpos($reglaCarga[1], 'position: fixed') === false,
+    'La carga no debe bloquear la pantalla completa.'
+);
 $comprobar(strpos($css, '@media (prefers-reduced-motion: reduce)') !== false, 'Las animaciones deben respetar movimiento reducido.');
 
 $paresAA = [

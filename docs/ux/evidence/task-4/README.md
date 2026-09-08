@@ -1,6 +1,6 @@
 # Evidencia — Tarea 4: estados visuales
 
-Fecha: 2026-09-08. Estado: validación técnica completa. Las correcciones transversales se revisarán al finalizar la secuencia, según indicación del usuario.
+Fecha: 2026-09-08. Estado: validación técnica completa y aprobación explícita del usuario recibida antes de iniciar la Tarea 5.
 
 ## Capturas
 

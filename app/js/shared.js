@@ -177,11 +177,64 @@
         }
     }
 
+    function iniciarDetalle(raiz) {
+        var panel = raiz.querySelector('[data-panel-detalle]');
+        var fondo = raiz.querySelector('[data-detalle-fondo]');
+        var cuerpo = panel && panel.querySelector('[data-detalle-cuerpo]');
+        var cerrar = panel && panel.querySelector('[data-cerrar-detalle]');
+        var disparador = null;
+        var posicionScroll = 0;
+
+        if (!panel || !fondo || !cuerpo || !cerrar) {
+            return;
+        }
+
+        function cerrarDetalle() {
+            panel.hidden = true;
+            fondo.hidden = true;
+            cuerpo.textContent = '';
+            if (disparador) {
+                try {
+                    disparador.focus({ preventScroll: true });
+                } catch (error) {
+                    disparador.focus();
+                }
+                window.scrollTo(0, posicionScroll);
+            }
+        }
+
+        raiz.addEventListener('click', function (evento) {
+            var boton = evento.target.closest('[data-abrir-detalle]');
+            var fila = boton && boton.closest('tr');
+            var plantilla = fila && fila.querySelector('[data-detalle-movimiento]');
+            if (!boton || !plantilla) {
+                return;
+            }
+
+            disparador = boton;
+            posicionScroll = window.scrollY;
+            cuerpo.textContent = '';
+            cuerpo.appendChild(plantilla.content.cloneNode(true));
+            fondo.hidden = false;
+            panel.hidden = false;
+            cerrar.focus();
+        });
+
+        cerrar.addEventListener('click', cerrarDetalle);
+        fondo.addEventListener('click', cerrarDetalle);
+        panel.addEventListener('keydown', function (evento) {
+            if (evento.key === 'Escape') {
+                cerrarDetalle();
+            }
+        });
+    }
+
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
         Array.prototype.forEach.call(bandejas, function (bandeja) {
             iniciarBarraContexto(bandeja);
             iniciarPaginacion(bandeja);
+            iniciarDetalle(bandeja);
         });
     }
 

@@ -12,7 +12,7 @@ $comprobar = static function ($condicion, $mensaje) {
 $comprobar(strpos($vista, '<style>') === false, 'La vista no debe contener estilos inline.');
 $comprobar(strpos($vista, 'style=') === false, 'La vista no debe contener atributos style.');
 $comprobar(strpos($vista, 'class="bandeja-table-region"') !== false, 'Falta la región responsive de resultados.');
-$comprobar(substr_count($vista, 'data-label=') === 9, 'Cada una de las nueve celdas debe tener etiqueta para el modo card.');
+$comprobar(substr_count($vista, 'data-label=') === 10, 'Cada una de las diez celdas debe tener etiqueta para el modo card.');
 $comprobar(strpos($css, '@media (max-width: 1100px)') !== false, 'Falta el breakpoint intermedio explícito.');
 $comprobar(strpos($css, '@media (max-width: 768px)') !== false, 'Falta el breakpoint móvil explícito.');
 $comprobar(strpos($css, '.bandeja-tabla td::before') !== false, 'Faltan etiquetas visibles en las cards móviles.');

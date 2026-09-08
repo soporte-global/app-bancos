@@ -121,7 +121,7 @@ if (($bandeja->error ?? null) !== null) {
             <div class="bandeja-table-region" tabindex="0" role="region" aria-label="Movimientos de la bandeja">
             <table class="bandeja-tabla">
             <thead>
-                <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th><th>Crédito</th><th>Débito</th><th>Estado</th><th>Asociación</th><th>Borrador</th><th>Último mensaje</th></tr>
+                <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th><th>Crédito</th><th>Débito</th><th>Estado</th><th>Asociación</th><th>Borrador</th><th>Último mensaje</th><th>Detalle</th></tr>
             </thead>
             <tbody>
             <?php foreach ($resultado->movimientos as $movimiento): ?>
@@ -147,23 +147,79 @@ if (($bandeja->error ?? null) !== null) {
                             echo '<span class="sin-dato">Sin asociación</span>';
                         }
                     ?></td>
-                    <td data-label="Borrador"><?php
+                    <td class="bandeja-resumen-celda" data-label="Borrador"><span class="bandeja-resumen-texto"><?php
                         if ($movimiento['borrador_id'] !== null) {
-                            echo 'Borrador #' . $escapar($movimiento['borrador_id']) . '<br>';
-                            echo $escapar($movimiento['borrador_fecha_contable']) . ' · ' . $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo') . '<br>';
-                            echo 'Debe: ' . $escapar($movimiento['borrador_total_debe']) . '<br>';
-                            echo 'Haber: ' . $escapar($movimiento['borrador_total_haber']);
+                            echo 'Borrador #' . $escapar($movimiento['borrador_id']);
+                            echo ' · ' . $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo');
                         } else {
                             echo '<span class="sin-dato">Sin borrador</span>';
                         }
-                    ?></td>
-                    <td class="mensaje" data-label="Último mensaje"><?php
+                    ?></span></td>
+                    <td class="mensaje bandeja-resumen-celda" data-label="Último mensaje"><span class="bandeja-resumen-texto"><?php
                         if ($movimiento['ultimo_mensaje_cuerpo'] !== null) {
-                            echo $escapar($movimiento['ultimo_mensaje_tipo']) . ': ' . $escapar($movimiento['ultimo_mensaje_cuerpo']);
+                            echo $escapar($movimiento['ultimo_mensaje_tipo']) . ' · ' . $escapar($movimiento['ultimo_mensaje_cuerpo']);
                         } else {
                             echo '<span class="sin-dato">Sin mensajes</span>';
                         }
-                    ?></td>
+                    ?></span></td>
+                    <td data-label="Detalle">
+                        <button class="bandeja-ver-detalle" type="button" data-abrir-detalle aria-label="Ver detalle de <?php echo $escapar($movimiento['referencia']); ?>">Ver detalle</button>
+                        <template data-detalle-movimiento>
+                            <article class="bandeja-detalle-contenido">
+                                <header class="bandeja-detalle-resumen">
+                                    <p class="bandeja-detalle-sobretitulo">Movimiento <?php echo $escapar($movimiento['referencia']); ?></p>
+                                    <h2><?php echo $escapar($movimiento['descripcion']); ?></h2>
+                                    <p><?php echo $escapar($movimiento['fecha_operacion']); ?> · Crédito <?php echo $escapar($movimiento['credito']); ?> · Débito <?php echo $escapar($movimiento['debito']); ?></p>
+                                    <span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span>
+                                </header>
+
+                                <section class="bandeja-detalle-seccion">
+                                    <h3>Asociación</h3>
+                                    <p><?php
+                                        if ($movimiento['valor_zetti_id'] !== null) {
+                                            echo 'Valor #' . $escapar($movimiento['valor_zetti_id']);
+                                        } elseif ($movimiento['asiento_zetti_id'] !== null) {
+                                            echo 'Asiento #' . $escapar($movimiento['asiento_zetti_id']);
+                                        } elseif ($movimiento['borrador_asiento_id'] !== null) {
+                                            echo 'Borrador de asiento #' . $escapar($movimiento['borrador_asiento_id']);
+                                        } else {
+                                            echo 'Sin asociación registrada';
+                                        }
+                                    ?></p>
+                                </section>
+
+                                <section class="bandeja-detalle-seccion">
+                                    <h3>Mensajes</h3>
+                                    <?php if ($movimiento['ultimo_mensaje_cuerpo'] !== null): ?>
+                                        <p><strong><?php echo $escapar($movimiento['ultimo_mensaje_tipo']); ?>:</strong> <?php echo $escapar($movimiento['ultimo_mensaje_cuerpo']); ?></p>
+                                    <?php else: ?>
+                                        <p class="sin-dato">Sin mensajes registrados.</p>
+                                    <?php endif; ?>
+                                </section>
+
+                                <section class="bandeja-detalle-seccion">
+                                    <h3>Borradores</h3>
+                                    <?php if ($movimiento['borrador_id'] !== null): ?>
+                                        <dl class="bandeja-detalle-datos">
+                                            <div><dt>Identificador</dt><dd>#<?php echo $escapar($movimiento['borrador_id']); ?></dd></div>
+                                            <div><dt>Fecha contable</dt><dd><?php echo $escapar($movimiento['borrador_fecha_contable']); ?></dd></div>
+                                            <div><dt>Modelo</dt><dd><?php echo $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo'); ?></dd></div>
+                                            <div><dt>Debe</dt><dd><?php echo $escapar($movimiento['borrador_total_debe']); ?></dd></div>
+                                            <div><dt>Haber</dt><dd><?php echo $escapar($movimiento['borrador_total_haber']); ?></dd></div>
+                                        </dl>
+                                    <?php else: ?>
+                                        <p class="sin-dato">Sin borradores registrados.</p>
+                                    <?php endif; ?>
+                                </section>
+
+                                <section class="bandeja-detalle-seccion">
+                                    <h3>Historial</h3>
+                                    <p>Estado actual: <strong><?php echo $escapar($estadoCodigo); ?></strong>.</p>
+                                    <p class="sin-dato">La consulta actual no incluye eventos históricos adicionales.</p>
+                                </section>
+                            </article>
+                        </template>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
@@ -187,6 +243,14 @@ if (($bandeja->error ?? null) !== null) {
                 </div>
             </nav>
         </section>
+        <div class="bandeja-detalle-fondo" data-detalle-fondo hidden></div>
+        <aside class="bandeja-detalle" role="dialog" aria-modal="true" aria-labelledby="bandeja-detalle-titulo" data-panel-detalle hidden>
+            <header class="bandeja-detalle-cabecera">
+                <h2 id="bandeja-detalle-titulo">Detalle del movimiento</h2>
+                <button type="button" aria-label="Cerrar detalle" data-cerrar-detalle>×</button>
+            </header>
+            <div data-detalle-cuerpo></div>
+        </aside>
         <?php endif; ?>
         <?php else: ?>
             <section class="bandeja-panel bandeja-estado bandeja-estado-inicial" data-contenido-bandeja>

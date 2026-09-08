@@ -88,7 +88,8 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 
 ## Entregas incrementales
 
-- **Tarea 1 — Layout responsive de la bandeja:** implementada y validada técnicamente el 2026-09-08. La vista usa estilos externos, breakpoints explícitos y filas convertibles a cards en móvil. La evidencia y el checklist están en [`docs/ux/evidence/task-1/`](evidence/task-1/README.md). Pendiente de aprobación explícita antes de iniciar la barra de contexto de la Tarea 2.
+- **Tarea 1 — Layout responsive de la bandeja:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La vista usa estilos externos, breakpoints explícitos y filas convertibles a cards en móvil. La evidencia y el checklist están en [`docs/ux/evidence/task-1/`](evidence/task-1/README.md).
+- **Tarea 2 — Barra de contexto cuenta/período:** implementada y validada técnicamente el 2026-09-08. La barra sticky muestra cuenta, período legible, carga y resumen de filtros, y se sincroniza localmente con el formulario sin estado global. La evidencia y el checklist están en [`docs/ux/evidence/task-2/`](evidence/task-2/README.md). Pendiente de aprobación explícita antes de iniciar la navegación y los indicadores de la Tarea 3.
 
 ## Decisiones explícitas
 

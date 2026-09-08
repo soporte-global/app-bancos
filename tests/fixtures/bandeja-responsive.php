@@ -56,6 +56,7 @@ $contextoApp = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Evidencia de bandeja responsive</title>
     <link rel="stylesheet" href="../../app/css/shared.css">
+    <script defer src="../../app/js/shared.js"></script>
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background: #eef3f8; }
         .afterheader { width: 100%; }

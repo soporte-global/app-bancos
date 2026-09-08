@@ -8,12 +8,47 @@ $escapar = static function ($valor) {
 $cuenta = $filtros->cuenta_bancaria_id ?? ($_GET['cuenta_bancaria_id'] ?? '');
 $periodo = $filtros->inicio_periodo ?? ($_GET['inicio_periodo'] ?? '');
 $limite = $filtros->limite ?? ($_GET['limite'] ?? 50);
+$meses = [
+    '01' => 'enero', '02' => 'febrero', '03' => 'marzo', '04' => 'abril',
+    '05' => 'mayo', '06' => 'junio', '07' => 'julio', '08' => 'agosto',
+    '09' => 'septiembre', '10' => 'octubre', '11' => 'noviembre', '12' => 'diciembre',
+];
+$periodoLegible = 'Sin seleccionar';
+if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', (string) $periodo, $partesPeriodo)) {
+    $periodoLegible = ($meses[$partesPeriodo[2]] ?? $partesPeriodo[2]) . ' de ' . $partesPeriodo[1];
+}
+$cantidadMovimientos = $resultado !== null ? count($resultado->movimientos) : null;
+if (($bandeja->error ?? null) !== null) {
+    $estadoCarga = 'No se pudo cargar la bandeja';
+} elseif ($cantidadMovimientos !== null) {
+    $estadoCarga = $cantidadMovimientos . ($cantidadMovimientos === 1 ? ' movimiento cargado' : ' movimientos cargados');
+} else {
+    $estadoCarga = 'Esperando consulta';
+}
 ?>
 <main class="afterheader">
-<div class="bandeja-mensual">
+<div class="bandeja-mensual" data-bandeja>
     <div class="bandeja-shell">
         <h1>Bandeja mensual</h1>
         <p class="bandeja-introduccion">Consulta de sólo lectura. En modo debug, los movimientos se leen desde <code>global_temp</code>.</p>
+
+        <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto>
+            <ol class="bandeja-contexto-miga">
+                <li class="bandeja-contexto-origen">Extractos</li>
+                <li>
+                    <span class="bandeja-contexto-etiqueta">Cuenta</span>
+                    <output data-contexto-cuenta><?php echo $cuenta !== '' ? $escapar($cuenta) : 'Sin seleccionar'; ?></output>
+                </li>
+                <li>
+                    <span class="bandeja-contexto-etiqueta">Período</span>
+                    <output data-contexto-periodo><?php echo $escapar($periodoLegible); ?></output>
+                </li>
+            </ol>
+            <div class="bandeja-contexto-meta">
+                <span class="bandeja-contexto-estado" aria-live="polite" data-contexto-estado><?php echo $escapar($estadoCarga); ?></span>
+                <span class="bandeja-contexto-filtros">Filtros activos: ninguno</span>
+            </div>
+        </nav>
 
         <section class="bandeja-panel" aria-label="Consulta de movimientos">
             <form class="bandeja-filtros" method="get" action="<?php echo $escapar(RUTA_WEB); ?>">

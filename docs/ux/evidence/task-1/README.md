@@ -1,6 +1,6 @@
 # Evidencia — Tarea 1: layout responsive de la bandeja
 
-Fecha: 2026-09-08. Estado: validación técnica completa; pendiente de aprobación explícita del usuario antes de iniciar la Tarea 2.
+Fecha: 2026-09-08. Estado: validación técnica completa y aprobación explícita del usuario recibida antes de iniciar la Tarea 2.
 
 ## Capturas
 
@@ -33,4 +33,4 @@ Playwright/Chromium
 390 px: filas en modo card, sin overflow horizontal del documento.
 ```
 
-Validación técnica firmada por Codex. La aceptación de producto queda pendiente de la revisión del usuario.
+Validación técnica firmada por Codex y aceptación de producto confirmada por el usuario.

@@ -97,6 +97,6 @@ $contextoApp = [
 <header class="top"><span class="fixture-menu">☰</span><span class="fixture-logo">NUEVA APP</span></header>
 <div class="espaciador"></div>
 <?php include __DIR__ . '/../../app/html/bandeja-mensual.php'; ?>
-<header class="footer irrelevante"></header>
+<header class="footer irrelevante" style="display: none;"></header>
 </body>
 </html>

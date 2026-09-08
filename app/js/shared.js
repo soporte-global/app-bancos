@@ -317,6 +317,8 @@
         footer.classList.add('bandeja-footer');
         document.body.classList.add('bandeja-con-footer');
         footer.appendChild(controles);
+        footer.removeAttribute('hidden');
+        footer.style.removeProperty('display');
     }
 
     function iniciar() {

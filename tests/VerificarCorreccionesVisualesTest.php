@@ -27,6 +27,7 @@ $comprobar(strpos($css, 'overscroll-behavior: contain') !== false, 'El panel no 
 $comprobar(strpos($vista, 'data-controles-bandeja') !== false, 'El formulario debe identificar el bloque movible al footer.');
 $comprobar(strpos($javascript, "document.querySelector('header.footer')") !== false, 'Debe reutilizarse el footer de la estructura.');
 $comprobar(strpos($javascript, 'footer.appendChild(controles)') !== false, 'El bloque de consulta debe moverse al footer existente.');
+$comprobar(strpos($javascript, "footer.style.removeProperty('display')") !== false, 'La bandeja debe volver visible el footer ocultado por el script compartido.');
 $comprobar(strpos($css, 'header.footer.bandeja-footer') !== false, 'Faltan estilos acotados para el footer de bandeja.');
 $comprobar(strpos($css, '.bandeja-footer *') !== false && strpos($css, 'box-sizing: border-box') !== false, 'El footer debe contener sus controles sin overflow horizontal.');
 

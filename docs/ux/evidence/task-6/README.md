@@ -82,6 +82,7 @@ Modo oscuro: preferencia `oscuro` persistida en localStorage y recuperada al rec
 Paleta: 0 colores hex, rgb(), rgba(), hsl() o hsla() declarados en app/css/shared.css.
 Footer desktop: position fixed; borde inferior 900/900 px; paginación termina en 751 px y permanece visible.
 Footer mobile: position static; controles dentro del footer; sin overflow horizontal.
+Integración real: se elimina el `display: none` que aplica `_shared/js/footer.js` antes de mostrar los controles de la bandeja.
 Flujo Siguiente -> Anterior: Anterior queda habilitado, vuelve a la URL previa y restaura `Página 1 · movimientos 1–10`.
 Entrada directa con cursor: Anterior queda habilitado y vuelve a la primera página del mismo contexto.
 ```

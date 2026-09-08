@@ -21,10 +21,13 @@ $cantidadMovimientos = $resultado !== null ? count($resultado->movimientos) : nu
 $limiteEsActivo = (int) $limite !== 50;
 if (($bandeja->error ?? null) !== null) {
     $estadoCarga = 'No se pudo cargar la bandeja';
+    $estadoContexto = 'error';
 } elseif ($cantidadMovimientos !== null) {
     $estadoCarga = $cantidadMovimientos . ($cantidadMovimientos === 1 ? ' movimiento cargado' : ' movimientos cargados');
+    $estadoContexto = 'cargado';
 } else {
     $estadoCarga = 'Esperando consulta';
+    $estadoContexto = 'espera';
 }
 ?>
 <main class="afterheader">
@@ -33,7 +36,7 @@ if (($bandeja->error ?? null) !== null) {
         <h1>Bandeja mensual</h1>
         <p class="bandeja-introduccion">Consulta de sólo lectura. En modo debug, los movimientos se leen desde <code>global_temp</code>.</p>
 
-        <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto>
+        <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto data-estado="<?php echo $estadoContexto; ?>">
             <ol class="bandeja-contexto-miga">
                 <li class="bandeja-contexto-origen">Extractos</li>
                 <li>
@@ -80,9 +83,39 @@ if (($bandeja->error ?? null) !== null) {
             </form>
         </section>
 
+        <section class="bandeja-panel bandeja-cargando" aria-live="polite" data-estado-cargando hidden>
+            <div class="bandeja-estado-encabezado">
+                <span class="bandeja-spinner" aria-hidden="true"></span>
+                <div>
+                    <h2>Cargando movimientos</h2>
+                    <p>Conservamos la cuenta, el período y los filtros mientras se actualiza la bandeja.</p>
+                </div>
+            </div>
+            <div class="bandeja-skeleton" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+        </section>
+
         <?php if (($bandeja->error ?? null) !== null): ?>
-            <p role="alert"><?php echo $escapar($bandeja->error); ?></p>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-error" role="alert" data-contenido-bandeja>
+                <span class="bandeja-estado-icono" aria-hidden="true">!</span>
+                <div>
+                    <h2>No pudimos cargar los movimientos</h2>
+                    <p><?php echo $escapar($bandeja->error); ?></p>
+                    <p class="bandeja-estado-ayuda">La cuenta, el período y los filtros permanecen disponibles para volver a intentar.</p>
+                    <button type="button" data-reintentar-consulta>Reintentar consulta</button>
+                </div>
+            </section>
         <?php elseif ($resultado !== null): ?>
+        <?php if ($cantidadMovimientos === 0): ?>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-vacio" data-contenido-bandeja>
+                <span class="bandeja-estado-icono" aria-hidden="true">0</span>
+                <div>
+                    <h2>No hay movimientos para este contexto</h2>
+                    <p>No encontramos resultados para la cuenta <?php echo $escapar($cuenta); ?> en <?php echo $escapar($periodoLegible); ?>. Podés ajustar los datos de consulta sin perder el estado actual.</p>
+                </div>
+            </section>
+        <?php else: ?>
         <section class="bandeja-panel" aria-labelledby="bandeja-resultados-titulo">
             <p class="bandeja-resumen" id="bandeja-resultados-titulo"><?php echo count($resultado->movimientos); ?> movimientos en esta página.</p>
             <div class="bandeja-table-region" tabindex="0" role="region" aria-label="Movimientos de la bandeja">
@@ -98,7 +131,11 @@ if (($bandeja->error ?? null) !== null) {
                     <td data-label="Descripción"><?php echo $escapar($movimiento['descripcion']); ?></td>
                     <td class="importe" data-label="Crédito"><?php echo $escapar($movimiento['credito']); ?></td>
                     <td class="importe" data-label="Débito"><?php echo $escapar($movimiento['debito']); ?></td>
-                    <td class="estado" data-label="Estado"><?php echo $escapar($movimiento['estado_codigo'] ?? 'SIN_ESTADO'); ?></td>
+                    <?php
+                        $estadoCodigo = (string) ($movimiento['estado_codigo'] ?? 'SIN_ESTADO');
+                        $estadoClase = strtolower(str_replace('_', '-', $estadoCodigo));
+                    ?>
+                    <td data-label="Estado"><span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span></td>
                     <td data-label="Asociación"><?php
                         if ($movimiento['valor_zetti_id'] !== null) {
                             echo 'Valor #' . $escapar($movimiento['valor_zetti_id']);
@@ -150,6 +187,16 @@ if (($bandeja->error ?? null) !== null) {
                 </div>
             </nav>
         </section>
+        <?php endif; ?>
+        <?php else: ?>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-inicial" data-contenido-bandeja>
+                <span class="bandeja-estado-icono" aria-hidden="true">→</span>
+                <div>
+                    <h2>Elegí una cuenta y un período</h2>
+                    <p>Completá ambos datos para consultar los movimientos de la bandeja.</p>
+                    <button type="button" data-seleccionar-contexto>Seleccionar cuenta y período</button>
+                </div>
+            </section>
         <?php endif; ?>
     </div>
 </div>

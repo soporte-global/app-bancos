@@ -36,17 +36,33 @@ $movimientoConSeguimiento['borrador_total_haber'] = '18.250,00';
 $movimientoConSeguimiento['ultimo_mensaje_tipo'] = 'OBSERVACION';
 $movimientoConSeguimiento['ultimo_mensaje_cuerpo'] = 'Pendiente de revisión documental por Tesorería.';
 
+$estadoFixture = $_GET['fixture_estado'] ?? 'resultados';
+$bandejaFixture = (object) [
+    'resultado' => (object) [
+        'cuenta_bancaria_id' => 1042,
+        'inicio_periodo' => '2026-07-01',
+        'limite' => 25,
+        'movimientos' => [$movimientoBase, $movimientoConSeguimiento],
+        'siguiente_cursor' => 'cursor-opaco-de-ejemplo',
+    ],
+];
+
+if ($estadoFixture === 'sin-contexto') {
+    $bandejaFixture = (object) [];
+    unset($_GET['cuenta_bancaria_id'], $_GET['inicio_periodo']);
+} elseif ($estadoFixture === 'sin-movimientos') {
+    $bandejaFixture->resultado->movimientos = [];
+    $bandejaFixture->resultado->siguiente_cursor = null;
+} elseif ($estadoFixture === 'error') {
+    $bandejaFixture = (object) ['error' => 'La consulta no respondió dentro del tiempo esperado.'];
+    $_GET['cuenta_bancaria_id'] = 1042;
+    $_GET['inicio_periodo'] = '2026-07-01';
+    $_GET['limite'] = 25;
+}
+
 $contextoApp = [
     'data' => (object) [
-        'bandeja_mensual' => (object) [
-            'resultado' => (object) [
-                'cuenta_bancaria_id' => 1042,
-                'inicio_periodo' => '2026-07-01',
-                'limite' => 25,
-                'movimientos' => [$movimientoBase, $movimientoConSeguimiento],
-                'siguiente_cursor' => 'cursor-opaco-de-ejemplo',
-            ],
-        ],
+        'bandeja_mensual' => $bandejaFixture,
     ],
 ];
 ?><!doctype html>

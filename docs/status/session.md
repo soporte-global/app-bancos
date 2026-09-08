@@ -41,3 +41,17 @@ La bandeja ya se expone como página interna de sólo lectura en `?pag=bandeja-m
 ## Lote real de sombra - 2026-09-08
 
 Se aplicó `016_bancos_debug_cargar_lote_sombra_2026_07.sql`: toma una única importación ya migrada de `global_prod`, reconstruye sus relaciones internas en `global_temp` y conserva 51 movimientos y 47 asociaciones a asientos que siguen siendo referencias de sólo lectura a `public`. La precondición, los marcadores `SOMBRA-016`, la verificación de conteos y el rollback hacen repetible el lote. La pantalla devolvió tres movimientos y cursor siguiente para esa cuenta/período; lo que resta es la comparación de paridad contra el legado.
+
+## Comparación de sombra inicial - 2026-09-08
+
+`tests/CompararLoteSombra016Test.php` confirmó, en modo de sólo lectura, que no existen diferencias entre el lote legacy, `global_prod` y `global_temp`: 51 movimientos y 47 asociaciones de asiento. La prueba usa la traza de migración para no asociar por el `id_movimiento` legacy ambiguo. El siguiente lote debe cubrir eventos que éste no contiene: historial, mensajes, valores, borradores y excepciones.
+
+## Casos especiales en sandbox - 2026-09-08
+
+`017_bancos_debug_cargar_casos_sombra.sql` cargó dos movimientos seleccionados por su cobertura: dos mensajes, una asociación a valor, un borrador y dos líneas contables. El lote es idempotente y escribe sólo en `global_temp`; la comparación automática de esos casos y la selección de una excepción quedan como siguiente incremento.
+
+`CompararCasosSombra017Test.php` verificó esos campos frente a `global_prod` y confirmó la presencia de una excepción de asociación a asiento documentada por migración. La próxima mejora visible es exponer esos datos en la bandeja, todavía en modo de sólo lectura.
+
+## Diseño UX/UI - 2026-09-08
+
+Se relevaron las pantallas de usuario y administración de BANCOS_MENSUAL y las tres pestañas de BANCOS. El diseño resultante, documentado en `docs/ux/navigation-and-ui.md`, conserva el alcance operativo pero reemplaza paneles fijos, pestañas sin URL y acciones mezcladas con la grilla por rutas autorizables, contexto de cuenta/período, detalle progresivo y acciones futuras separadas por permiso/estado.

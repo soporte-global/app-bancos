@@ -79,7 +79,8 @@ demás aplicaciones comenzará después de validarla.
   paginada validado con dos páginas consecutivas.
 - lote sombra `016` aplicado en `global_temp` con 51 movimientos y 47
   asociaciones de la importación canónica `35333`; la pantalla de lectura
-  ya está expuesta y queda contrastar su paridad con el legado.
+  ya está expuesta y su paridad con el legado fue verificada mediante
+  `tests/CompararLoteSombra016Test.php`.
 
 ## Pendiente inmediato
 

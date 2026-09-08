@@ -30,6 +30,8 @@ Compartido: sesión, permisos, configuración, movimientos de extracto, reservas
 
 La interfaz consume contratos API y no conoce IDs heredados, SQL ni códigos ERP. `hQuery` queda limitado a funciones UI; su estado técnico vive en `vars.hquery` y el contexto funcional bajo `sesion`, `app`, `data` y `estado`. El detalle de CTEs, joins, paginación, reservas concurrentes e índices está en [query-plan.md](database/query-plan.md).
 
+La navegación y los límites de UX resultantes del relevamiento de BANCOS y BANCOS_MENSUAL están en [navigation-and-ui.md](ux/navigation-and-ui.md). Define una bandeja de lectura como destino inicial, rutas separadas para importación/configuración/conciliación y acciones futuras condicionadas por estado y permiso.
+
 ## Modo debug de datos
 
 `bancos_debug` controla el acceso de datos operativos. Las lecturas de referencia al ERP se hacen siempre en `public.*`, tanto en debug como en producción. Las mutaciones ERP se obtienen mediante `tablaEscrituraErp()`: van a `global_temp.*` en debug y a `public.*` en producción. Las tablas propias de BANCOS usan `global_temp.bancos_*` en debug y `global_prod.bancos_*` en producción. Los repositorios deben obtener las tres rutas desde `AppBancos\Infrastructure\EsquemaBancos`; no pueden interpolar esquemas. El bootstrap rechaza `bancos_debug = true` cuando `entorno = prod`. El Hub de identidad y permisos continúa en `global_prod.hub_*` en ambos modos.

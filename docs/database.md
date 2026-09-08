@@ -20,4 +20,6 @@ La migración [015_bancos_debug_fixtures.sql](../app/sql/migraciones/015_bancos_
 
 La migración [016_bancos_debug_cargar_lote_sombra_2026_07.sql](../app/sql/migraciones/016_bancos_debug_cargar_lote_sombra_2026_07.sql) se aplicó el 2026-09-08. Copia exclusivamente al sandbox la importación `35333` de `global_prod` (cuenta `103500000000515822`, período `2026-07-01`): 51 movimientos y 47 asociaciones a asientos ERP que se mantienen de sólo lectura en `public`. Reconstruye los IDs internos de `global_temp`, marca cada fila con `SOMBRA-016` y cuenta con [rollback](../app/sql/migraciones/016_bancos_debug_cargar_lote_sombra_2026_07_rollback.sql); no modifica `public` ni `global_prod`.
 
+La prueba [CompararLoteSombra016Test.php](../tests/CompararLoteSombra016Test.php) verificó el 2026-09-08 la paridad de ese lote en tres tramos: movimientos y asociaciones entre `global_temp` y `global_prod`, y movimientos/asociaciones de asiento entre `global_prod` y las tablas legacy. La prueba es de sólo lectura y usa la traza de migración para resolver el período y la clave canónica de cada fila.
+
 El DDL heredado se ejecuta desde requests y no debe ser el diseño canónico. La migración debe partir del esquema productivo real, con integridad referencial, índices, unicidad, auditoría y migraciones reversibles cuando sea posible.

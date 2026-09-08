@@ -37,6 +37,7 @@ $primeraPagina = $repositorio->listar($cuentaFixture, '2026-09-01', null, 2);
 comprobarBandeja(count($primeraPagina) === 2, 'La primera página no devolvió dos movimientos.');
 comprobarBandeja($primeraPagina[0]['referencia'] === 'DBG-001', 'El orden inicial no coincide con el fixture.');
 comprobarBandeja($primeraPagina[1]['referencia'] === 'DBG-002', 'La primera página no respeta el orden por fecha e ID.');
+comprobarBandeja($primeraPagina[0]['estado_codigo'] === 'ABIERTO', 'No se resolvió el estado legible de la importación.');
 
 $cursor = [
     'fecha' => $primeraPagina[1]['fecha_operacion'],

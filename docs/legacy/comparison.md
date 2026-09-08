@@ -38,3 +38,7 @@ No hay evidencia suficiente para decidir como comportamiento canónico:
 3. Obtener ejemplos reales de importación y de conciliaciones válidas/rechazadas para convertir las reglas inferidas en pruebas de caracterización.
 4. Definir claves, restricciones, pertenencia de configuración y migraciones reversibles para las tablas auxiliares.
 5. Documentar con el área contable los códigos del ERP y la política para conciliaciones forzadas, duplicados y reversas.
+
+## Navegación y UX
+
+El relevamiento visual posterior confirmó que los legados resuelven tareas distintas mediante panel fijo de filtros, tablas densas, pestañas y controles de acción mezclados con la consulta. Se conserva la necesidad de filtrar por cuenta/período/estado y de visualizar mensajes, asociaciones y borradores; no se adopta su implementación con estilos inline, alturas fijas, pestañas sin URL ni acciones críticas en la grilla. La propuesta de reorganización está en [navigation-and-ui.md](../ux/navigation-and-ui.md).

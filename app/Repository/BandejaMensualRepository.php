@@ -39,6 +39,9 @@ final class BandejaMensualRepository
         $historial = $this->esquemas->tablaBancos('bancos_historial_asignacion');
         $asociacion = $this->esquemas->tablaBancos('bancos_asociacion_movimiento');
         $mensaje = $this->esquemas->tablaBancos('bancos_mensaje_movimiento');
+        $estado = $this->esquemas->tablaBancos('bancos_estado');
+        $borrador = $this->esquemas->tablaBancos('bancos_borrador_asiento');
+        $lineaBorrador = $this->esquemas->tablaBancos('bancos_linea_borrador_asiento');
 
         $condicionCursor = '';
         if ($tieneCursor) {
@@ -51,13 +54,14 @@ final class BandejaMensualRepository
 
         $sql = sprintf(
             'WITH lote AS (
-                SELECT i.id
+                SELECT i.id, i.estado_id
                 FROM %1$s AS i
                 WHERE i.cuenta_bancaria_zetti_id = :cuenta_bancaria_id
                   AND i.inicio_periodo = :inicio_periodo
             ), pagina AS (
                 SELECT m.id, m.fecha_operacion, m.referencia, m.descripcion,
-                       m.credito, m.debito, m.subtipo_valor_zetti_id
+                       m.credito, m.debito, m.subtipo_valor_zetti_id,
+                       l.estado_id AS estado_importacion_id
                 FROM %2$s AS m
                 JOIN lote AS l ON l.id = m.importacion_id
                 WHERE 1 = 1
@@ -66,8 +70,16 @@ final class BandejaMensualRepository
                 LIMIT :limite
             )
             SELECT p.*, h.estado_id, h.usuario_hub_id,
+                   COALESCE(estado_historial.codigo, estado_importacion.codigo) AS estado_codigo,
                    a.valor_zetti_id, a.asiento_zetti_id, a.borrador_asiento_id,
-                   ultimo_mensaje.emitido_en AS ultimo_mensaje_en
+                   ultimo_mensaje.emitido_en AS ultimo_mensaje_en,
+                   ultimo_mensaje.tipo_mensaje AS ultimo_mensaje_tipo,
+                   ultimo_mensaje.cuerpo AS ultimo_mensaje_cuerpo,
+                   resumen_borrador.id AS borrador_id,
+                   resumen_borrador.fecha_contable AS borrador_fecha_contable,
+                   resumen_borrador.modelo AS borrador_modelo,
+                   resumen_borrador.total_debe AS borrador_total_debe,
+                   resumen_borrador.total_haber AS borrador_total_haber
             FROM pagina AS p
             LEFT JOIN LATERAL (
                 SELECT ha.estado_id, ha.usuario_hub_id
@@ -76,22 +88,38 @@ final class BandejaMensualRepository
                 ORDER BY ha.registrado_en DESC, ha.id DESC
                 LIMIT 1
             ) AS h ON true
+            LEFT JOIN %7$s AS estado_historial ON estado_historial.id = h.estado_id
+            LEFT JOIN %7$s AS estado_importacion ON estado_importacion.id = p.estado_importacion_id
             LEFT JOIN %4$s AS a
                    ON a.movimiento_id = p.id AND a.activo
             LEFT JOIN LATERAL (
-                SELECT mm.emitido_en
+                SELECT mm.emitido_en, mm.tipo_mensaje, mm.cuerpo
                 FROM %5$s AS mm
                 WHERE mm.movimiento_id = p.id
                 ORDER BY mm.emitido_en DESC, mm.id DESC
                 LIMIT 1
             ) AS ultimo_mensaje ON true
+            LEFT JOIN LATERAL (
+                SELECT b.id, b.fecha_contable, b.modelo,
+                       COALESCE(sum(l.debe), 0) AS total_debe,
+                       COALESCE(sum(l.haber), 0) AS total_haber
+                FROM %8$s AS b
+                LEFT JOIN %9$s AS l ON l.borrador_asiento_id = b.id
+                WHERE b.movimiento_id = p.id AND b.activo
+                GROUP BY b.id, b.fecha_contable, b.modelo
+                ORDER BY b.id DESC
+                LIMIT 1
+            ) AS resumen_borrador ON true
             ORDER BY p.fecha_operacion NULLS LAST, p.id',
             $importacion,
             $movimiento,
             $historial,
             $asociacion,
             $mensaje,
-            $condicionCursor
+            $condicionCursor,
+            $estado,
+            $borrador,
+            $lineaBorrador
         );
 
         $consulta = $this->pdo->prepare($sql);

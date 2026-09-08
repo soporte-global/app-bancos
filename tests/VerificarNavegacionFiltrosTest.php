@@ -16,6 +16,8 @@ $comprobar(strpos($vista, 'data-posicion-pagina') !== false, 'Falta la posición
 $comprobar(strpos($vista, 'data-limpiar-filtro="limite"') !== false, 'Falta la opción de limpiar el filtro soportado.');
 $comprobar(strpos($javascript, 'sessionStorage') !== false, 'Falta persistencia local de la posición anterior.');
 $comprobar(strpos($javascript, "parametros.has('cursor')") !== false, 'La paginación no reconoce el cursor actual.');
+$comprobar(strpos($javascript, "inicio.searchParams.delete('cursor')") !== false, 'Anterior debe tener un regreso seguro aunque falte historial local.');
+$comprobar(strpos($javascript, 'paginaAnteriorDesdeReferrer(parametros) || paginaInicialActual()') !== false, 'Anterior debe recuperar referrer o primera página.');
 $comprobar(strpos($javascript, "etiqueta.textContent = 'Límite: '") !== false, 'Falta la actualización local del badge de límite.');
 $comprobar(strpos($css, '.bandeja-paginacion-controles') !== false, 'Falta el layout de los controles de paginación.');
 $comprobar(strpos($javascript, 'atob(') === false, 'La UI no debe decodificar el cursor opaco.');

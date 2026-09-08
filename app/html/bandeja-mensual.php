@@ -65,7 +65,7 @@ if (($bandeja->error ?? null) !== null) {
             </div>
         </nav>
 
-        <section class="bandeja-panel" aria-label="Consulta de movimientos">
+        <section class="bandeja-panel" aria-label="Consulta de movimientos" data-controles-bandeja>
             <form class="bandeja-filtros" method="get" action="<?php echo $escapar(RUTA_WEB); ?>">
                 <input type="hidden" name="pag" value="bandeja-mensual">
                 <label>

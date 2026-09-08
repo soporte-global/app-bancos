@@ -35,6 +35,8 @@ Las capturas incrementales de las entregas anteriores permanecen en [`task-1`](.
 | Detalle cerrado | [lista desktop](despues-desktop-10-filas.png) | Lista y cursor visibles |
 | Detalle abierto | [captura](detalle-abierto.png) | Cuatro secciones, cierre visible, sin overflow |
 | Barra de contexto | [corrección](correccion-barra-estatica.png) | Posición estática; deja de cubrir movimientos al recorrer la lista |
+| Controles en footer | [desktop](correccion-footer-desktop.png) / [mobile](correccion-footer-mobile.png) | El formulario reutiliza el footer de la estructura; queda fijo y sin cubrir la paginación en desktop, y fluye al final sin overflow horizontal en mobile |
+| Anterior con cursor | [captura](correccion-anterior-habilitado.png) | Se habilita al entrar con cursor y recupera la URL anterior o, como respaldo, la primera página del mismo contexto |
 
 ## Mediciones automatizadas
 
@@ -65,6 +67,9 @@ Resultado corregido:
 - [Barra estática durante el scroll](correccion-barra-estatica.png)
 - [Detalle con documento bloqueado](correccion-detalle-scroll-bloqueado.png)
 - [Modo oscuro](correccion-modo-oscuro.png)
+- [Formulario en el footer — desktop](correccion-footer-desktop.png)
+- [Formulario en el footer — mobile](correccion-footer-mobile.png)
+- [Anterior habilitado al entrar con cursor](correccion-anterior-habilitado.png)
 
 Validaciones de navegador:
 
@@ -75,6 +80,10 @@ Detalle corto: scrollHeight/clientHeight 900/900; no genera desplazamiento vací
 Detalle cerrado: scrollY restaurado a 500.
 Modo oscuro: preferencia `oscuro` persistida en localStorage y recuperada al recargar.
 Paleta: 0 colores hex, rgb(), rgba(), hsl() o hsla() declarados en app/css/shared.css.
+Footer desktop: position fixed; borde inferior 900/900 px; paginación termina en 751 px y permanece visible.
+Footer mobile: position static; controles dentro del footer; sin overflow horizontal.
+Flujo Siguiente -> Anterior: Anterior queda habilitado, vuelve a la URL previa y restaura `Página 1 · movimientos 1–10`.
+Entrada directa con cursor: Anterior queda habilitado y vuelve a la primera página del mismo contexto.
 ```
 
 Esta revisión reemplaza las mediciones sticky registradas en la primera pasada de la Tarea 6.

@@ -158,6 +158,33 @@
         return url.pathname + url.search;
     }
 
+    function paginaInicialActual() {
+        var inicio = new URL(window.location.href);
+        inicio.searchParams.delete('cursor');
+        return rutaRelativa(inicio);
+    }
+
+    function paginaAnteriorDesdeReferrer(parametrosActuales) {
+        if (!document.referrer) {
+            return null;
+        }
+
+        try {
+            var referencia = new URL(document.referrer);
+            if (referencia.origin !== window.location.origin || referencia.pathname !== window.location.pathname) {
+                return null;
+            }
+
+            var parametrosReferencia = referencia.searchParams;
+            var mismoContexto = ['pag', 'cuenta_bancaria_id', 'inicio_periodo'].every(function (nombre) {
+                return parametrosReferencia.get(nombre) === parametrosActuales.get(nombre);
+            });
+            return mismoContexto ? rutaRelativa(referencia) : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
     function leerEstadoPagina(clave) {
         try {
             return JSON.parse(window.sessionStorage.getItem(clave));
@@ -192,15 +219,22 @@
 
         if (!parametros.has('cursor')) {
             estado = { pagina: 1, inicio: cantidad > 0 ? 1 : 0, anterior: null };
+        } else if (!estado) {
+            estado = {
+                pagina: null,
+                inicio: null,
+                anterior: paginaAnteriorDesdeReferrer(parametros) || paginaInicialActual()
+            };
         }
 
-        if (estado) {
+        if (estado && estado.pagina) {
             var fin = estado.inicio === 0 ? 0 : estado.inicio + cantidad - 1;
             posicion.textContent = 'Página ' + estado.pagina + ' · movimientos ' + estado.inicio + '–' + fin;
-            if (estado.anterior) {
-                anterior.href = estado.anterior;
-                anterior.removeAttribute('aria-disabled');
-            }
+        }
+
+        if (estado && estado.anterior) {
+            anterior.href = estado.anterior;
+            anterior.removeAttribute('aria-disabled');
         }
 
         if (siguiente) {
@@ -273,6 +307,18 @@
         });
     }
 
+    function iniciarFooter(raiz) {
+        var controles = raiz.querySelector('[data-controles-bandeja]');
+        var footer = document.querySelector('header.footer');
+        if (!controles || !footer) {
+            return;
+        }
+
+        footer.classList.add('bandeja-footer');
+        document.body.classList.add('bandeja-con-footer');
+        footer.appendChild(controles);
+    }
+
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
         if (bandejas.length > 0) {
@@ -284,6 +330,7 @@
             iniciarBarraContexto(bandeja);
             iniciarPaginacion(bandeja);
             iniciarDetalle(bandeja);
+            iniciarFooter(bandeja);
         });
     }
 

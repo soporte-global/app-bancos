@@ -97,7 +97,7 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 
 ### Correcciones posteriores a la secuencia
 
-La revisión visual final del usuario ajustó tres decisiones de presentación: la barra de contexto dejó de ser sticky; el panel de detalle bloquea el scroll del documento mientras permanece abierto y contiene su propio desplazamiento sólo cuando resulta necesario; y la bandeja incorpora modo oscuro persistente. Todos los colores de ambos temas referencian exclusivamente variables existentes en `_shared/css/paleta_colores.css`.
+La revisión visual final del usuario ajustó cinco decisiones: la barra de contexto dejó de ser sticky; el panel de detalle bloquea el scroll del documento mientras permanece abierto y contiene su propio desplazamiento sólo cuando resulta necesario; la bandeja incorpora modo oscuro persistente; el formulario de cuenta/período/límite reutiliza el footer existente de la estructura; y `Anterior` recupera la URL previa o la primera página del mismo contexto cuando se entra con un cursor sin historial de sesión. Todos los colores de ambos temas referencian exclusivamente variables existentes en `_shared/css/paleta_colores.css`.
 
 ## Decisiones explícitas
 

@@ -87,6 +87,80 @@ body.bandeja-tema-oscuro .bandeja-page {
     background: var(--gris-10);
 }
 
+body.bandeja-con-footer .bandeja-page {
+    padding-bottom: 92px;
+}
+
+header.footer.bandeja-footer {
+    --bandeja-border: var(--gris-80);
+    --bandeja-surface: var(--white);
+    --bandeja-texto: var(--color-principal-700);
+    --bandeja-campo: var(--white);
+    --bandeja-muted: var(--gris-40);
+    --bandeja-primario: var(--color-principal-desde);
+    --bandeja-primario-texto: var(--white);
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 82px;
+    padding: 8px clamp(16px, 3vw, 32px);
+    border: 0;
+    background: var(--bandeja-surface);
+    box-shadow: 0 -4px 16px var(--black-a15);
+    box-sizing: border-box;
+}
+
+.bandeja-footer *,
+.bandeja-footer *::before,
+.bandeja-footer *::after {
+    box-sizing: border-box;
+}
+
+body.bandeja-tema-oscuro header.footer.bandeja-footer {
+    --bandeja-border: var(--gris-40);
+    --bandeja-surface: var(--gris-20);
+    --bandeja-texto: var(--gris-90);
+    --bandeja-campo: var(--gris-10);
+    --bandeja-muted: var(--gris-70);
+}
+
+.bandeja-footer .bandeja-panel {
+    width: min(100%, 1600px);
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    background: var(--bandeja-surface);
+    box-shadow: none;
+}
+
+.bandeja-footer .bandeja-filtros {
+    width: 100%;
+}
+
+.bandeja-footer .bandeja-filtros label {
+    color: var(--bandeja-texto);
+}
+
+.bandeja-footer .bandeja-filtros > button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--bandeja-primario);
+    color: var(--bandeja-primario-texto);
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.bandeja-footer button:focus-visible {
+    outline: 3px solid var(--switch-gold-border);
+    outline-offset: 2px;
+}
+
 html.bandeja-detalle-activo,
 body.bandeja-detalle-activo {
     overflow: hidden;
@@ -777,6 +851,22 @@ body.bandeja-detalle-activo {
 }
 
 @media (max-width: 768px) {
+    body.bandeja-con-footer .bandeja-page {
+        padding-bottom: 0;
+    }
+
+    header.footer.bandeja-footer {
+        position: static;
+        min-height: 0;
+        padding: 16px;
+        box-shadow: 0 -2px 8px var(--black-a10);
+    }
+
+    .bandeja-footer .bandeja-panel {
+        padding: 16px;
+        border: 1px solid var(--bandeja-border);
+    }
+
     .bandeja-mensual {
         padding: 16px;
     }

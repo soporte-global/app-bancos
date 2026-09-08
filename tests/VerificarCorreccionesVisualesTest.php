@@ -24,9 +24,14 @@ $comprobar(strpos($javascript, "window.localStorage.setItem(clave, tema)") !== f
 $comprobar(strpos($javascript, "document.body.classList.add('bandeja-tema-oscuro')") !== false, 'El fondo de página debe acompañar el modo oscuro.');
 $comprobar(strpos($css, 'html.bandeja-detalle-activo') !== false, 'Falta el bloqueo de scroll al abrir detalle.');
 $comprobar(strpos($css, 'overscroll-behavior: contain') !== false, 'El panel no debe propagar su scroll a la página.');
+$comprobar(strpos($vista, 'data-controles-bandeja') !== false, 'El formulario debe identificar el bloque movible al footer.');
+$comprobar(strpos($javascript, "document.querySelector('header.footer')") !== false, 'Debe reutilizarse el footer de la estructura.');
+$comprobar(strpos($javascript, 'footer.appendChild(controles)') !== false, 'El bloque de consulta debe moverse al footer existente.');
+$comprobar(strpos($css, 'header.footer.bandeja-footer') !== false, 'Faltan estilos acotados para el footer de bandeja.');
+$comprobar(strpos($css, '.bandeja-footer *') !== false && strpos($css, 'box-sizing: border-box') !== false, 'El footer debe contener sus controles sin overflow horizontal.');
 
 preg_match('/\.bandeja-contexto\s*\{([^}]*)\}/s', $css, $contexto);
 $comprobar(isset($contexto[1]) && strpos($contexto[1], 'position: static') !== false, 'La barra de contexto debe ser estática.');
 $comprobar(!isset($contexto[1]) || strpos($contexto[1], 'position: sticky') === false, 'La barra no debe permanecer sticky.');
 
-echo "OK: scroll de detalle, barra estática, modo oscuro y paleta validados.\n";
+echo "OK: scroll de detalle, barra estática, modo oscuro, footer y paleta validados.\n";

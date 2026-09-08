@@ -15,6 +15,46 @@
         return meses[Number(coincidencia[2]) - 1] + ' de ' + coincidencia[1];
     }
 
+    function iniciarTema(raiz) {
+        var boton = raiz.querySelector('[data-alternar-tema]');
+        var clave = 'bandeja-tema';
+        var tema = 'claro';
+
+        if (!boton) {
+            return;
+        }
+
+        try {
+            tema = window.localStorage.getItem(clave) === 'oscuro' ? 'oscuro' : 'claro';
+        } catch (error) {
+            tema = 'claro';
+        }
+
+        function aplicarTema(nuevoTema) {
+            var oscuro = nuevoTema === 'oscuro';
+            tema = oscuro ? 'oscuro' : 'claro';
+            if (oscuro) {
+                raiz.setAttribute('data-tema', 'oscuro');
+                document.body.classList.add('bandeja-tema-oscuro');
+            } else {
+                raiz.removeAttribute('data-tema');
+                document.body.classList.remove('bandeja-tema-oscuro');
+            }
+            boton.setAttribute('aria-pressed', oscuro ? 'true' : 'false');
+            boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+        }
+
+        aplicarTema(tema);
+        boton.addEventListener('click', function () {
+            aplicarTema(tema === 'oscuro' ? 'claro' : 'oscuro');
+            try {
+                window.localStorage.setItem(clave, tema);
+            } catch (error) {
+                // La preferencia sigue activa durante la vista aunque no pueda persistirse.
+            }
+        });
+    }
+
     function iniciarBarraContexto(raiz) {
         var formulario = raiz.querySelector('.bandeja-filtros');
         var barra = raiz.querySelector('[data-bandeja-contexto]');
@@ -193,6 +233,8 @@
             panel.hidden = true;
             fondo.hidden = true;
             cuerpo.textContent = '';
+            document.documentElement.classList.remove('bandeja-detalle-activo');
+            document.body.classList.remove('bandeja-detalle-activo');
             if (disparador) {
                 try {
                     disparador.focus({ preventScroll: true });
@@ -217,6 +259,8 @@
             cuerpo.appendChild(plantilla.content.cloneNode(true));
             fondo.hidden = false;
             panel.hidden = false;
+            document.documentElement.classList.add('bandeja-detalle-activo');
+            document.body.classList.add('bandeja-detalle-activo');
             cerrar.focus();
         });
 
@@ -236,6 +280,7 @@
             document.body.classList.add('bandeja-scroll');
         }
         Array.prototype.forEach.call(bandejas, function (bandeja) {
+            iniciarTema(bandeja);
             iniciarBarraContexto(bandeja);
             iniciarPaginacion(bandeja);
             iniciarDetalle(bandeja);

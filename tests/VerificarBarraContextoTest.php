@@ -15,7 +15,11 @@ $comprobar(strpos($vista, 'data-contexto-cuenta') !== false, 'Falta la cuenta en
 $comprobar(strpos($vista, 'data-contexto-periodo') !== false, 'Falta el período en el contexto.');
 $comprobar(strpos($vista, 'data-contexto-estado') !== false, 'Falta el estado de carga localizado.');
 $comprobar(strpos($vista, 'Filtros activos: ninguno') !== false, 'Falta el resumen de filtros activos.');
-$comprobar(strpos($css, '.bandeja-contexto') !== false && strpos($css, 'position: sticky') !== false, 'La barra debe persistir durante el scroll.');
+$comprobar(
+    preg_match('/\.bandeja-contexto\s*\{([^}]*)\}/s', $css, $reglaContexto) === 1
+    && strpos($reglaContexto[1], 'position: static') !== false,
+    'La barra de contexto no debe ocultar información durante el scroll.'
+);
 $comprobar(strpos($javascript, "cuenta.addEventListener('input'") !== false, 'La cuenta no actualiza el contexto localmente.');
 $comprobar(strpos($javascript, "periodo.addEventListener('input'") !== false, 'El período no actualiza el contexto localmente.');
 $comprobar(!preg_match('/window\.location(?:\.(?:assign|replace|reload))?\s*[=(]/', $javascript), 'La actualización local no debe forzar navegación global.');

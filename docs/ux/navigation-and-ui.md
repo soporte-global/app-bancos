@@ -89,11 +89,15 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 ## Entregas incrementales
 
 - **Tarea 1 — Layout responsive de la bandeja:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La vista usa estilos externos, breakpoints explícitos y filas convertibles a cards en móvil. La evidencia y el checklist están en [`docs/ux/evidence/task-1/`](evidence/task-1/README.md).
-- **Tarea 2 — Barra de contexto cuenta/período:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La barra sticky muestra cuenta, período legible, carga y resumen de filtros, y se sincroniza localmente con el formulario sin estado global. La evidencia y el checklist están en [`docs/ux/evidence/task-2/`](evidence/task-2/README.md).
+- **Tarea 2 — Barra de contexto cuenta/período:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La barra muestra cuenta, período legible, carga y resumen de filtros, y se sincroniza localmente con el formulario sin estado global. Tras la revisión final se eliminó su posición sticky para no ocultar filas durante el scroll. La evidencia y el checklist están en [`docs/ux/evidence/task-2/`](evidence/task-2/README.md).
 - **Tarea 3 — Navegación anterior/siguiente e indicadores de filtros:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La UI conserva el cursor opaco existente, recupera localmente la posición anterior, muestra página/rango legibles y permite quitar el badge del límite sin alterar el listado actual. La evidencia y el checklist están en [`docs/ux/evidence/task-3/`](evidence/task-3/README.md).
 - **Tarea 4 — Estilos, contraste y estados vacío/cargando/error:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La bandeja ofrece feedback localizado y recuperable, evita tablas vacías y expresa cada estado de movimiento mediante texto y color con contraste AA. La evidencia y el checklist están en [`docs/ux/evidence/task-4/`](evidence/task-4/README.md).
 - **Tarea 5 — Detalle visual de mensajes y borradores:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La fila conserva un resumen compacto y abre un panel lateral con asociación, mensajes, borradores e historial disponible, sin perder URL, cursor, scroll ni foco. La evidencia y el checklist están en [`docs/ux/evidence/task-5/`](evidence/task-5/README.md).
 - **Tarea 6 — Pruebas de render y regresión visual:** completada el 2026-09-08. La matriz cubre desktop/mobile, estados de consulta, cursor, detalle y contexto. A partir de la captura real aportada se corrigieron el bloqueo de scroll, la distribución de columnas y conflictos puntuales con estilos heredados. El reporte firmado y las capturas están en [`docs/ux/evidence/task-6/`](evidence/task-6/README.md).
+
+### Correcciones posteriores a la secuencia
+
+La revisión visual final del usuario ajustó tres decisiones de presentación: la barra de contexto dejó de ser sticky; el panel de detalle bloquea el scroll del documento mientras permanece abierto y contiene su propio desplazamiento sólo cuando resulta necesario; y la bandeja incorpora modo oscuro persistente. Todos los colores de ambos temas referencian exclusivamente variables existentes en `_shared/css/paleta_colores.css`.
 
 ## Decisiones explícitas
 

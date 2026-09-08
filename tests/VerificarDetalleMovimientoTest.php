@@ -23,6 +23,8 @@ $comprobar(strpos($css, '.bandeja-detalle') !== false && strpos($css, 'right: 0'
 $comprobar(strpos($javascript, 'plantilla.content.cloneNode(true)') !== false, 'El panel debe usar contenido local sin otra consulta.');
 $comprobar(strpos($javascript, 'disparador.focus({ preventScroll: true })') !== false, 'Cerrar el panel debe devolver el foco sin mover la lista.');
 $comprobar(strpos($javascript, 'window.scrollTo(0, posicionScroll)') !== false, 'Cerrar el panel debe restaurar la posición de la lista.');
+$comprobar(strpos($javascript, "classList.add('bandeja-detalle-activo')") !== false, 'Abrir el panel debe bloquear el scroll de fondo.');
+$comprobar(strpos($javascript, "classList.remove('bandeja-detalle-activo')") !== false, 'Cerrar el panel debe restaurar el scroll de fondo.');
 $comprobar(!preg_match('/(?:history\.(?:pushState|replaceState)|location\.(?:assign|replace))/', $javascript), 'Abrir detalle no debe modificar URL ni cursor.');
 
 $_GET = [];

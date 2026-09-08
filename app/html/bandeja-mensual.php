@@ -61,6 +61,7 @@ if (($bandeja->error ?? null) !== null) {
                         <?php endif; ?>
                     </ul>
                 </div>
+                <button class="bandeja-tema" type="button" aria-pressed="false" data-alternar-tema>Modo oscuro</button>
             </div>
         </nav>
 

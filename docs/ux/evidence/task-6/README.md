@@ -34,7 +34,7 @@ Las capturas incrementales de las entregas anteriores permanecen en [`task-1`](.
 | Cursor anterior/siguiente | [página 2](cursor-pagina-2.png) | `Página 2 · movimientos 11–12`; Anterior recuperado |
 | Detalle cerrado | [lista desktop](despues-desktop-10-filas.png) | Lista y cursor visibles |
 | Detalle abierto | [captura](detalle-abierto.png) | Cuatro secciones, cierre visible, sin overflow |
-| Barra de contexto | capturas desktop/mobile | Sticky a 98/94 px bajo el encabezado |
+| Barra de contexto | [corrección](correccion-barra-estatica.png) | Posición estática; deja de cubrir movimientos al recorrer la lista |
 
 ## Mediciones automatizadas
 
@@ -42,16 +42,42 @@ Las capturas incrementales de las entregas anteriores permanecen en [`task-1`](.
 Desktop 1440 × 900
 document.scrollHeight: 1505 px
 scroll probado: 0 -> 500 px
-barra sticky: top 98 px
+barra de contexto: posición estática
 tabla/región: 1324/1326 px
 columnas: 99, 86, 265, 126, 113, 126, 179, 106, 106, 119 px
 overflow horizontal del documento: no
 
 Mobile 390 × 844
 scroll probado: 0 -> 700 px
-barra sticky: top 94 px
+barra de contexto: posición estática
 overflow horizontal del documento: no
 ```
+
+## Correcciones de revisión final
+
+Capturas aportadas por el usuario:
+
+- [Detalle con scroll de fondo activo](correccion-antes-detalle.png)
+- [Barra sticky ocultando filas](correccion-antes-sticky.png)
+
+Resultado corregido:
+
+- [Barra estática durante el scroll](correccion-barra-estatica.png)
+- [Detalle con documento bloqueado](correccion-detalle-scroll-bloqueado.png)
+- [Modo oscuro](correccion-modo-oscuro.png)
+
+Validaciones de navegador:
+
+```text
+Barra de contexto: position static; al desplazar 500 px queda fuera del viewport.
+Detalle abierto: overflow-y hidden en html/body; wheel no modifica scrollY (500 -> 500).
+Detalle corto: scrollHeight/clientHeight 900/900; no genera desplazamiento vacío.
+Detalle cerrado: scrollY restaurado a 500.
+Modo oscuro: preferencia `oscuro` persistida en localStorage y recuperada al recargar.
+Paleta: 0 colores hex, rgb(), rgba(), hsl() o hsla() declarados en app/css/shared.css.
+```
+
+Esta revisión reemplaza las mediciones sticky registradas en la primera pasada de la Tarea 6.
 
 ## Checklist de aceptación
 

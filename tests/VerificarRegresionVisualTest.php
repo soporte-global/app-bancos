@@ -33,6 +33,11 @@ $archivosEvidencia = [
     'estado-cargando.png',
     'estado-error.png',
     'detalle-abierto.png',
+    'correccion-antes-detalle.png',
+    'correccion-antes-sticky.png',
+    'correccion-barra-estatica.png',
+    'correccion-detalle-scroll-bloqueado.png',
+    'correccion-modo-oscuro.png',
 ];
 
 $directorioEvidencia = __DIR__ . '/../docs/ux/evidence/task-6/';

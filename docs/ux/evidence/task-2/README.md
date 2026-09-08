@@ -14,7 +14,7 @@ Fecha: 2026-09-08. Estado: validación técnica completa y aprobación explícit
 - [x] Cuenta y período usan texto explícito; el período se presenta como mes y año legibles.
 - [x] La barra muestra estado localizado (`movimientos cargados`, `esperando consulta`, error o carga en curso).
 - [x] Se informa el resumen de filtros activos; en este incremento es `ninguno` porque aún no existen filtros opcionales.
-- [x] La barra usa `position: sticky` y permanece visible al recorrer filtros o resultados.
+- [x] La barra se implementó inicialmente como sticky. La revisión posterior a la Tarea 6 cambió su posición a estática para evitar que oculte movimientos durante el scroll.
 - [x] Editar cuenta/período actualiza la barra mediante eventos locales, sin recarga ni mutación de estado global.
 - [x] Enviar el formulario cambia sólo el indicador local a `Cargando movimientos…` antes de la navegación existente.
 - [x] No se modificaron rutas, contratos API, SQL, repositorios, permisos, lógica de negocio ni mutaciones.
@@ -35,7 +35,7 @@ Playwright/Chromium
 Cuenta 1042 -> 2200: actualización inmediata en la barra.
 Período julio -> agosto de 2026: actualización inmediata en la barra.
 Submit interceptado: estado local `Cargando movimientos…`.
-Scroll mobile: borde superior de la barra a 4 px del viewport.
+La captura conserva el comportamiento original de esta entrega; el estado vigente y su corrección están documentados en la evidencia de la Tarea 6.
 ```
 
 Validación técnica firmada por Codex y aceptación de producto confirmada por el usuario.

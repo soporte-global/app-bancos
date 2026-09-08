@@ -131,6 +131,42 @@
     border-left: 1px solid var(--bandeja-border);
 }
 
+.bandeja-filtros-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bandeja-filtros-lista[hidden] {
+    display: none;
+}
+
+.bandeja-filtros-lista li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 10px;
+    border: 1px solid #9eb3c9;
+    border-radius: 999px;
+    background: #edf4fb;
+    color: #24364d;
+    font-weight: 700;
+}
+
+.bandeja-filtros-lista button {
+    width: 24px;
+    min-height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    background: #d8e6f4;
+    color: #173f6c;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
 .bandeja-panel {
     margin-top: 24px;
     padding: clamp(16px, 2.5vw, 24px);
@@ -174,7 +210,7 @@
 }
 
 .bandeja-mensual button,
-.bandeja-mensual a.bandeja-siguiente {
+.bandeja-mensual a.bandeja-pagina {
     display: inline-flex;
     min-height: 42px;
     align-items: center;
@@ -258,7 +294,37 @@
 }
 
 .bandeja-paginacion {
-    margin: 16px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.bandeja-posicion {
+    margin: 0;
+    color: #41536a;
+    font-size: 0.925rem;
+    font-weight: 700;
+}
+
+.bandeja-paginacion-controles {
+    display: flex;
+    gap: 8px;
+}
+
+.bandeja-mensual a.bandeja-anterior {
+    border: 1px solid #0b5cad;
+    background: #ffffff;
+    color: #0b5cad;
+}
+
+.bandeja-mensual a.bandeja-pagina[aria-disabled="true"] {
+    cursor: not-allowed;
+    border: 1px solid #c3ccd7;
+    background: #e8edf3;
+    color: #667487;
+    pointer-events: none;
 }
 
 @media (max-width: 1100px) {
@@ -330,8 +396,7 @@
         gap: 12px;
     }
 
-    .bandeja-filtros button,
-    .bandeja-mensual a.bandeja-siguiente {
+    .bandeja-filtros > button {
         width: 100%;
     }
 
@@ -407,6 +472,21 @@
 
     .bandeja-tabla .mensaje {
         max-width: none;
+    }
+
+    .bandeja-paginacion {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .bandeja-paginacion-controles {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .bandeja-mensual a.bandeja-pagina {
+        width: 100%;
     }
 }
 

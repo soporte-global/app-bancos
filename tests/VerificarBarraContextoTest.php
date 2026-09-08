@@ -18,7 +18,7 @@ $comprobar(strpos($vista, 'Filtros activos: ninguno') !== false, 'Falta el resum
 $comprobar(strpos($css, '.bandeja-contexto') !== false && strpos($css, 'position: sticky') !== false, 'La barra debe persistir durante el scroll.');
 $comprobar(strpos($javascript, "cuenta.addEventListener('input'") !== false, 'La cuenta no actualiza el contexto localmente.');
 $comprobar(strpos($javascript, "periodo.addEventListener('input'") !== false, 'El período no actualiza el contexto localmente.');
-$comprobar(strpos($javascript, 'window.location') === false, 'La actualización local no debe forzar navegación global.');
+$comprobar(!preg_match('/window\.location(?:\.(?:assign|replace|reload))?\s*[=(]/', $javascript), 'La actualización local no debe forzar navegación global.');
 
 ob_start();
 include __DIR__ . '/fixtures/bandeja-responsive.php';

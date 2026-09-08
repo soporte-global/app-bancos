@@ -18,6 +18,7 @@ if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', (string) $periodo, $partesPeriodo)) 
     $periodoLegible = ($meses[$partesPeriodo[2]] ?? $partesPeriodo[2]) . ' de ' . $partesPeriodo[1];
 }
 $cantidadMovimientos = $resultado !== null ? count($resultado->movimientos) : null;
+$limiteEsActivo = (int) $limite !== 50;
 if (($bandeja->error ?? null) !== null) {
     $estadoCarga = 'No se pudo cargar la bandeja';
 } elseif ($cantidadMovimientos !== null) {
@@ -46,7 +47,17 @@ if (($bandeja->error ?? null) !== null) {
             </ol>
             <div class="bandeja-contexto-meta">
                 <span class="bandeja-contexto-estado" aria-live="polite" data-contexto-estado><?php echo $escapar($estadoCarga); ?></span>
-                <span class="bandeja-contexto-filtros">Filtros activos: ninguno</span>
+                <div class="bandeja-contexto-filtros" data-filtros-activos>
+                    <span data-filtros-vacio<?php echo $limiteEsActivo ? ' hidden' : ''; ?>>Filtros activos: ninguno</span>
+                    <ul class="bandeja-filtros-lista" aria-label="Filtros activos" data-filtros-lista<?php echo $limiteEsActivo ? '' : ' hidden'; ?>>
+                        <?php if ($limiteEsActivo): ?>
+                            <li>
+                                <span>Límite: <?php echo $escapar($limite); ?></span>
+                                <button type="button" aria-label="Quitar filtro Límite" data-limpiar-filtro="limite">×</button>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
             </div>
         </nav>
 
@@ -121,11 +132,23 @@ if (($bandeja->error ?? null) !== null) {
             </tbody>
             </table>
             </div>
-            <?php if ($resultado->siguiente_cursor !== null): ?>
-                <p class="bandeja-paginacion">
-                    <a class="bandeja-siguiente" href="<?php echo $escapar(RUTA_WEB . '?pag=bandeja-mensual&cuenta_bancaria_id=' . rawurlencode((string) $resultado->cuenta_bancaria_id) . '&inicio_periodo=' . rawurlencode($resultado->inicio_periodo) . '&limite=' . rawurlencode((string) $resultado->limite) . '&cursor=' . rawurlencode($resultado->siguiente_cursor)); ?>">Página siguiente</a>
+            <nav class="bandeja-paginacion" aria-label="Paginación de movimientos" data-paginacion data-cantidad="<?php echo $escapar($cantidadMovimientos); ?>">
+                <p class="bandeja-posicion" aria-live="polite" data-posicion-pagina>
+                    <?php if (!isset($_GET['cursor'])): ?>
+                        Página 1 · movimientos <?php echo $cantidadMovimientos > 0 ? '1–' . $escapar($cantidadMovimientos) : '0'; ?>
+                    <?php else: ?>
+                        Página actual · <?php echo $escapar($cantidadMovimientos); ?> movimientos visibles
+                    <?php endif; ?>
                 </p>
-            <?php endif; ?>
+                <div class="bandeja-paginacion-controles">
+                    <a class="bandeja-pagina bandeja-anterior" aria-disabled="true" data-pagina-anterior>Anterior</a>
+                    <?php if ($resultado->siguiente_cursor !== null): ?>
+                        <a class="bandeja-pagina bandeja-siguiente" data-pagina-siguiente href="<?php echo $escapar(RUTA_WEB . '?pag=bandeja-mensual&cuenta_bancaria_id=' . rawurlencode((string) $resultado->cuenta_bancaria_id) . '&inicio_periodo=' . rawurlencode($resultado->inicio_periodo) . '&limite=' . rawurlencode((string) $resultado->limite) . '&cursor=' . rawurlencode($resultado->siguiente_cursor)); ?>">Siguiente</a>
+                    <?php else: ?>
+                        <a class="bandeja-pagina bandeja-siguiente" aria-disabled="true">Siguiente</a>
+                    <?php endif; ?>
+                </div>
+            </nav>
         </section>
         <?php endif; ?>
     </div>

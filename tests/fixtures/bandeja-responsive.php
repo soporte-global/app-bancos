@@ -1,5 +1,5 @@
 <?php
-define('RUTA_WEB', '/index.php');
+define('RUTA_WEB', '/tests/fixtures/bandeja-responsive.php');
 
 $movimientoBase = [
     'fecha_operacion' => '2026-07-14',

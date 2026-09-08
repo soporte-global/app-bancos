@@ -89,7 +89,8 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 ## Entregas incrementales
 
 - **Tarea 1 — Layout responsive de la bandeja:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La vista usa estilos externos, breakpoints explícitos y filas convertibles a cards en móvil. La evidencia y el checklist están en [`docs/ux/evidence/task-1/`](evidence/task-1/README.md).
-- **Tarea 2 — Barra de contexto cuenta/período:** implementada y validada técnicamente el 2026-09-08. La barra sticky muestra cuenta, período legible, carga y resumen de filtros, y se sincroniza localmente con el formulario sin estado global. La evidencia y el checklist están en [`docs/ux/evidence/task-2/`](evidence/task-2/README.md). Pendiente de aprobación explícita antes de iniciar la navegación y los indicadores de la Tarea 3.
+- **Tarea 2 — Barra de contexto cuenta/período:** implementada, validada técnicamente y aprobada por el usuario el 2026-09-08. La barra sticky muestra cuenta, período legible, carga y resumen de filtros, y se sincroniza localmente con el formulario sin estado global. La evidencia y el checklist están en [`docs/ux/evidence/task-2/`](evidence/task-2/README.md).
+- **Tarea 3 — Navegación anterior/siguiente e indicadores de filtros:** implementada y validada técnicamente el 2026-09-08. La UI conserva el cursor opaco existente, recupera localmente la posición anterior, muestra página/rango legibles y permite quitar el badge del límite sin alterar el listado actual. La evidencia y el checklist están en [`docs/ux/evidence/task-3/`](evidence/task-3/README.md). Pendiente de aprobación explícita antes de iniciar los estados visuales de la Tarea 4.
 
 ## Decisiones explícitas
 

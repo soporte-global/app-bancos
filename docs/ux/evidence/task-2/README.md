@@ -1,6 +1,6 @@
 # Evidencia — Tarea 2: barra de contexto cuenta/período
 
-Fecha: 2026-09-08. Estado: validación técnica completa; pendiente de aprobación explícita del usuario antes de iniciar la Tarea 3.
+Fecha: 2026-09-08. Estado: validación técnica completa y aprobación explícita del usuario recibida antes de iniciar la Tarea 3.
 
 ## Capturas
 
@@ -38,4 +38,4 @@ Submit interceptado: estado local `Cargando movimientos…`.
 Scroll mobile: borde superior de la barra a 4 px del viewport.
 ```
 
-Validación técnica firmada por Codex. La aceptación de producto queda pendiente de la revisión del usuario.
+Validación técnica firmada por Codex y aceptación de producto confirmada por el usuario.

@@ -86,6 +86,10 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 4. Implementar detalle de movimiento y sus secciones de asociación, borrador, mensajes e historial.
 5. Recién entonces diseñar acciones operativas bajo permisos Hub, confirmaciones e idempotencia.
 
+## Entregas incrementales
+
+- **Tarea 1 — Layout responsive de la bandeja:** implementada y validada técnicamente el 2026-09-08. La vista usa estilos externos, breakpoints explícitos y filas convertibles a cards en móvil. La evidencia y el checklist están en [`docs/ux/evidence/task-1/`](evidence/task-1/README.md). Pendiente de aprobación explícita antes de iniciar la barra de contexto de la Tarea 2.
+
 ## Decisiones explícitas
 
 - No se conserva la navegación por pestañas como única forma de cambiar de módulo: las rutas permiten permisos, enlaces y recarga segura.

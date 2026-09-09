@@ -1,8 +1,22 @@
-# API: estado de descubrimiento
+# API
 
 Los legados usan archivos PHP, formularios y AJAX, sin API formal. Las operaciones críticas son importación de período, reglas, asignación/estado, mensajería, asociación de valores/asientos, creación/fusión y cierre.
 
 La API nueva debe autenticar y autorizar en servidor, validar entradas, preservar idempotencia cuando corresponda y no confiar en `idu` enviado por POST ni en rutas PHP heredadas. Debe integrarse al flujo de `nueva_app`: sesión opaca, `PoliticaAcceso` por aplicación y permiso interno por destino, antes de ejecutar carga o reglas de negocio.
+
+## Infraestructura HTTP implementada
+
+`api.php` es el único front controller JSON de la aplicación. Restaura la misma sesión opaca `GLOBAL_APPS_AUTH` que usa la interfaz, exige acceso vigente a APP BANCOS y responde errores con la forma estable `{"error":{"codigo":"...","mensaje":"..."}}`. No acepta una identidad enviada por el cliente.
+
+El primer contrato disponible es `GET api.php?accion=csrf`. Devuelve un token aleatorio de 256 bits ligado a la sesión bajo `data.csrf_token`; no muta datos de negocio. Cada futura acción de escritura se registrará por un nombre cerrado y deberá, en este orden:
+
+1. aceptar sólo JSON mediante `POST`;
+2. validar `X-CSRF-Token` con `ProteccionCsrf`;
+3. autorizar la acción con `AutorizadorAccion`: nivel Hub 1 administra toda la app y un acceso general necesita el permiso interno exacto;
+4. exigir `Idempotency-Key` y ejecutar mediante `EjecutorComandoIdempotente`;
+5. persistir la respuesta y un evento de auditoría dentro de la misma transacción que el cambio funcional.
+
+Los estados de error reservados son `400` para acción inválida, `401` para sesión ausente o vencida, `403` para acceso/permiso/CSRF, `404` para acción no registrada, `405` para método incorrecto, `409` para reutilización incompatible de una clave idempotente, `422` para entrada inválida y `500` para fallos no publicables. Todavía no existe una mutación de negocio expuesta: agregar una requiere su caso de uso, permiso Hub, validaciones y prueba de integración.
 
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 

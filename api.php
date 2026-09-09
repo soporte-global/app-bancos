@@ -1,0 +1,109 @@
+<?php
+$raiz = __DIR__;
+require_once $raiz . '/src/config.php';
+require_once $raiz . '/src/autoload.php';
+
+use AppBancos\Http\ApiException;
+use AppBancos\Security\ProteccionCsrf;
+use GlobalApps\Core\Acceso\PoliticaAcceso;
+use GlobalApps\Core\Identidad\Autenticador;
+use GlobalApps\Core\Identidad\SesionCache;
+use GlobalApps\Core\Infrastructure\Persistence\PdoProvider;
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+try {
+    $metodo = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $accion = trim((string) ($_GET['accion'] ?? ''));
+    if ($accion === '' || !preg_match('/^[a-z][a-z0-9._-]{1,79}$/', $accion)) {
+        throw new ApiException(400, 'ACCION_INVALIDA', 'La accion solicitada es invalida.');
+    }
+
+    $cuentaId = isset($_SESSION[AUTH_SESSION_KEY]['cuenta_id'])
+        ? (int) $_SESSION[AUTH_SESSION_KEY]['cuenta_id']
+        : 0;
+    $venceAt = (int) ($_SESSION[AUTH_SESSION_KEY]['vence_at'] ?? 0);
+    if ($cuentaId <= 0 || $venceAt <= time()) {
+        unset($_SESSION[AUTH_SESSION_KEY], $_SESSION[FolderName]['sesion_cache']);
+        throw new ApiException(401, 'SESION_REQUERIDA', 'La sesion no esta autenticada.');
+    }
+
+    $proveedor = new PdoProvider([
+        'ftweb' => [
+            'dsn' => 'pgsql:host=' . HOST . ';port=' . PORT . ';dbname=' . DBASE,
+            'user' => USER,
+            'password' => PASS,
+            'options' => [PDO::ATTR_PERSISTENT => FTWEB_PERSISTENT],
+        ],
+    ]);
+    $conexion = $proveedor->ftweb();
+    $cache = new SesionCache(FolderName, AUTH_CACHE_TTL);
+    $sesion = $cache->obtener();
+    if ($sesion === null || $sesion->cuenta()->id() !== $cuentaId) {
+        $sesion = (new Autenticador($conexion))->restaurar($cuentaId);
+        $cache->guardar($sesion);
+    }
+
+    (new PoliticaAcceso(ID_APLICACION, [
+        'libre' => FREE_FOR_ALL,
+        'requiere_empleado' => REQUIERE_EMPLEADO,
+        'requiere_zweb' => REQUIERE_ZWEB_USER,
+        'requiere_cliente' => REQUIERE_CLIENTE,
+    ]))->validar($sesion);
+
+    if ($metodo === 'GET' && $accion === 'csrf') {
+        $token = (new ProteccionCsrf())->obtenerToken($_SESSION);
+        responderJson(200, [
+            'data' => ['csrf_token' => $token],
+            'meta' => ['cuenta_id' => $sesion->cuenta()->id()],
+        ]);
+    }
+    if ($accion === 'csrf') {
+        throw new ApiException(405, 'METODO_NO_PERMITIDO', 'La accion csrf solo acepta GET.');
+    }
+
+    // Las mutaciones se agregan aquí por nombre cerrado. Cada handler deberá
+    // exigir permiso interno, X-CSRF-Token e Idempotency-Key antes del comando.
+    throw new ApiException(404, 'ACCION_NO_ENCONTRADA', 'La accion solicitada no existe.');
+} catch (Throwable $error) {
+    if ($error instanceof ApiException) {
+        responderError($error->estadoHttp(), $error->codigoApi(), $error->getMessage());
+    }
+    if ($error instanceof AppBancos\Application\ConflictoIdempotenciaException) {
+        responderError(409, 'CONFLICTO_IDEMPOTENCIA', $error->getMessage());
+    }
+    if ($error instanceof InvalidArgumentException) {
+        responderError(422, 'ENTRADA_INVALIDA', $error->getMessage());
+    }
+    if ($error instanceof GlobalApps\Core\Identidad\AutenticacionException) {
+        unset($_SESSION[AUTH_SESSION_KEY], $_SESSION[FolderName]['sesion_cache']);
+        responderError(401, 'SESION_INVALIDA', 'La sesion no pudo restaurarse.');
+    }
+    if ($error instanceof GlobalApps\Core\Acceso\AccesoDenegadoException) {
+        responderError(403, 'ACCESO_DENEGADO', 'La cuenta no tiene acceso a la aplicacion.');
+    }
+    error_log(get_class($error) . ': ' . $error->getMessage());
+    responderError(500, 'ERROR_INTERNO', 'No se pudo completar la solicitud.');
+}
+
+function responderJson($estado, array $contenido)
+{
+    http_response_code((int) $estado);
+    echo json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function responderError($estado, $codigo, $mensaje)
+{
+    responderJson($estado, [
+        'error' => [
+            'codigo' => (string) $codigo,
+            'mensaje' => (string) $mensaje,
+        ],
+    ]);
+}

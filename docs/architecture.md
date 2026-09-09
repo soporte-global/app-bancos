@@ -30,6 +30,8 @@ Compartido: sesión, permisos, configuración, movimientos de extracto, reservas
 
 La interfaz consume contratos API y no conoce IDs heredados, SQL ni códigos ERP. `hQuery` queda limitado a funciones UI; su estado técnico vive en `vars.hquery` y el contexto funcional bajo `sesion`, `app`, `data` y `estado`. El detalle de CTEs, joins, paginación, reservas concurrentes e índices está en [query-plan.md](database/query-plan.md).
 
+La infraestructura común de escritura se materializa en `api.php`, `ProteccionCsrf`, `AutorizadorAccion` y `EjecutorComandoIdempotente`. El administrador Hub (`nivel = 1`) puede ejecutar cualquier acción registrada de APP BANCOS; los accesos generales deben poseer el permiso interno específico. El ejecutor abre y controla una única transacción, reclama `(operacion, clave)`, compara una huella SHA-256 del JSON normalizado, ejecuta el comando una sola vez y guarda respuesta y auditoría antes del commit. Un reintento compatible devuelve la respuesta persistida; reutilizar la clave con otro usuario o contenido produce conflicto. Las tablas `bancos_solicitud_idempotente` y `bancos_evento_auditoria` existen en `global_prod` y `global_temp`, y se resuelven exclusivamente con `EsquemaBancos`.
+
 La navegación y los límites de UX resultantes del relevamiento de BANCOS y BANCOS_MENSUAL están en [navigation-and-ui.md](ux/navigation-and-ui.md). Define una bandeja de lectura como destino inicial, rutas separadas para importación/configuración/conciliación y acciones futuras condicionadas por estado y permiso.
 
 ## Modo debug de datos

@@ -75,3 +75,9 @@ Se creó y aplicó `018_bancos_hub_acceso_inicial.sql` en el entorno conectado p
 ## Lectura funcional completa de la bandeja - 2026-09-09
 
 Se reemplazaron los campos manuales de cuenta y período por opciones derivadas de las importaciones del esquema operativo y etiquetas completadas desde el ERP de sólo lectura. La bandeja admite filtros parametrizados por estado, responsable, asociación y mensajes. El cursor versión 3 firma esos filtros además del contexto y la posición. El repositorio evita duplicar filas cuando coexisten asociaciones y carga en cuatro consultas por lote todas las asociaciones, conversaciones, borradores/líneas e historial de los movimientos visibles. Los casos de sombra `017` validan mensajes, asociación y las dos líneas del borrador. No se agregaron mutaciones.
+
+## Infraestructura segura de escritura - 2026-09-09
+
+Se agregó `api.php` como front controller JSON autenticado y el contrato `GET ?accion=csrf`. Las clases comunes separan CSRF, autorización por acción, idempotencia, auditoría y coordinación transaccional. El nivel administrador Hub cubre toda APP BANCOS; un futuro usuario general necesitará el permiso interno exacto. La migración reversible `019` creó las tablas de solicitudes idempotentes y eventos de auditoría en producción y sandbox, sin DML de negocio ni cambios ERP.
+
+La prueba unitaria cubre token y matriz de autorización. La prueba integrada en `global_temp` confirmó que dos solicitudes equivalentes ejecutan el comando una sola vez, que el reintento devuelve la respuesta persistida, que una clave incompatible se rechaza, que una excepción revierte toda fila parcial y que existe un único evento de auditoría. La limpieza dejó ambas tablas del sandbox sin filas. La próxima acción segura es implementar una primera mutación propia de preparación, manteniendo fuera de alcance el cierre y el ERP.

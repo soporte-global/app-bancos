@@ -22,4 +22,6 @@ El 2026-09-09 se implementó el sistema visual relevado de `rrhh_consulta`. La b
 
 El ajuste visual posterior corrigió la fila del selector de tema dentro del menú hamburguesa, actualizó la identidad visible a `APP BANCOS` y amplió el pie de la tabla con página, rango y cantidad de registros visibles. El cursor sigue tratándose como opaco y no se presenta un total global que la consulta no provee.
 
+La posición del paginado dejó de depender de `sessionStorage`: los cursores nuevos incluyen página e inicio de rango dentro de su contenido firmado, y el servidor expone esos metadatos después de validar la firma. Así, avanzar, recargar o abrir el enlace en otra pestaña conserva el indicador; los cursores versión 1 siguen siendo aceptados como transición, aunque no contienen una posición recuperable.
+
 Se confirmaron las reglas iniciales de estados, asociaciones, reversa/fusión y retención: cualquier usuario autorizado prepara un movimiento, el cierre requiere administración o permiso especial, un cerrado es terminal, la preparación no modifica ERP y el histórico se conserva completo. Quedan por especificar el permiso concreto de Hub, validaciones adicionales de preparación y la secuencia contable final de fusión/generación de asiento.

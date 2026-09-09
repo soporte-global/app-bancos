@@ -54,6 +54,8 @@ $bandejaFixture = (object) [
         'inicio_periodo' => '2026-07-01',
         'limite' => $limiteFixture,
         'movimientos' => $movimientosFixture,
+        'pagina_actual' => 1,
+        'inicio_actual' => count($movimientosFixture) > 0 ? 1 : 0,
         'siguiente_cursor' => 'cursor-opaco-de-ejemplo',
     ],
 ];

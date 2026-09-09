@@ -60,6 +60,8 @@ $respuesta = $casoDeUso->ejecutar([
 comprobarBandeja(count($respuesta['movimientos']) === 2, 'El caso de uso no respetó el límite.');
 comprobarBandeja(is_string($respuesta['siguiente_cursor']), 'No se entregó un cursor firmado para la segunda página.');
 comprobarBandeja(strpos($respuesta['siguiente_cursor'], '.') !== false, 'El formato del cursor firmado es inválido.');
+comprobarBandeja($respuesta['pagina_actual'] === 1, 'La primera página no expuso su posición.');
+comprobarBandeja($respuesta['inicio_actual'] === 1, 'La primera página no expuso el inicio del rango.');
 
 $respuestaSiguiente = $casoDeUso->ejecutar([
     'cuenta_bancaria_id' => $cuentaFixture,
@@ -68,6 +70,8 @@ $respuestaSiguiente = $casoDeUso->ejecutar([
     'cursor' => $respuesta['siguiente_cursor'],
 ]);
 comprobarBandeja($respuestaSiguiente['movimientos'][0]['referencia'] === 'DBG-003', 'El cursor firmado no continuó la bandeja.');
+comprobarBandeja($respuestaSiguiente['pagina_actual'] === 2, 'El cursor no conservó el número de página.');
+comprobarBandeja($respuestaSiguiente['inicio_actual'] === 3, 'El cursor no conservó el inicio del rango.');
 
 try {
     $casoDeUso->ejecutar([

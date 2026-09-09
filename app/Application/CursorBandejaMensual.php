@@ -16,7 +16,7 @@ final class CursorBandejaMensual
         $this->secreto = $secreto;
     }
 
-    public function codificar(array $movimiento, $cuentaBancariaId, $inicioPeriodo)
+    public function codificar(array $movimiento, $cuentaBancariaId, $inicioPeriodo, $pagina = null, $inicio = null)
     {
         $fecha = array_key_exists('fecha_operacion', $movimiento) && $movimiento['fecha_operacion'] !== null
             ? $this->fecha($movimiento['fecha_operacion'], 'fecha_operacion')
@@ -24,12 +24,19 @@ final class CursorBandejaMensual
         $id = $this->enteroPositivo($movimiento['id'] ?? null, 'id');
         $cuentaBancariaId = $this->enteroPositivo($cuentaBancariaId, 'cuenta_bancaria_id');
         $inicioPeriodo = $this->fecha($inicioPeriodo, 'inicio_periodo');
+        if (($pagina === null) !== ($inicio === null)) {
+            throw new InvalidArgumentException('pagina e inicio deben informarse juntos.');
+        }
+        $pagina = $pagina === null ? null : $this->enteroPositivo($pagina, 'pagina');
+        $inicio = $inicio === null ? null : $this->enteroPositivo($inicio, 'inicio');
         $contenido = json_encode([
-            'v' => 1,
+            'v' => 2,
             'f' => $fecha,
             'i' => $id,
             'c' => $cuentaBancariaId,
             'p' => $inicioPeriodo,
+            'n' => $pagina,
+            'o' => $inicio,
         ]);
         if ($contenido === false) {
             throw new RuntimeException('No se pudo codificar el cursor.');
@@ -57,7 +64,8 @@ final class CursorBandejaMensual
         $relleno = str_repeat('=', (4 - strlen($token) % 4) % 4);
         $contenido = base64_decode(strtr($token . $relleno, '-_', '+/'), true);
         $datos = $contenido === false ? null : json_decode($contenido, true);
-        if (!is_array($datos) || ($datos['v'] ?? null) !== 1) {
+        $version = is_array($datos) ? ($datos['v'] ?? null) : null;
+        if ($version !== 1 && $version !== 2) {
             throw new InvalidArgumentException('cursor no es válido.');
         }
 
@@ -66,12 +74,21 @@ final class CursorBandejaMensual
         if (($datos['c'] ?? null) !== $cuentaBancariaId || ($datos['p'] ?? null) !== $inicioPeriodo) {
             throw new InvalidArgumentException('cursor no corresponde a la cuenta y período solicitados.');
         }
+        if ($version === 2 && (($datos['n'] ?? null) === null) !== (($datos['o'] ?? null) === null)) {
+            throw new InvalidArgumentException('cursor no es válido.');
+        }
 
         return [
             'fecha' => ($datos['f'] ?? null) === null
                 ? null
                 : $this->fecha($datos['f'], 'cursor.fecha'),
             'id' => $this->enteroPositivo($datos['i'] ?? null, 'cursor.id'),
+            'pagina' => $version === 2 && ($datos['n'] ?? null) !== null
+                ? $this->enteroPositivo($datos['n'], 'cursor.pagina')
+                : null,
+            'inicio' => $version === 2 && ($datos['o'] ?? null) !== null
+                ? $this->enteroPositivo($datos['o'], 'cursor.inicio')
+                : null,
         ];
     }
 

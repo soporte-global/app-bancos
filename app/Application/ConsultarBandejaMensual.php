@@ -39,14 +39,28 @@ final class ConsultarBandejaMensual
         );
         $movimientos = $pagina['movimientos'];
         $ultimo = $movimientos ? $movimientos[count($movimientos) - 1] : null;
+        $paginaActual = $cursor === null ? 1 : ($cursor['pagina'] ?? null);
+        $inicioActual = $cursor === null ? 1 : ($cursor['inicio'] ?? null);
+        $cantidadActual = count($movimientos);
+        $inicioVisible = $cantidadActual > 0 ? $inicioActual : 0;
+        $paginaSiguiente = $paginaActual === null ? null : $paginaActual + 1;
+        $inicioSiguiente = $inicioActual === null ? null : $inicioActual + $cantidadActual;
 
         return [
             'cuenta_bancaria_id' => (int) $cuentaBancariaId,
             'inicio_periodo' => $inicioPeriodo,
             'limite' => (int) $limite,
             'movimientos' => $movimientos,
+            'pagina_actual' => $paginaActual,
+            'inicio_actual' => $inicioVisible,
             'siguiente_cursor' => $pagina['hay_mas']
-                ? $this->cursores->codificar($ultimo, $cuentaBancariaId, $inicioPeriodo)
+                ? $this->cursores->codificar(
+                    $ultimo,
+                    $cuentaBancariaId,
+                    $inicioPeriodo,
+                    $paginaSiguiente,
+                    $inicioSiguiente
+                )
                 : null,
         ];
     }

@@ -174,25 +174,15 @@
 
         var actual = rutaRelativa(window.location);
         var claveActual = 'bandeja-pagina:' + actual;
-        var cantidad = Number(paginacion.getAttribute('data-cantidad')) || 0;
         var parametros = new URLSearchParams(window.location.search);
         var estado = leerEstadoPagina(claveActual);
 
         if (!parametros.has('cursor')) {
-            estado = { pagina: 1, inicio: cantidad > 0 ? 1 : 0, anterior: null };
+            estado = { anterior: null };
         } else if (!estado) {
             estado = {
-                pagina: null,
-                inicio: null,
                 anterior: paginaAnteriorDesdeReferrer(parametros) || paginaInicialActual()
             };
-        }
-
-        if (estado && estado.pagina) {
-            var inicioVisible = cantidad > 0 ? estado.inicio : 0;
-            var fin = cantidad > 0 ? estado.inicio + cantidad - 1 : 0;
-            posicion.textContent = 'Página ' + estado.pagina + ' · registros ' + inicioVisible + '–' + fin
-                + ' · ' + cantidad + ' en esta página';
         }
 
         if (estado && estado.anterior) {
@@ -203,11 +193,7 @@
         if (siguiente) {
             siguiente.addEventListener('click', function () {
                 var destino = rutaRelativa(new URL(siguiente.href, window.location.href));
-                var paginaActual = estado && estado.pagina ? estado.pagina : 1;
-                var inicioActual = estado && typeof estado.inicio === 'number' ? estado.inicio : 0;
                 guardarEstadoPagina('bandeja-pagina:' + destino, {
-                    pagina: paginaActual + 1,
-                    inicio: inicioActual + cantidad,
                     anterior: actual
                 });
             });

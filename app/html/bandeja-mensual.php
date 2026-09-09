@@ -18,6 +18,11 @@ if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', (string) $periodo, $partesPeriodo)) 
     $periodoLegible = ($meses[$partesPeriodo[2]] ?? $partesPeriodo[2]) . ' de ' . $partesPeriodo[1];
 }
 $cantidadMovimientos = $resultado !== null ? count($resultado->movimientos) : null;
+$paginaActual = $resultado->pagina_actual ?? (!isset($_GET['cursor']) ? 1 : null);
+$inicioActual = $resultado->inicio_actual ?? ($cantidadMovimientos > 0 && !isset($_GET['cursor']) ? 1 : null);
+$finActual = $inicioActual !== null && $cantidadMovimientos > 0
+    ? $inicioActual + $cantidadMovimientos - 1
+    : 0;
 $limiteEsActivo = (int) $limite !== 50;
 if (($bandeja->error ?? null) !== null) {
     $estadoCarga = 'No se pudo cargar la bandeja';
@@ -240,8 +245,8 @@ if (($bandeja->error ?? null) !== null) {
             </div>
             <nav class="bandeja-paginacion" aria-label="Paginación de movimientos" data-paginacion data-cantidad="<?php echo $escapar($cantidadMovimientos); ?>">
                 <p class="bandeja-posicion" aria-live="polite" data-posicion-pagina>
-                    <?php if (!isset($_GET['cursor'])): ?>
-                        Página 1 · registros <?php echo $cantidadMovimientos > 0 ? '1–' . $escapar($cantidadMovimientos) : '0'; ?> · <?php echo $escapar($cantidadMovimientos); ?> en esta página
+                    <?php if ($paginaActual !== null && $inicioActual !== null): ?>
+                        Página <?php echo $escapar($paginaActual); ?> · registros <?php echo $escapar($inicioActual); ?>–<?php echo $escapar($finActual); ?> · <?php echo $escapar($cantidadMovimientos); ?> en esta página
                     <?php else: ?>
                         Página actual · <?php echo $escapar($cantidadMovimientos); ?> registros en esta página
                     <?php endif; ?>

@@ -7,6 +7,7 @@ use AppBancos\Infrastructure\EsquemaBancos;
 use AppBancos\Application\ConsultarBandejaMensual;
 use AppBancos\Application\CursorBandejaMensual;
 use AppBancos\Repository\BandejaMensualRepository;
+use AppBancos\Repository\ContextoBandejaMensualRepository;
 
 function comprobarBandeja($condicion, $mensaje)
 {
@@ -38,6 +39,17 @@ comprobarBandeja(count($primeraPagina) === 2, 'La primera página no devolvió d
 comprobarBandeja($primeraPagina[0]['referencia'] === 'DBG-001', 'El orden inicial no coincide con el fixture.');
 comprobarBandeja($primeraPagina[1]['referencia'] === 'DBG-002', 'La primera página no respeta el orden por fecha e ID.');
 comprobarBandeja($primeraPagina[0]['estado_codigo'] === 'ABIERTO', 'No se resolvió el estado legible de la importación.');
+comprobarBandeja(isset($primeraPagina[0]['asociaciones']), 'La bandeja no expuso el detalle de asociaciones.');
+comprobarBandeja(isset($primeraPagina[0]['mensajes']), 'La bandeja no expuso el detalle de mensajes.');
+comprobarBandeja(isset($primeraPagina[0]['historial']), 'La bandeja no expuso el historial.');
+comprobarBandeja(isset($primeraPagina[0]['borradores']), 'La bandeja no expuso los borradores.');
+
+$contexto = (new ContextoBandejaMensualRepository(
+    $pdo,
+    EsquemaBancos::desdeConfiguracion(['bancos_debug' => true])
+))->consultar();
+$idsContexto = array_column($contexto['cuentas'], 'id');
+comprobarBandeja(in_array((int) $cuentaFixture, $idsContexto, true), 'El selector no incluyó la cuenta del fixture.');
 
 $cursor = [
     'fecha' => $primeraPagina[1]['fecha_operacion'],
@@ -72,6 +84,51 @@ $respuestaSiguiente = $casoDeUso->ejecutar([
 comprobarBandeja($respuestaSiguiente['movimientos'][0]['referencia'] === 'DBG-003', 'El cursor firmado no continuó la bandeja.');
 comprobarBandeja($respuestaSiguiente['pagina_actual'] === 2, 'El cursor no conservó el número de página.');
 comprobarBandeja($respuestaSiguiente['inicio_actual'] === 3, 'El cursor no conservó el inicio del rango.');
+
+$importacionConMensaje = $pdo->query(
+    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo
+     FROM global_temp.bancos_importacion_extracto i
+     JOIN global_temp.bancos_movimiento_extracto m ON m.importacion_id=i.id
+     JOIN global_temp.bancos_asociacion_movimiento a ON a.movimiento_id=m.id AND a.activo
+     WHERE i.observacion LIKE 'SOMBRA-017|IMPORTACION|%'
+     ORDER BY i.id
+     LIMIT 1"
+)->fetch(PDO::FETCH_ASSOC);
+comprobarBandeja($importacionConMensaje !== false, 'No se encontró un caso de mensajes de sombra.');
+$conMensajes = $casoDeUso->ejecutar([
+    'cuenta_bancaria_id' => $importacionConMensaje['cuenta_bancaria_zetti_id'],
+    'inicio_periodo' => $importacionConMensaje['inicio_periodo'],
+    'mensajes' => 'CON',
+    'asociacion' => 'CON',
+]);
+comprobarBandeja(count($conMensajes['movimientos']) === 1, 'El filtro de mensajes no devolvió el caso de sombra.');
+comprobarBandeja(count($conMensajes['movimientos'][0]['mensajes']) === 1, 'El detalle no incluyó la conversación completa.');
+comprobarBandeja(count($conMensajes['movimientos'][0]['asociaciones']) === 1, 'El detalle no incluyó la asociación activa.');
+
+$importacionConBorrador = $pdo->query(
+    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo
+     FROM global_temp.bancos_importacion_extracto i
+     JOIN global_temp.bancos_movimiento_extracto m ON m.importacion_id=i.id
+     JOIN global_temp.bancos_borrador_asiento b ON b.movimiento_id=m.id AND b.activo
+     WHERE i.observacion LIKE 'SOMBRA-017|IMPORTACION|%'
+     LIMIT 1"
+)->fetch(PDO::FETCH_ASSOC);
+$conBorrador = $casoDeUso->ejecutar([
+    'cuenta_bancaria_id' => $importacionConBorrador['cuenta_bancaria_zetti_id'],
+    'inicio_periodo' => $importacionConBorrador['inicio_periodo'],
+]);
+comprobarBandeja(count($conBorrador['movimientos'][0]['borradores']) === 1, 'El detalle no incluyó el borrador activo.');
+comprobarBandeja(count($conBorrador['movimientos'][0]['borradores'][0]['lineas']) === 2, 'El detalle no incluyó las líneas del borrador.');
+
+try {
+    $casoDeUso->ejecutar([
+        'cuenta_bancaria_id' => $cuentaFixture,
+        'inicio_periodo' => '2026-09-01',
+        'estado' => 'INVENTADO',
+    ]);
+    throw new RuntimeException('Se aceptó un filtro de estado fuera del contrato.');
+} catch (InvalidArgumentException $esperada) {
+}
 
 try {
     $casoDeUso->ejecutar([

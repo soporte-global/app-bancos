@@ -66,13 +66,15 @@ body:has(.bancos-app),
     background: var(--ui-hover);
 }
 
-.bandeja-filtros input {
+.bandeja-filtros input,
+.bandeja-filtros select {
     border-color: var(--ui-borde);
     background: var(--ui-campo);
     color: var(--ui-texto);
 }
 
 .bandeja-filtros input:focus-visible,
+.bandeja-filtros select:focus-visible,
 .bandeja-filtros > button:focus-visible,
 .bandeja-estado button:focus-visible,
 .bandeja-ver-detalle:focus-visible,
@@ -84,8 +86,22 @@ body:has(.bancos-app),
     outline-offset: 2px;
 }
 
-.bandeja-filtros input:focus-visible {
+.bandeja-filtros input:focus-visible,
+.bandeja-filtros select:focus-visible {
     border-color: var(--ui-acento);
+}
+
+.bandeja-detalle-lista li,
+.bandeja-borrador,
+.bandeja-lineas th,
+.bandeja-lineas td {
+    border-color: var(--ui-borde);
+}
+
+.bandeja-detalle-lista li,
+.bandeja-borrador,
+.bandeja-lineas th {
+    background: var(--ui-superficie-hundida);
 }
 
 .bandeja-filtros > button,

@@ -29,7 +29,7 @@ include __DIR__ . '/fixtures/bandeja-responsive.php';
 $html = ob_get_clean();
 
 $comprobar(strpos($html, '>Extractos<') !== false, 'La miga debe comenzar en Extractos.');
-$comprobar(strpos($html, '>1042<') !== false, 'El contexto debe mostrar la cuenta actual.');
+$comprobar(strpos($html, 'Casa Central · Banco Demo') !== false, 'El contexto debe mostrar la etiqueta inequívoca de la cuenta actual.');
 $comprobar(strpos($html, 'julio de 2026') !== false, 'El período debe presentarse en texto legible.');
 $comprobar(strpos($html, '2 movimientos cargados') !== false, 'El contexto debe presentar el estado de carga actual.');
 

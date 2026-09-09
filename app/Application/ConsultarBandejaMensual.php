@@ -26,16 +26,19 @@ final class ConsultarBandejaMensual
         $limite = array_key_exists('limite', $entrada) && $entrada['limite'] !== ''
             ? $entrada['limite']
             : 50;
+        $filtros = $this->filtros($entrada);
         $cursor = $this->cursores->decodificar(
             $entrada['cursor'] ?? null,
             $cuentaBancariaId,
-            $inicioPeriodo
+            $inicioPeriodo,
+            $filtros
         );
         $pagina = $this->repositorio->listarPagina(
             $cuentaBancariaId,
             $inicioPeriodo,
             $cursor,
-            $limite
+            $limite,
+            $filtros
         );
         $movimientos = $pagina['movimientos'];
         $ultimo = $movimientos ? $movimientos[count($movimientos) - 1] : null;
@@ -50,6 +53,7 @@ final class ConsultarBandejaMensual
             'cuenta_bancaria_id' => (int) $cuentaBancariaId,
             'inicio_periodo' => $inicioPeriodo,
             'limite' => (int) $limite,
+            'filtros' => $filtros,
             'movimientos' => $movimientos,
             'pagina_actual' => $paginaActual,
             'inicio_actual' => $inicioVisible,
@@ -59,9 +63,49 @@ final class ConsultarBandejaMensual
                     $cuentaBancariaId,
                     $inicioPeriodo,
                     $paginaSiguiente,
-                    $inicioSiguiente
+                    $inicioSiguiente,
+                    $filtros
                 )
                 : null,
         ];
+    }
+
+    private function filtros(array $entrada)
+    {
+        $estado = strtoupper(trim((string) ($entrada['estado'] ?? '')));
+        if ($estado === '') {
+            $estado = null;
+        } elseif (!in_array($estado, ['ABIERTO', 'PARA_CERRAR', 'CERRADO'], true)) {
+            throw new InvalidArgumentException('estado no es válido.');
+        }
+
+        $responsable = $entrada['responsable_id'] ?? null;
+        if ($responsable === '') {
+            $responsable = null;
+        }
+        if ($responsable !== null
+            && (filter_var($responsable, FILTER_VALIDATE_INT) === false || (int) $responsable <= 0)
+        ) {
+            throw new InvalidArgumentException('responsable_id debe ser un entero positivo.');
+        }
+
+        return [
+            'estado' => $estado,
+            'responsable_id' => $responsable === null ? null : (int) $responsable,
+            'asociacion' => $this->presencia($entrada['asociacion'] ?? '', 'asociacion'),
+            'mensajes' => $this->presencia($entrada['mensajes'] ?? '', 'mensajes'),
+        ];
+    }
+
+    private function presencia($valor, $nombre)
+    {
+        $valor = strtoupper(trim((string) $valor));
+        if ($valor === '') {
+            return null;
+        }
+        if (!in_array($valor, ['CON', 'SIN'], true)) {
+            throw new InvalidArgumentException($nombre . ' no es válido.');
+        }
+        return $valor;
     }
 }

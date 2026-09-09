@@ -13,11 +13,11 @@ $comprobar = static function ($condicion, $mensaje) {
 $comprobar(strpos($vista, 'data-abrir-detalle') !== false, 'Falta el acceso al detalle desde la fila.');
 $comprobar(strpos($vista, '<template data-detalle-movimiento>') !== false, 'El detalle debe reutilizar los datos ya renderizados.');
 $comprobar(strpos($vista, 'data-panel-detalle hidden') !== false, 'Falta el panel lateral inicialmente cerrado.');
-$comprobar(strpos($vista, '<h3>Asociación</h3>') !== false, 'Falta la sección Asociación.');
+$comprobar(strpos($vista, '<h3>Asociaciones</h3>') !== false, 'Falta la sección Asociaciones.');
 $comprobar(strpos($vista, '<h3>Mensajes</h3>') !== false, 'Falta la sección Mensajes.');
 $comprobar(strpos($vista, '<h3>Borradores</h3>') !== false, 'Falta la sección Borradores.');
 $comprobar(strpos($vista, '<h3>Historial</h3>') !== false, 'Falta la sección Historial.');
-$comprobar(strpos($vista, 'La consulta actual no incluye eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
+$comprobar(strpos($vista, 'Sin eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
 $comprobar(strpos($css, '.bandeja-resumen-texto') !== false && strpos($css, '-webkit-line-clamp: 2') !== false, 'La fila debe resumir el contenido extenso.');
 $comprobar(strpos($css, '.bandeja-detalle') !== false && strpos($css, 'right: 0') !== false, 'El detalle debe abrir como panel lateral.');
 $comprobar(substr_count($css, 'height: 100dvh') >= 2, 'El panel y su fondo deben cubrir el viewport aunque la tabla tenga pocas filas.');
@@ -38,7 +38,7 @@ $html = ob_get_clean();
 $comprobar(substr_count($html, 'data-abrir-detalle') === 2, 'Cada movimiento debe ofrecer un único acceso al detalle.');
 $comprobar(strpos($html, 'Borrador #731 · COMISIONES') !== false, 'La fila debe mostrar un resumen compacto del borrador.');
 $comprobar(strpos($html, 'Pendiente de revisión documental por Tesorería.') !== false, 'El detalle debe conservar el cuerpo completo del mensaje.');
-$comprobar(strpos($html, '<dt>Debe</dt><dd>18.250,00</dd>') !== false, 'El detalle debe conservar los totales del borrador.');
+$comprobar(strpos($html, '<th>Debe</th><th>Haber</th>') !== false && strpos($html, '<td>18.250,00</td>') !== false, 'El detalle debe conservar las líneas del borrador.');
 
 $_GET = ['fixture_filas' => 1];
 ob_start();

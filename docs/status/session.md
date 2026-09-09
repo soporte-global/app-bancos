@@ -71,3 +71,7 @@ Se corrigió además el detalle con páginas cortas: el filtro dinámico del she
 ## Acceso inicial de APP BANCOS - 2026-09-09
 
 Se creó y aplicó `018_bancos_hub_acceso_inicial.sql` en el entorno conectado por túnel. La migración registra `APP BANCOS` con ID 12, crea el permiso de acceso administrador y el destino interno `bandeja-mensual`, y los asigna directamente a las cuentas activas `mcaballero` y `hvega`. También invalida cualquier ruta heredada del permiso administrador para mantener ese rol limitado a ambos usuarios. La verificación sobre `hub_permisos_efectivos_usuario` confirmó dos administradores y cuatro rutas efectivas en total, todas directas. `app/config.php` ya exige la aplicación 12; se agregó un rollback que desactiva de forma auditable las filas creadas.
+
+## Lectura funcional completa de la bandeja - 2026-09-09
+
+Se reemplazaron los campos manuales de cuenta y período por opciones derivadas de las importaciones del esquema operativo y etiquetas completadas desde el ERP de sólo lectura. La bandeja admite filtros parametrizados por estado, responsable, asociación y mensajes. El cursor versión 3 firma esos filtros además del contexto y la posición. El repositorio evita duplicar filas cuando coexisten asociaciones y carga en cuatro consultas por lote todas las asociaciones, conversaciones, borradores/líneas e historial de los movimientos visibles. Los casos de sombra `017` validan mensajes, asociación y las dos líneas del borrador. No se agregaron mutaciones.

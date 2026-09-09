@@ -27,6 +27,6 @@ $html = ob_get_clean();
 $comprobar(strpos($html, 'TRX-94821') !== false, 'El render no conserva la referencia del movimiento.');
 $comprobar(strpos($html, 'data-label="Estado"') !== false, 'El render no conserva la etiqueta de estado para móvil.');
 $comprobar(strpos($html, 'cursor-opaco-de-ejemplo') !== false, 'El render no conserva el enlace de paginación actual.');
-$comprobar(substr_count($html, '<tr>') === 3, 'El render esperado debe contener cabecera y dos movimientos.');
+$comprobar(substr_count($html, 'class="bandeja-ver-detalle"') === 2, 'El render esperado debe contener dos movimientos.');
 
 echo "OK: bandeja responsive validada en estructura y render.\n";

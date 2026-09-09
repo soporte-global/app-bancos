@@ -36,8 +36,29 @@
         }
 
         function actualizarContexto() {
-            salidaCuenta.textContent = cuenta.value || 'Sin seleccionar';
+            salidaCuenta.textContent = cuenta.value && cuenta.selectedIndex >= 0
+                ? cuenta.options[cuenta.selectedIndex].textContent
+                : 'Sin seleccionar';
             salidaPeriodo.textContent = periodoLegible(periodo.value);
+        }
+
+        function actualizarPeriodos() {
+            var seleccionAnterior = periodo.value;
+            Array.prototype.forEach.call(periodo.options, function (opcion) {
+                if (!opcion.dataset.cuenta) {
+                    opcion.hidden = false;
+                    opcion.disabled = false;
+                    return;
+                }
+                var disponible = opcion.dataset.cuenta === cuenta.value;
+                opcion.hidden = !disponible;
+                opcion.disabled = !disponible;
+            });
+            if (!periodo.selectedOptions.length || periodo.selectedOptions[0].disabled) {
+                periodo.value = '';
+            } else {
+                periodo.value = seleccionAnterior;
+            }
         }
 
         function actualizarFiltros() {
@@ -46,38 +67,66 @@
             }
 
             filtrosLista.textContent = '';
-            if (limite.value === '' || limite.value === '50') {
+            var activos = [];
+            var definiciones = [
+                { nombre: 'estado', prefijo: 'Estado: ' },
+                { nombre: 'responsable_id', prefijo: 'Responsable: ' },
+                { nombre: 'asociacion', prefijo: '' },
+                { nombre: 'mensajes', prefijo: '' }
+            ];
+            if (limite.value !== '' && limite.value !== '50') {
+                activos.push({ nombre: 'limite', etiqueta: 'Límite: ' + limite.value });
+            }
+            definiciones.forEach(function (definicion) {
+                var control = formulario.elements[definicion.nombre];
+                if (control && control.value) {
+                    activos.push({
+                        nombre: definicion.nombre,
+                        etiqueta: definicion.prefijo + control.options[control.selectedIndex].textContent
+                    });
+                }
+            });
+            if (activos.length === 0) {
                 filtrosVacio.hidden = false;
                 filtrosLista.hidden = true;
                 return;
             }
-
-            var item = document.createElement('li');
-            var etiqueta = document.createElement('span');
-            var limpiar = document.createElement('button');
-            etiqueta.textContent = 'Límite: ' + limite.value;
-            limpiar.type = 'button';
-            limpiar.setAttribute('aria-label', 'Quitar filtro Límite');
-            limpiar.setAttribute('data-limpiar-filtro', 'limite');
-            limpiar.textContent = '×';
-            item.appendChild(etiqueta);
-            item.appendChild(limpiar);
-            filtrosLista.appendChild(item);
+            activos.forEach(function (activo) {
+                var item = document.createElement('li');
+                var etiqueta = document.createElement('span');
+                var limpiar = document.createElement('button');
+                etiqueta.textContent = activo.etiqueta;
+                limpiar.type = 'button';
+                limpiar.setAttribute('aria-label', 'Quitar filtro ' + activo.etiqueta);
+                limpiar.setAttribute('data-limpiar-filtro', activo.nombre);
+                limpiar.textContent = '×';
+                item.appendChild(etiqueta);
+                item.appendChild(limpiar);
+                filtrosLista.appendChild(item);
+            });
             filtrosVacio.hidden = true;
             filtrosLista.hidden = false;
         }
 
-        cuenta.addEventListener('input', actualizarContexto);
+        cuenta.addEventListener('input', function () {
+            actualizarPeriodos();
+            actualizarContexto();
+        });
         periodo.addEventListener('input', actualizarContexto);
+        Array.prototype.forEach.call(formulario.querySelectorAll('[name="estado"], [name="responsable_id"], [name="asociacion"], [name="mensajes"]'), function (control) {
+            control.addEventListener('input', actualizarFiltros);
+        });
         limite.addEventListener('input', actualizarFiltros);
         filtros.addEventListener('click', function (evento) {
-            if (!evento.target.matches('[data-limpiar-filtro="limite"]')) {
+            var nombre = evento.target.getAttribute('data-limpiar-filtro');
+            if (!nombre || !formulario.elements[nombre]) {
                 return;
             }
-            limite.value = '50';
+            formulario.elements[nombre].value = nombre === 'limite' ? '50' : '';
             actualizarFiltros();
-            limite.focus();
+            formulario.elements[nombre].focus();
         });
+        actualizarPeriodos();
         function mostrarCarga() {
             actualizarContexto();
             raiz.setAttribute('aria-busy', 'true');
@@ -137,7 +186,7 @@
             }
 
             var parametrosReferencia = referencia.searchParams;
-            var mismoContexto = ['pag', 'cuenta_bancaria_id', 'inicio_periodo'].every(function (nombre) {
+            var mismoContexto = ['pag', 'cuenta_bancaria_id', 'inicio_periodo', 'estado', 'responsable_id', 'asociacion', 'mensajes', 'limite'].every(function (nombre) {
                 return parametrosReferencia.get(nombre) === parametrosActuales.get(nombre);
             });
             return mismoContexto ? rutaRelativa(referencia) : null;

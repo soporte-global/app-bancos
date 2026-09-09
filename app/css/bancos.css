@@ -214,7 +214,7 @@ body.bandeja-detalle-activo {
 
 .bandeja-filtros {
     display: grid;
-    grid-template-columns: minmax(160px, 1.2fr) minmax(160px, 1fr) minmax(90px, 0.45fr) auto;
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
     gap: 12px;
     align-items: end;
 }
@@ -227,12 +227,17 @@ body.bandeja-detalle-activo {
     font-weight: 800;
 }
 
-.bandeja-filtros input {
+.bandeja-filtros input,
+.bandeja-filtros select {
     width: 100%;
     height: var(--alto-control);
     padding: 7px 10px;
     border: 1px solid;
     border-radius: var(--radio-control);
+}
+
+.bandeja-filtros label:first-of-type {
+    grid-column: span 2;
 }
 
 .bandeja-filtros > button,
@@ -614,6 +619,56 @@ body.bandeja-detalle-activo {
     font-weight: 800;
 }
 
+.bandeja-detalle-lista {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bandeja-detalle-lista li,
+.bandeja-borrador {
+    padding: 9px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font-size: 0.7rem;
+    line-height: 1.45;
+}
+
+.bandeja-detalle-lista span,
+.bandeja-detalle-lista small {
+    display: block;
+    margin-top: 4px;
+}
+
+.bandeja-borrador + .bandeja-borrador {
+    margin-top: 8px;
+}
+
+.bandeja-lineas-region {
+    margin-top: 8px;
+    overflow-x: auto;
+}
+
+.bandeja-lineas {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.68rem;
+}
+
+.bandeja-lineas th,
+.bandeja-lineas td {
+    padding: 6px;
+    border: 1px solid;
+    text-align: left;
+}
+
+.bandeja-lineas th:nth-child(n + 2),
+.bandeja-lineas td:nth-child(n + 2) {
+    text-align: right;
+}
+
 @keyframes bandeja-girar {
     to { transform: rotate(360deg); }
 }
@@ -643,13 +698,7 @@ body.bandeja-detalle-activo {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .bandeja-filtros label:last-of-type {
-        grid-column: 1 / 2;
-    }
-
-    .bandeja-filtros > button {
-        grid-column: 2 / 3;
-    }
+    .bandeja-filtros label:first-of-type { grid-column: span 2; }
 }
 
 @media (max-width: 650px) {
@@ -681,7 +730,7 @@ body.bandeja-detalle-activo {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .bandeja-filtros label:last-of-type,
+    .bandeja-filtros label:first-of-type,
     .bandeja-filtros > button {
         grid-column: auto;
     }

@@ -7,7 +7,7 @@ Diseño vigente:
 - `nueva_app` queda definida como plantilla de referencia para identidad/permisos; SGUA se descarta.
 - hQuery queda definida como librería compartida de UI/infraestructura cliente (versión externa publicada).
 
-Avance funcional: `015_bancos_debug_fixtures.sql` cargó cinco movimientos de prueba en `global_temp` sin escribir datos productivos. `016_bancos_debug_cargar_lote_sombra_2026_07.sql` agregó un lote real y acotado: 51 movimientos y 47 asociaciones de una cuenta/período ya migrados desde `global_prod`, sin DML sobre `public` ni `global_prod`. `BandejaMensualRepository` y `ConsultarBandejaMensual` exponen la consulta keyset como pantalla interna `?pag=bandeja-mensual`, con límite de 1 a 100 y cursor firmado ligado a cuenta/período.
+Avance funcional: `015_bancos_debug_fixtures.sql` cargó cinco movimientos de prueba en `global_temp` sin escribir datos productivos. `016_bancos_debug_cargar_lote_sombra_2026_07.sql` agregó un lote real y acotado: 51 movimientos y 47 asociaciones de una cuenta/período ya migrados desde `global_prod`, sin DML sobre `public` ni `global_prod`. `BandejaMensualRepository` y `ConsultarBandejaMensual` exponen la consulta keyset como pantalla interna `?pag=bandeja-mensual`, con límite de 1 a 100 y cursor firmado ligado a cuenta, período y filtros.
 
 Validación de sombra: `tests/CompararLoteSombra016Test.php` confirmó paridad del lote `016` entre legacy, `global_prod` y `global_temp`: 51 movimientos y 47 asociaciones de asiento, sin diferencias.
 
@@ -15,7 +15,7 @@ Avance de cobertura: `017_bancos_debug_cargar_casos_sombra.sql` cargó dos movim
 
 Validación de cobertura: `tests/CompararCasosSombra017Test.php` confirmó paridad de movimientos, mensajes, asociación a valor y líneas de borrador contra producción; además verifica una excepción documentada de migración.
 
-La bandeja de sólo lectura ya muestra estados legibles, asociaciones, último mensaje y resumen del borrador activo (fecha, modelo, debe y haber), con contraste reforzado para la tabla y los controles.
+La bandeja de sólo lectura ya ofrece selectores reales de cuenta/período, filtros por estado, responsable, asociación y mensajes, y detalle completo por página. El detalle incluye todas las asociaciones activas, conversación, borradores con líneas contables e historial de estado/responsable. Las consultas de detalle se agrupan por página y no generan una consulta por fila.
 
 Acceso inicial configurado: la migración `018_bancos_hub_acceso_inicial.sql` registró `APP BANCOS` como aplicación Hub 12 y concedió acceso administrador y acceso a `bandeja-mensual` exclusivamente a las cuentas activas `mcaballero` y `hvega`, mediante asignaciones directas. La aplicación ya exige ese `id_aplicacion`.
 

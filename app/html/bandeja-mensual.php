@@ -1,29 +1,72 @@
 <?php
 $bandeja = $contextoApp['data']->bandeja_mensual ?? (object) [];
 $resultado = $bandeja->resultado ?? null;
-$filtros = $resultado ?: (object) [];
+$contexto = is_array($bandeja->contexto ?? null) ? $bandeja->contexto : [];
+$cuentas = is_array($contexto['cuentas'] ?? null) ? $contexto['cuentas'] : [];
+$responsables = is_array($contexto['responsables'] ?? null) ? $contexto['responsables'] : [];
+$filtrosResultado = $resultado !== null && is_array($resultado->filtros ?? null)
+    ? $resultado->filtros
+    : [];
 $escapar = static function ($valor) {
     return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
 };
-$cuenta = $filtros->cuenta_bancaria_id ?? ($_GET['cuenta_bancaria_id'] ?? '');
-$periodo = $filtros->inicio_periodo ?? ($_GET['inicio_periodo'] ?? '');
-$limite = $filtros->limite ?? ($_GET['limite'] ?? 50);
+$cuenta = $resultado->cuenta_bancaria_id ?? ($_GET['cuenta_bancaria_id'] ?? '');
+$periodo = $resultado->inicio_periodo ?? ($_GET['inicio_periodo'] ?? '');
+$limite = $resultado->limite ?? ($_GET['limite'] ?? 50);
+$estadoFiltro = $filtrosResultado['estado'] ?? ($_GET['estado'] ?? '');
+$responsableFiltro = $filtrosResultado['responsable_id'] ?? ($_GET['responsable_id'] ?? '');
+$asociacionFiltro = $filtrosResultado['asociacion'] ?? ($_GET['asociacion'] ?? '');
+$mensajesFiltro = $filtrosResultado['mensajes'] ?? ($_GET['mensajes'] ?? '');
 $meses = [
     '01' => 'enero', '02' => 'febrero', '03' => 'marzo', '04' => 'abril',
     '05' => 'mayo', '06' => 'junio', '07' => 'julio', '08' => 'agosto',
     '09' => 'septiembre', '10' => 'octubre', '11' => 'noviembre', '12' => 'diciembre',
 ];
-$periodoLegible = 'Sin seleccionar';
-if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', (string) $periodo, $partesPeriodo)) {
-    $periodoLegible = ($meses[$partesPeriodo[2]] ?? $partesPeriodo[2]) . ' de ' . $partesPeriodo[1];
+$periodoLegible = static function ($valor) use ($meses) {
+    if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', (string) $valor, $partes)) {
+        return ($meses[$partes[2]] ?? $partes[2]) . ' de ' . $partes[1];
+    }
+    return 'Sin seleccionar';
+};
+$cuentaEtiqueta = (string) $cuenta;
+$periodosDisponibles = [];
+foreach ($cuentas as $opcionCuenta) {
+    if ((string) ($opcionCuenta['id'] ?? '') === (string) $cuenta) {
+        $cuentaEtiqueta = $opcionCuenta['etiqueta'];
+        $periodosDisponibles = $opcionCuenta['periodos'];
+        break;
+    }
+}
+if ($cuentaEtiqueta === '') {
+    $cuentaEtiqueta = 'Sin seleccionar';
+}
+$responsableEtiqueta = (string) $responsableFiltro;
+foreach ($responsables as $responsable) {
+    if ((string) $responsable['id'] === (string) $responsableFiltro) {
+        $responsableEtiqueta = $responsable['usuario'];
+        break;
+    }
+}
+$filtrosActivos = [];
+if ((int) $limite !== 50) {
+    $filtrosActivos['limite'] = 'Límite: ' . $limite;
+}
+if ($estadoFiltro !== '' && $estadoFiltro !== null) {
+    $filtrosActivos['estado'] = 'Estado: ' . $estadoFiltro;
+}
+if ($responsableFiltro !== '' && $responsableFiltro !== null) {
+    $filtrosActivos['responsable_id'] = 'Responsable: ' . $responsableEtiqueta;
+}
+if ($asociacionFiltro !== '' && $asociacionFiltro !== null) {
+    $filtrosActivos['asociacion'] = $asociacionFiltro === 'CON' ? 'Con asociación' : 'Sin asociación';
+}
+if ($mensajesFiltro !== '' && $mensajesFiltro !== null) {
+    $filtrosActivos['mensajes'] = $mensajesFiltro === 'CON' ? 'Con mensajes' : 'Sin mensajes';
 }
 $cantidadMovimientos = $resultado !== null ? count($resultado->movimientos) : null;
 $paginaActual = $resultado->pagina_actual ?? (!isset($_GET['cursor']) ? 1 : null);
 $inicioActual = $resultado->inicio_actual ?? ($cantidadMovimientos > 0 && !isset($_GET['cursor']) ? 1 : null);
-$finActual = $inicioActual !== null && $cantidadMovimientos > 0
-    ? $inicioActual + $cantidadMovimientos - 1
-    : 0;
-$limiteEsActivo = (int) $limite !== 50;
+$finActual = $inicioActual !== null && $cantidadMovimientos > 0 ? $inicioActual + $cantidadMovimientos - 1 : 0;
 if (($bandeja->error ?? null) !== null) {
     $estadoCarga = 'No se pudo cargar la bandeja';
     $estadoContexto = 'error';
@@ -34,36 +77,36 @@ if (($bandeja->error ?? null) !== null) {
     $estadoCarga = 'Esperando consulta';
     $estadoContexto = 'espera';
 }
+$describirAsociacion = static function (array $asociacion) {
+    if ($asociacion['valor_zetti_id'] !== null) {
+        return 'Valor #' . $asociacion['valor_zetti_id'];
+    }
+    if ($asociacion['asiento_zetti_id'] !== null) {
+        return 'Asiento #' . $asociacion['asiento_zetti_id'];
+    }
+    return 'Borrador #' . $asociacion['borrador_asiento_id'];
+};
 ?>
 <main class="afterheader bandeja-page">
 <div class="bandeja-mensual bancos-app" data-bandeja aria-busy="false">
     <div class="bandeja-shell">
         <h1>Bandeja mensual</h1>
-        <p class="bandeja-introduccion">Consulta de sólo lectura. En modo debug, los movimientos se leen desde <code>global_temp</code>.</p>
+        <p class="bandeja-introduccion">Consulta de sólo lectura de los extractos y su seguimiento.</p>
 
         <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto data-estado="<?php echo $estadoContexto; ?>">
             <ol class="bandeja-contexto-miga">
                 <li class="bandeja-contexto-origen">Extractos</li>
-                <li>
-                    <span class="bandeja-contexto-etiqueta">Cuenta</span>
-                    <output data-contexto-cuenta><?php echo $cuenta !== '' ? $escapar($cuenta) : 'Sin seleccionar'; ?></output>
-                </li>
-                <li>
-                    <span class="bandeja-contexto-etiqueta">Período</span>
-                    <output data-contexto-periodo><?php echo $escapar($periodoLegible); ?></output>
-                </li>
+                <li><span class="bandeja-contexto-etiqueta">Cuenta</span><output data-contexto-cuenta><?php echo $escapar($cuentaEtiqueta); ?></output></li>
+                <li><span class="bandeja-contexto-etiqueta">Período</span><output data-contexto-periodo><?php echo $escapar($periodoLegible($periodo)); ?></output></li>
             </ol>
             <div class="bandeja-contexto-meta">
                 <span class="bandeja-contexto-estado" aria-live="polite" data-contexto-estado><?php echo $escapar($estadoCarga); ?></span>
                 <div class="bandeja-contexto-filtros" data-filtros-activos>
-                    <span data-filtros-vacio<?php echo $limiteEsActivo ? ' hidden' : ''; ?>>Filtros activos: ninguno</span>
-                    <ul class="bandeja-filtros-lista" aria-label="Filtros activos" data-filtros-lista<?php echo $limiteEsActivo ? '' : ' hidden'; ?>>
-                        <?php if ($limiteEsActivo): ?>
-                            <li>
-                                <span>Límite: <?php echo $escapar($limite); ?></span>
-                                <button type="button" aria-label="Quitar filtro Límite" data-limpiar-filtro="limite">×</button>
-                            </li>
-                        <?php endif; ?>
+                    <span data-filtros-vacio<?php echo $filtrosActivos ? ' hidden' : ''; ?>>Filtros activos: ninguno</span>
+                    <ul class="bandeja-filtros-lista" aria-label="Filtros activos" data-filtros-lista<?php echo $filtrosActivos ? '' : ' hidden'; ?>>
+                        <?php foreach ($filtrosActivos as $nombre => $etiqueta): ?>
+                            <li><span><?php echo $escapar($etiqueta); ?></span><button type="button" aria-label="Quitar filtro <?php echo $escapar($etiqueta); ?>" data-limpiar-filtro="<?php echo $escapar($nombre); ?>">×</button></li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
             </div>
@@ -72,213 +115,91 @@ if (($bandeja->error ?? null) !== null) {
         <section class="bandeja-panel bandeja-selector" aria-label="Consulta de movimientos">
             <form class="bandeja-filtros" method="get" action="<?php echo $escapar(RUTA_WEB); ?>">
                 <input type="hidden" name="pag" value="bandeja-mensual">
-                <label>
-                    Cuenta bancaria
-                    <input name="cuenta_bancaria_id" type="number" min="1" required value="<?php echo $escapar($cuenta); ?>">
+                <label>Cuenta bancaria
+                    <select name="cuenta_bancaria_id" required data-selector-cuenta>
+                        <option value="">Seleccionar cuenta</option>
+                        <?php foreach ($cuentas as $opcionCuenta): ?>
+                            <option value="<?php echo $escapar($opcionCuenta['id']); ?>"<?php echo (string) $opcionCuenta['id'] === (string) $cuenta ? ' selected' : ''; ?>><?php echo $escapar($opcionCuenta['etiqueta']); ?></option>
+                        <?php endforeach; ?>
+                        <?php if ($cuenta !== '' && !$periodosDisponibles): ?><option value="<?php echo $escapar($cuenta); ?>" selected>Cuenta #<?php echo $escapar($cuenta); ?></option><?php endif; ?>
+                    </select>
                 </label>
-                <label>
-                    Inicio de período
-                    <input name="inicio_periodo" type="date" required value="<?php echo $escapar($periodo); ?>">
+                <label>Período
+                    <select name="inicio_periodo" required data-selector-periodo>
+                        <option value="">Seleccionar período</option>
+                        <?php foreach ($cuentas as $opcionCuenta): ?>
+                            <?php foreach ($opcionCuenta['periodos'] as $opcionPeriodo): ?>
+                                <option value="<?php echo $escapar($opcionPeriodo); ?>" data-cuenta="<?php echo $escapar($opcionCuenta['id']); ?>"<?php echo (string) $opcionCuenta['id'] === (string) $cuenta && $opcionPeriodo === $periodo ? ' selected' : ''; ?>><?php echo $escapar($periodoLegible($opcionPeriodo)); ?></option>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                        <?php if ($periodo !== '' && !in_array($periodo, $periodosDisponibles, true)): ?><option value="<?php echo $escapar($periodo); ?>" data-cuenta="<?php echo $escapar($cuenta); ?>" selected><?php echo $escapar($periodoLegible($periodo)); ?></option><?php endif; ?>
+                    </select>
                 </label>
-                <label>
-                    Límite
+                <label>Estado
+                    <select name="estado">
+                        <option value="">Todos</option>
+                        <?php foreach (['ABIERTO', 'PARA_CERRAR', 'CERRADO'] as $estado): ?><option value="<?php echo $estado; ?>"<?php echo $estadoFiltro === $estado ? ' selected' : ''; ?>><?php echo $estado; ?></option><?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Responsable
+                    <select name="responsable_id">
+                        <option value="">Todos</option>
+                        <?php foreach ($responsables as $responsable): ?><option value="<?php echo $escapar($responsable['id']); ?>"<?php echo (string) $responsable['id'] === (string) $responsableFiltro ? ' selected' : ''; ?>><?php echo $escapar($responsable['usuario']); ?></option><?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Asociación
+                    <select name="asociacion"><option value="">Todas</option><option value="CON"<?php echo $asociacionFiltro === 'CON' ? ' selected' : ''; ?>>Con asociación</option><option value="SIN"<?php echo $asociacionFiltro === 'SIN' ? ' selected' : ''; ?>>Sin asociación</option></select>
+                </label>
+                <label>Mensajes
+                    <select name="mensajes"><option value="">Todos</option><option value="CON"<?php echo $mensajesFiltro === 'CON' ? ' selected' : ''; ?>>Con mensajes</option><option value="SIN"<?php echo $mensajesFiltro === 'SIN' ? ' selected' : ''; ?>>Sin mensajes</option></select>
+                </label>
+                <label>Límite
                     <input name="limite" type="number" min="1" max="100" value="<?php echo $escapar($limite); ?>">
                 </label>
                 <button type="submit">Consultar</button>
             </form>
         </section>
 
-        <section class="bandeja-panel bandeja-cargando" aria-live="polite" data-estado-cargando hidden>
-            <div class="bandeja-estado-encabezado">
-                <span class="bandeja-spinner" aria-hidden="true"></span>
-                <div>
-                    <h2>Cargando movimientos</h2>
-                    <p>Conservamos la cuenta, el período y los filtros mientras se actualiza la bandeja.</p>
-                </div>
-            </div>
-            <div class="bandeja-skeleton" aria-hidden="true">
-                <span></span><span></span><span></span>
-            </div>
-        </section>
+        <section class="bandeja-panel bandeja-cargando" aria-live="polite" data-estado-cargando hidden><div class="bandeja-estado-encabezado"><span class="bandeja-spinner" aria-hidden="true"></span><div><h2>Cargando movimientos</h2><p>Conservamos la cuenta, el período y los filtros mientras se actualiza la bandeja.</p></div></div><div class="bandeja-skeleton" aria-hidden="true"><span></span><span></span><span></span></div></section>
 
         <?php if (($bandeja->error ?? null) !== null): ?>
-            <section class="bandeja-panel bandeja-estado bandeja-estado-error" role="alert" data-contenido-bandeja>
-                <span class="bandeja-estado-icono" aria-hidden="true">!</span>
-                <div>
-                    <h2>No pudimos cargar los movimientos</h2>
-                    <p><?php echo $escapar($bandeja->error); ?></p>
-                    <p class="bandeja-estado-ayuda">La cuenta, el período y los filtros permanecen disponibles para volver a intentar.</p>
-                    <button type="button" data-reintentar-consulta>Reintentar consulta</button>
-                </div>
-            </section>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-error" role="alert" data-contenido-bandeja><span class="bandeja-estado-icono" aria-hidden="true">!</span><div><h2>No pudimos cargar los movimientos</h2><p><?php echo $escapar($bandeja->error); ?></p><p class="bandeja-estado-ayuda">El contexto permanece disponible para volver a intentar.</p><button type="button" data-reintentar-consulta>Reintentar consulta</button></div></section>
+        <?php elseif ($resultado !== null && $cantidadMovimientos === 0): ?>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-vacio" data-contenido-bandeja><span class="bandeja-estado-icono" aria-hidden="true">0</span><div><h2>No hay movimientos para este contexto</h2><p>No encontramos resultados para los datos y filtros seleccionados.</p></div></section>
         <?php elseif ($resultado !== null): ?>
-        <?php if ($cantidadMovimientos === 0): ?>
-            <section class="bandeja-panel bandeja-estado bandeja-estado-vacio" data-contenido-bandeja>
-                <span class="bandeja-estado-icono" aria-hidden="true">0</span>
-                <div>
-                    <h2>No hay movimientos para este contexto</h2>
-                    <p>No encontramos resultados para la cuenta <?php echo $escapar($cuenta); ?> en <?php echo $escapar($periodoLegible); ?>. Podés ajustar los datos de consulta sin perder el estado actual.</p>
-                </div>
-            </section>
-        <?php else: ?>
         <section class="bandeja-panel" aria-labelledby="bandeja-resultados-titulo">
-            <p class="bandeja-resumen" id="bandeja-resultados-titulo"><?php echo count($resultado->movimientos); ?> movimientos en esta página.</p>
+            <p class="bandeja-resumen" id="bandeja-resultados-titulo"><?php echo $cantidadMovimientos; ?> movimientos en esta página.</p>
             <div class="bandeja-table-region" tabindex="0" role="region" aria-label="Movimientos de la bandeja">
-            <table class="bandeja-tabla">
-            <caption class="visualmente_oculto">Movimientos bancarios del contexto seleccionado</caption>
-            <colgroup>
-                <col class="bandeja-col-fecha">
-                <col class="bandeja-col-referencia">
-                <col class="bandeja-col-descripcion">
-                <col class="bandeja-col-credito">
-                <col class="bandeja-col-debito">
-                <col class="bandeja-col-estado">
-                <col class="bandeja-col-asociacion">
-                <col class="bandeja-col-borrador">
-                <col class="bandeja-col-mensaje">
-                <col class="bandeja-col-detalle">
-            </colgroup>
-            <thead>
-                <tr><th scope="col">Fecha</th><th scope="col">Referencia</th><th scope="col">Descripción</th><th scope="col">Crédito</th><th scope="col">Débito</th><th scope="col">Estado</th><th scope="col">Asociación</th><th scope="col">Borrador</th><th scope="col">Último mensaje</th><th scope="col">Detalle</th></tr>
-            </thead>
+            <table class="bandeja-tabla"><caption class="visualmente_oculto">Movimientos bancarios del contexto seleccionado</caption>
+            <colgroup><col class="bandeja-col-fecha"><col class="bandeja-col-referencia"><col class="bandeja-col-descripcion"><col class="bandeja-col-credito"><col class="bandeja-col-debito"><col class="bandeja-col-estado"><col class="bandeja-col-asociacion"><col class="bandeja-col-borrador"><col class="bandeja-col-mensaje"><col class="bandeja-col-detalle"></colgroup>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Referencia</th><th scope="col">Descripción</th><th scope="col">Crédito</th><th scope="col">Débito</th><th scope="col">Estado</th><th scope="col">Asociación</th><th scope="col">Borrador</th><th scope="col">Último mensaje</th><th scope="col">Detalle</th></tr></thead>
             <tbody>
             <?php foreach ($resultado->movimientos as $movimiento): ?>
+                <?php $estadoCodigo = (string) ($movimiento['estado_codigo'] ?? 'SIN_ESTADO'); $estadoClase = strtolower(str_replace('_', '-', $estadoCodigo)); $asociaciones = $movimiento['asociaciones'] ?? []; if (!$asociaciones) { foreach (['valor_zetti_id', 'asiento_zetti_id', 'borrador_asiento_id'] as $destino) { if (($movimiento[$destino] ?? null) !== null) { $asociaciones[] = ['valor_zetti_id' => null, 'asiento_zetti_id' => null, 'borrador_asiento_id' => null, 'monto_asociado' => null, 'compartido' => false, 'observacion' => null, $destino => $movimiento[$destino]]; } } } $mensajes = $movimiento['mensajes'] ?? []; $historial = $movimiento['historial'] ?? []; $borradores = $movimiento['borradores'] ?? []; ?>
                 <tr>
-                    <td data-label="Fecha"><?php echo $escapar($movimiento['fecha_operacion']); ?></td>
-                    <td data-label="Referencia"><?php echo $escapar($movimiento['referencia']); ?></td>
-                    <td data-label="Descripción"><?php echo $escapar($movimiento['descripcion']); ?></td>
-                    <td class="importe" data-label="Crédito"><?php echo $escapar($movimiento['credito']); ?></td>
-                    <td class="importe" data-label="Débito"><?php echo $escapar($movimiento['debito']); ?></td>
-                    <?php
-                        $estadoCodigo = (string) ($movimiento['estado_codigo'] ?? 'SIN_ESTADO');
-                        $estadoClase = strtolower(str_replace('_', '-', $estadoCodigo));
-                    ?>
+                    <td data-label="Fecha"><?php echo $escapar($movimiento['fecha_operacion']); ?></td><td data-label="Referencia"><?php echo $escapar($movimiento['referencia']); ?></td><td data-label="Descripción"><?php echo $escapar($movimiento['descripcion']); ?></td><td class="importe" data-label="Crédito"><?php echo $escapar($movimiento['credito']); ?></td><td class="importe" data-label="Débito"><?php echo $escapar($movimiento['debito']); ?></td>
                     <td data-label="Estado"><span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span></td>
-                    <td data-label="Asociación"><?php
-                        if ($movimiento['valor_zetti_id'] !== null) {
-                            echo 'Valor #' . $escapar($movimiento['valor_zetti_id']);
-                        } elseif ($movimiento['asiento_zetti_id'] !== null) {
-                            echo 'Asiento #' . $escapar($movimiento['asiento_zetti_id']);
-                        } elseif ($movimiento['borrador_asiento_id'] !== null) {
-                            echo 'Borrador #' . $escapar($movimiento['borrador_asiento_id']);
-                        } else {
-                            echo '<span class="sin-dato">Sin asociación</span>';
-                        }
-                    ?></td>
-                    <td class="bandeja-resumen-celda" data-label="Borrador"><span class="bandeja-resumen-texto"><?php
-                        if ($movimiento['borrador_id'] !== null) {
-                            echo 'Borrador #' . $escapar($movimiento['borrador_id']);
-                            echo ' · ' . $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo');
-                        } else {
-                            echo '<span class="sin-dato">Sin borrador</span>';
-                        }
-                    ?></span></td>
-                    <td class="mensaje bandeja-resumen-celda" data-label="Último mensaje"><span class="bandeja-resumen-texto"><?php
-                        if ($movimiento['ultimo_mensaje_cuerpo'] !== null) {
-                            echo $escapar($movimiento['ultimo_mensaje_tipo']) . ' · ' . $escapar($movimiento['ultimo_mensaje_cuerpo']);
-                        } else {
-                            echo '<span class="sin-dato">Sin mensajes</span>';
-                        }
-                    ?></span></td>
-                    <td data-label="Detalle">
-                        <button class="bandeja-ver-detalle" type="button" data-abrir-detalle aria-label="Ver detalle de <?php echo $escapar($movimiento['referencia']); ?>">Ver detalle</button>
-                        <template data-detalle-movimiento>
-                            <article class="bandeja-detalle-contenido">
-                                <header class="bandeja-detalle-resumen">
-                                    <p class="bandeja-detalle-sobretitulo">Movimiento <?php echo $escapar($movimiento['referencia']); ?></p>
-                                    <h2><?php echo $escapar($movimiento['descripcion']); ?></h2>
-                                    <p><?php echo $escapar($movimiento['fecha_operacion']); ?> · Crédito <?php echo $escapar($movimiento['credito']); ?> · Débito <?php echo $escapar($movimiento['debito']); ?></p>
-                                    <span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span>
-                                </header>
-
-                                <section class="bandeja-detalle-seccion">
-                                    <h3>Asociación</h3>
-                                    <p><?php
-                                        if ($movimiento['valor_zetti_id'] !== null) {
-                                            echo 'Valor #' . $escapar($movimiento['valor_zetti_id']);
-                                        } elseif ($movimiento['asiento_zetti_id'] !== null) {
-                                            echo 'Asiento #' . $escapar($movimiento['asiento_zetti_id']);
-                                        } elseif ($movimiento['borrador_asiento_id'] !== null) {
-                                            echo 'Borrador de asiento #' . $escapar($movimiento['borrador_asiento_id']);
-                                        } else {
-                                            echo 'Sin asociación registrada';
-                                        }
-                                    ?></p>
-                                </section>
-
-                                <section class="bandeja-detalle-seccion">
-                                    <h3>Mensajes</h3>
-                                    <?php if ($movimiento['ultimo_mensaje_cuerpo'] !== null): ?>
-                                        <p><strong><?php echo $escapar($movimiento['ultimo_mensaje_tipo']); ?>:</strong> <?php echo $escapar($movimiento['ultimo_mensaje_cuerpo']); ?></p>
-                                    <?php else: ?>
-                                        <p class="sin-dato">Sin mensajes registrados.</p>
-                                    <?php endif; ?>
-                                </section>
-
-                                <section class="bandeja-detalle-seccion">
-                                    <h3>Borradores</h3>
-                                    <?php if ($movimiento['borrador_id'] !== null): ?>
-                                        <dl class="bandeja-detalle-datos">
-                                            <div><dt>Identificador</dt><dd>#<?php echo $escapar($movimiento['borrador_id']); ?></dd></div>
-                                            <div><dt>Fecha contable</dt><dd><?php echo $escapar($movimiento['borrador_fecha_contable']); ?></dd></div>
-                                            <div><dt>Modelo</dt><dd><?php echo $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo'); ?></dd></div>
-                                            <div><dt>Debe</dt><dd><?php echo $escapar($movimiento['borrador_total_debe']); ?></dd></div>
-                                            <div><dt>Haber</dt><dd><?php echo $escapar($movimiento['borrador_total_haber']); ?></dd></div>
-                                        </dl>
-                                    <?php else: ?>
-                                        <p class="sin-dato">Sin borradores registrados.</p>
-                                    <?php endif; ?>
-                                </section>
-
-                                <section class="bandeja-detalle-seccion">
-                                    <h3>Historial</h3>
-                                    <p>Estado actual: <strong><?php echo $escapar($estadoCodigo); ?></strong>.</p>
-                                    <p class="sin-dato">La consulta actual no incluye eventos históricos adicionales.</p>
-                                </section>
-                            </article>
-                        </template>
+                    <td data-label="Asociación"><?php echo $asociaciones ? $escapar(implode(' + ', array_map($describirAsociacion, $asociaciones))) : '<span class="sin-dato">Sin asociación</span>'; ?></td>
+                    <td class="bandeja-resumen-celda" data-label="Borrador"><span class="bandeja-resumen-texto"><?php echo $movimiento['borrador_id'] !== null ? 'Borrador #' . $escapar($movimiento['borrador_id']) . ' · ' . $escapar($movimiento['borrador_modelo'] ?: 'Sin modelo') : '<span class="sin-dato">Sin borrador</span>'; ?></span></td>
+                    <td class="mensaje bandeja-resumen-celda" data-label="Último mensaje"><span class="bandeja-resumen-texto"><?php echo $movimiento['ultimo_mensaje_cuerpo'] !== null ? $escapar($movimiento['ultimo_mensaje_tipo']) . ' · ' . $escapar($movimiento['ultimo_mensaje_cuerpo']) : '<span class="sin-dato">Sin mensajes</span>'; ?></span></td>
+                    <td data-label="Detalle"><button class="bandeja-ver-detalle" type="button" data-abrir-detalle aria-label="Ver detalle de <?php echo $escapar($movimiento['referencia']); ?>">Ver detalle</button>
+                        <template data-detalle-movimiento><article class="bandeja-detalle-contenido">
+                            <header class="bandeja-detalle-resumen"><p class="bandeja-detalle-sobretitulo">Movimiento <?php echo $escapar($movimiento['referencia']); ?></p><h2><?php echo $escapar($movimiento['descripcion']); ?></h2><p><?php echo $escapar($movimiento['fecha_operacion']); ?> · Crédito <?php echo $escapar($movimiento['credito']); ?> · Débito <?php echo $escapar($movimiento['debito']); ?></p><span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span></header>
+                            <section class="bandeja-detalle-seccion"><h3>Asociaciones</h3><?php if ($asociaciones): ?><ol class="bandeja-detalle-lista"><?php foreach ($asociaciones as $asociacion): ?><li><strong><?php echo $escapar($describirAsociacion($asociacion)); ?></strong><?php if ($asociacion['monto_asociado'] !== null): ?> · <?php echo $escapar($asociacion['monto_asociado']); ?><?php endif; ?><?php if ($asociacion['compartido'] === true || $asociacion['compartido'] === 't'): ?> · compartido<?php endif; ?><?php if ($asociacion['observacion']): ?><small><?php echo $escapar($asociacion['observacion']); ?></small><?php endif; ?></li><?php endforeach; ?></ol><?php else: ?><p class="sin-dato">Sin asociaciones registradas.</p><?php endif; ?></section>
+                            <section class="bandeja-detalle-seccion"><h3>Mensajes</h3><?php if ($mensajes): ?><ol class="bandeja-detalle-lista"><?php foreach ($mensajes as $mensaje): ?><li><strong><?php echo $escapar($mensaje['tipo_mensaje']); ?></strong> · <?php echo $escapar($mensaje['emisor'] ?: 'Sistema'); ?> · <time><?php echo $escapar($mensaje['emitido_en']); ?></time><span><?php echo $escapar($mensaje['cuerpo']); ?></span></li><?php endforeach; ?></ol><?php else: ?><p class="sin-dato">Sin mensajes registrados.</p><?php endif; ?></section>
+                            <section class="bandeja-detalle-seccion"><h3>Borradores</h3><?php if ($borradores): ?><?php foreach ($borradores as $borrador): ?><div class="bandeja-borrador"><p><strong>Borrador #<?php echo $escapar($borrador['id']); ?></strong> · <?php echo $escapar($borrador['modelo'] ?: 'Sin modelo'); ?> · <?php echo $escapar($borrador['fecha_contable']); ?> · <?php echo $escapar($borrador['estado_codigo']); ?></p><?php if ($borrador['lineas']): ?><div class="bandeja-lineas-region"><table class="bandeja-lineas"><thead><tr><th>Cuenta</th><th>Debe</th><th>Haber</th></tr></thead><tbody><?php foreach ($borrador['lineas'] as $linea): ?><tr><td><?php echo $escapar(($linea['cuenta_codigo'] ?: $linea['cuenta_zetti_id']) . ' · ' . $linea['cuenta_nombre']); ?></td><td><?php echo $escapar($linea['debe']); ?></td><td><?php echo $escapar($linea['haber']); ?></td></tr><?php endforeach; ?></tbody></table></div><?php else: ?><p class="sin-dato">Sin líneas.</p><?php endif; ?></div><?php endforeach; ?><?php else: ?><p class="sin-dato">Sin borradores registrados.</p><?php endif; ?></section>
+                            <section class="bandeja-detalle-seccion"><h3>Historial</h3><?php if ($historial): ?><ol class="bandeja-detalle-lista bandeja-historial"><?php foreach ($historial as $evento): ?><li><strong><?php echo $escapar($evento['estado_codigo']); ?></strong> · <?php echo $escapar($evento['usuario'] ?: 'Usuario #' . $evento['usuario_hub_id']); ?> · <time><?php echo $escapar($evento['registrado_en']); ?></time><?php if ($evento['motivo'] || $evento['observacion']): ?><span><?php echo $escapar($evento['motivo'] ?: $evento['observacion']); ?></span><?php endif; ?></li><?php endforeach; ?></ol><?php else: ?><p>Estado actual: <strong><?php echo $escapar($estadoCodigo); ?></strong>.</p><p class="sin-dato">Sin eventos históricos adicionales.</p><?php endif; ?></section>
+                        </article></template>
                     </td>
                 </tr>
             <?php endforeach; ?>
-            </tbody>
-            </table>
-            </div>
-            <nav class="bandeja-paginacion" aria-label="Paginación de movimientos" data-paginacion data-cantidad="<?php echo $escapar($cantidadMovimientos); ?>">
-                <p class="bandeja-posicion" aria-live="polite" data-posicion-pagina>
-                    <?php if ($paginaActual !== null && $inicioActual !== null): ?>
-                        Página <?php echo $escapar($paginaActual); ?> · registros <?php echo $escapar($inicioActual); ?>–<?php echo $escapar($finActual); ?> · <?php echo $escapar($cantidadMovimientos); ?> en esta página
-                    <?php else: ?>
-                        Página actual · <?php echo $escapar($cantidadMovimientos); ?> registros en esta página
-                    <?php endif; ?>
-                </p>
-                <div class="bandeja-paginacion-controles">
-                    <a class="bandeja-pagina bandeja-anterior" aria-disabled="true" data-pagina-anterior>Anterior</a>
-                    <?php if ($resultado->siguiente_cursor !== null): ?>
-                        <a class="bandeja-pagina bandeja-siguiente" data-pagina-siguiente href="<?php echo $escapar(RUTA_WEB . '?pag=bandeja-mensual&cuenta_bancaria_id=' . rawurlencode((string) $resultado->cuenta_bancaria_id) . '&inicio_periodo=' . rawurlencode($resultado->inicio_periodo) . '&limite=' . rawurlencode((string) $resultado->limite) . '&cursor=' . rawurlencode($resultado->siguiente_cursor)); ?>">Siguiente</a>
-                    <?php else: ?>
-                        <a class="bandeja-pagina bandeja-siguiente" aria-disabled="true">Siguiente</a>
-                    <?php endif; ?>
-                </div>
-            </nav>
+            </tbody></table></div>
+            <?php $parametrosSiguiente = ['pag' => 'bandeja-mensual', 'cuenta_bancaria_id' => $resultado->cuenta_bancaria_id, 'inicio_periodo' => $resultado->inicio_periodo, 'limite' => $resultado->limite]; foreach ($resultado->filtros as $nombre => $valor) { if ($valor !== null && $valor !== '') { $parametrosSiguiente[$nombre] = $valor; } } ?>
+            <nav class="bandeja-paginacion" aria-label="Paginación de movimientos" data-paginacion data-cantidad="<?php echo $escapar($cantidadMovimientos); ?>"><p class="bandeja-posicion" aria-live="polite" data-posicion-pagina><?php echo $paginaActual !== null && $inicioActual !== null ? 'Página ' . $escapar($paginaActual) . ' · registros ' . $escapar($inicioActual) . '–' . $escapar($finActual) . ' · ' . $escapar($cantidadMovimientos) . ' en esta página' : 'Página actual · ' . $escapar($cantidadMovimientos) . ' registros en esta página'; ?></p><div class="bandeja-paginacion-controles"><a class="bandeja-pagina bandeja-anterior" aria-disabled="true" data-pagina-anterior>Anterior</a><?php if ($resultado->siguiente_cursor !== null): $parametrosSiguiente['cursor'] = $resultado->siguiente_cursor; ?><a class="bandeja-pagina bandeja-siguiente" data-pagina-siguiente href="<?php echo $escapar(RUTA_WEB . '?' . http_build_query($parametrosSiguiente, '', '&', PHP_QUERY_RFC3986)); ?>">Siguiente</a><?php else: ?><a class="bandeja-pagina bandeja-siguiente" aria-disabled="true">Siguiente</a><?php endif; ?></div></nav>
         </section>
-        <div class="bandeja-detalle-fondo" data-detalle-fondo hidden></div>
-        <aside class="bandeja-detalle" role="dialog" aria-modal="true" aria-labelledby="bandeja-detalle-titulo" data-panel-detalle hidden>
-            <header class="bandeja-detalle-cabecera">
-                <h2 id="bandeja-detalle-titulo">Detalle del movimiento</h2>
-                <button type="button" aria-label="Cerrar detalle" data-cerrar-detalle>×</button>
-            </header>
-            <div data-detalle-cuerpo></div>
-        </aside>
-        <?php endif; ?>
+        <div class="bandeja-detalle-fondo" data-detalle-fondo hidden></div><aside class="bandeja-detalle" role="dialog" aria-modal="true" aria-labelledby="bandeja-detalle-titulo" data-panel-detalle hidden><header class="bandeja-detalle-cabecera"><h2 id="bandeja-detalle-titulo">Detalle del movimiento</h2><button type="button" aria-label="Cerrar detalle" data-cerrar-detalle>×</button></header><div data-detalle-cuerpo></div></aside>
         <?php else: ?>
-            <section class="bandeja-panel bandeja-estado bandeja-estado-inicial" data-contenido-bandeja>
-                <span class="bandeja-estado-icono" aria-hidden="true">→</span>
-                <div>
-                    <h2>Elegí una cuenta y un período</h2>
-                    <p>Completá ambos datos para consultar los movimientos de la bandeja.</p>
-                    <button type="button" data-seleccionar-contexto>Seleccionar cuenta y período</button>
-                </div>
-            </section>
+            <section class="bandeja-panel bandeja-estado bandeja-estado-inicial" data-contenido-bandeja><span class="bandeja-estado-icono" aria-hidden="true">→</span><div><h2>Elegí una cuenta y un período</h2><p>Seleccioná un contexto disponible para consultar sus movimientos.</p><button type="button" data-seleccionar-contexto>Seleccionar cuenta y período</button></div></section>
         <?php endif; ?>
     </div>
 </div>

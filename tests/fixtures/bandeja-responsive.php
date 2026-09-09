@@ -4,6 +4,7 @@ if (!defined('RUTA_WEB')) {
 }
 
 $movimientoBase = [
+    'id' => 1,
     'fecha_operacion' => '2026-07-14',
     'referencia' => 'TRX-94821',
     'descripcion' => 'Transferencia recibida de cliente mayorista',
@@ -20,6 +21,10 @@ $movimientoBase = [
     'borrador_total_haber' => null,
     'ultimo_mensaje_tipo' => null,
     'ultimo_mensaje_cuerpo' => null,
+    'asociaciones' => [],
+    'mensajes' => [],
+    'borradores' => [],
+    'historial' => [],
 ];
 
 $movimientoConSeguimiento = $movimientoBase;
@@ -37,6 +42,45 @@ $movimientoConSeguimiento['borrador_total_debe'] = '18.250,00';
 $movimientoConSeguimiento['borrador_total_haber'] = '18.250,00';
 $movimientoConSeguimiento['ultimo_mensaje_tipo'] = 'OBSERVACION';
 $movimientoConSeguimiento['ultimo_mensaje_cuerpo'] = 'Pendiente de revisión documental por Tesorería.';
+$movimientoConSeguimiento['id'] = 2;
+$movimientoConSeguimiento['asociaciones'] = [[
+    'valor_zetti_id' => null,
+    'asiento_zetti_id' => 48219,
+    'borrador_asiento_id' => null,
+    'monto_asociado' => '18.250,00',
+    'compartido' => false,
+    'observacion' => null,
+]];
+$movimientoConSeguimiento['mensajes'] = [[
+    'tipo_mensaje' => 'OBSERVACION',
+    'emisor' => 'hvega',
+    'emitido_en' => '2026-07-15 10:30:00-03',
+    'cuerpo' => 'Pendiente de revisión documental por Tesorería.',
+]];
+$movimientoConSeguimiento['borradores'] = [[
+    'id' => 731,
+    'fecha_contable' => '2026-07-15',
+    'modelo' => 'COMISIONES',
+    'observacion' => null,
+    'estado_codigo' => 'PARA_CERRAR',
+    'operacion_zetti_id' => null,
+    'asiento_zetti_id' => null,
+    'lineas' => [[
+        'cuenta_zetti_id' => 100,
+        'cuenta_codigo' => '1.1.01',
+        'cuenta_nombre' => 'Banco',
+        'debe' => '18.250,00',
+        'haber' => '0,00',
+    ]],
+]];
+$movimientoConSeguimiento['historial'] = [[
+    'estado_codigo' => 'PARA_CERRAR',
+    'usuario' => 'hvega',
+    'usuario_hub_id' => 159,
+    'registrado_en' => '2026-07-15 10:00:00-03',
+    'motivo' => null,
+    'observacion' => 'Preparado para revisión',
+]];
 
 $movimientosFixture = [$movimientoBase, $movimientoConSeguimiento];
 $cantidadFilasFixture = max(1, min(20, (int) ($_GET['fixture_filas'] ?? 2)));
@@ -60,6 +104,12 @@ $bandejaFixture = (object) [
         'pagina_actual' => 1,
         'inicio_actual' => count($movimientosFixture) > 0 ? 1 : 0,
         'siguiente_cursor' => 'cursor-opaco-de-ejemplo',
+        'filtros' => [
+            'estado' => null,
+            'responsable_id' => null,
+            'asociacion' => null,
+            'mensajes' => null,
+        ],
     ],
 ];
 
@@ -78,7 +128,16 @@ if ($estadoFixture === 'sin-contexto') {
 
 $contextoApp = [
     'data' => (object) [
-        'bandeja_mensual' => $bandejaFixture,
+        'bandeja_mensual' => (object) array_merge((array) $bandejaFixture, [
+            'contexto' => [
+                'cuentas' => [[
+                    'id' => 1042,
+                    'etiqueta' => 'Casa Central · Banco Demo · Cuenta corriente · Operativa · 001-42',
+                    'periodos' => ['2026-07-01'],
+                ]],
+                'responsables' => [['id' => 159, 'usuario' => 'hvega']],
+            ],
+        ]),
     ],
 ];
 ?><!doctype html>

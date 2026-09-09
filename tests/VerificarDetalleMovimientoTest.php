@@ -20,6 +20,8 @@ $comprobar(strpos($vista, '<h3>Historial</h3>') !== false, 'Falta la sección Hi
 $comprobar(strpos($vista, 'La consulta actual no incluye eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
 $comprobar(strpos($css, '.bandeja-resumen-texto') !== false && strpos($css, '-webkit-line-clamp: 2') !== false, 'La fila debe resumir el contenido extenso.');
 $comprobar(strpos($css, '.bandeja-detalle') !== false && strpos($css, 'right: 0') !== false, 'El detalle debe abrir como panel lateral.');
+$comprobar(substr_count($css, 'height: 100dvh') >= 2, 'El panel y su fondo deben cubrir el viewport aunque la tabla tenga pocas filas.');
+$comprobar(strpos($css, 'body:has(.bancos-app)') !== false && strpos($css, 'min-height: 100dvh') !== false, 'El shell filtrado debe conservar como mínimo la altura visible.');
 $comprobar(strpos($javascript, 'plantilla.content.cloneNode(true)') !== false, 'El panel debe usar contenido local sin otra consulta.');
 $comprobar(strpos($javascript, 'disparador.focus({ preventScroll: true })') !== false, 'Cerrar el panel debe devolver el foco sin mover la lista.');
 $comprobar(strpos($javascript, 'window.scrollTo(0, posicionScroll)') !== false, 'Cerrar el panel debe restaurar la posición de la lista.');
@@ -37,5 +39,11 @@ $comprobar(substr_count($html, 'data-abrir-detalle') === 2, 'Cada movimiento deb
 $comprobar(strpos($html, 'Borrador #731 · COMISIONES') !== false, 'La fila debe mostrar un resumen compacto del borrador.');
 $comprobar(strpos($html, 'Pendiente de revisión documental por Tesorería.') !== false, 'El detalle debe conservar el cuerpo completo del mensaje.');
 $comprobar(strpos($html, '<dt>Debe</dt><dd>18.250,00</dd>') !== false, 'El detalle debe conservar los totales del borrador.');
+
+$_GET = ['fixture_filas' => 1];
+ob_start();
+include __DIR__ . '/fixtures/bandeja-responsive.php';
+$htmlUnaFila = ob_get_clean();
+$comprobar(substr_count($htmlUnaFila, 'data-abrir-detalle') === 1, 'El fixture debe cubrir el detalle con una sola fila.');
 
 echo "OK: resumen de fila y detalle de movimiento validados.\n";

@@ -24,4 +24,6 @@ El ajuste visual posterior corrigió la fila del selector de tema dentro del men
 
 La posición del paginado dejó de depender de `sessionStorage`: los cursores nuevos incluyen página e inicio de rango dentro de su contenido firmado, y el servidor expone esos metadatos después de validar la firma. Así, avanzar, recargar o abrir el enlace en otra pestaña conserva el indicador; los cursores versión 1 siguen siendo aceptados como transición, aunque no contienen una posición recuperable.
 
+El drawer de detalle y su fondo ahora fijan su altura al viewport dinámico. Esto evita que el filtro de color aplicado por el shell convierta un `<body>` corto en una referencia de altura insuficiente cuando la bandeja contiene pocos movimientos.
+
 Se confirmaron las reglas iniciales de estados, asociaciones, reversa/fusión y retención: cualquier usuario autorizado prepara un movimiento, el cierre requiere administración o permiso especial, un cerrado es terminal, la preparación no modifica ERP y el histórico se conserva completo. Quedan por especificar el permiso concreto de Hub, validaciones adicionales de preparación y la secuencia contable final de fusión/generación de asiento.

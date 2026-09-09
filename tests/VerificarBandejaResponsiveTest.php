@@ -16,7 +16,9 @@ $comprobar(substr_count($vista, 'data-label=') === 10, 'Cada una de las diez cel
 $comprobar(strpos($css, '@media (max-width: 900px)') !== false, 'Falta el breakpoint intermedio de la referencia RRHH.');
 $comprobar(strpos($css, '@media (max-width: 650px)') !== false, 'Falta el breakpoint móvil de la referencia RRHH.');
 $comprobar(strpos($css, '.bandeja-tabla td::before') !== false, 'Faltan etiquetas visibles en las cards móviles.');
-$comprobar(!preg_match('/\b(?:min-|max-)?height\s*:\s*[^;]*vh\b/i', $css), 'La altura no debe depender de vh.');
+preg_match('/\.bandeja-shell\s*\{([^}]*)\}/s', $css, $shell);
+$comprobar(!isset($shell[1]) || !preg_match('/\b(?:min-|max-)?height\s*:\s*[^;]*vh\b/i', $shell[1]), 'El contenido de la bandeja no debe fijar su altura al viewport.');
+$comprobar(strpos($css, '.bandeja-detalle-fondo') !== false && strpos($css, 'height: 100dvh') !== false, 'El overlay del detalle sí debe cubrir el viewport dinámico.');
 
 ob_start();
 include __DIR__ . '/fixtures/bandeja-responsive.php';

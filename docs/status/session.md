@@ -65,3 +65,5 @@ En el incremento siguiente del mismo día se aplicó la especificación. Se inco
 Como pulido final, la fila de tema recuperó el layout de la referencia dentro del menú hamburguesa, el encabezado pasó de `NUEVA APP` a `APP BANCOS` y el pie de la tabla ahora informa página, rango y cantidad de registros de la página actual. No se alteró la paginación keyset ni se infiere un total global.
 
 La prueba integrada detectó que esa posición se perdía al navegar con el cursor de la URL porque sólo vivía en `sessionStorage`. Se versionó el cursor firmado para transportar página e inicio, se mantuvo lectura compatible de cursores anteriores y el render pasó a usar exclusivamente los metadatos validados por el servidor. La clave keyset sigue formada por fecha e ID.
+
+Se corrigió además el detalle con páginas cortas: el filtro dinámico del shell establece al `<body>` como bloque contenedor de los elementos fijos, por lo que una sola fila recortaba visualmente el panel y el overlay. El shell conserva ahora al menos `100dvh`, y ambos elementos declaran una altura completa con fallback `100vh`.

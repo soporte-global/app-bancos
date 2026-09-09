@@ -1,5 +1,7 @@
 <?php
-define('RUTA_WEB', '/tests/fixtures/bandeja-responsive.php');
+if (!defined('RUTA_WEB')) {
+    define('RUTA_WEB', '/tests/fixtures/bandeja-responsive.php');
+}
 
 $movimientoBase = [
     'fecha_operacion' => '2026-07-14',
@@ -37,7 +39,8 @@ $movimientoConSeguimiento['ultimo_mensaje_tipo'] = 'OBSERVACION';
 $movimientoConSeguimiento['ultimo_mensaje_cuerpo'] = 'Pendiente de revisión documental por Tesorería.';
 
 $movimientosFixture = [$movimientoBase, $movimientoConSeguimiento];
-$cantidadFilasFixture = max(2, min(20, (int) ($_GET['fixture_filas'] ?? 2)));
+$cantidadFilasFixture = max(1, min(20, (int) ($_GET['fixture_filas'] ?? 2)));
+$movimientosFixture = array_slice($movimientosFixture, 0, $cantidadFilasFixture);
 for ($indice = 3; $indice <= $cantidadFilasFixture; $indice++) {
     $movimientoAdicional = $indice % 2 === 0 ? $movimientoConSeguimiento : $movimientoBase;
     $movimientoAdicional['referencia'] = 'MOV-' . str_pad((string) $indice, 3, '0', STR_PAD_LEFT);

@@ -254,8 +254,10 @@
         var fondo = raiz.querySelector('[data-detalle-fondo]');
         var cuerpo = panel && panel.querySelector('[data-detalle-cuerpo]');
         var cerrar = panel && panel.querySelector('[data-cerrar-detalle]');
+        var formularioBandeja = raiz.querySelector('.bandeja-filtros');
         var disparador = null;
         var posicionScroll = 0;
+        var csrfToken = null;
 
         if (!panel || !fondo || !cuerpo || !cerrar) {
             return;
@@ -277,7 +279,96 @@
             }
         }
 
+        function crearClaveIdempotencia() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+            var aleatorio = window.crypto && typeof window.crypto.getRandomValues === 'function'
+                ? window.crypto.getRandomValues(new Uint32Array(4))
+                : [Date.now(), Math.random() * 0xffffffff, Math.random() * 0xffffffff, Math.random() * 0xffffffff];
+            return 'web-' + Array.prototype.map.call(aleatorio, function (valor) {
+                return Math.floor(valor).toString(16);
+            }).join('-');
+        }
+
+        function leerRespuesta(respuesta) {
+            return respuesta.json().catch(function () {
+                return {};
+            }).then(function (contenido) {
+                if (!respuesta.ok) {
+                    var mensaje = contenido.error && contenido.error.mensaje
+                        ? contenido.error.mensaje
+                        : 'No se pudo completar la acción.';
+                    throw new Error(mensaje);
+                }
+                return contenido;
+            });
+        }
+
+        function obtenerCsrf() {
+            if (csrfToken) {
+                return Promise.resolve(csrfToken);
+            }
+            return fetch(window.contextoApp.app.ruta + '/api.php?accion=csrf', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerRespuesta).then(function (contenido) {
+                csrfToken = contenido.data.csrf_token;
+                return csrfToken;
+            });
+        }
+
+        function prepararMovimiento(boton) {
+            var bloque = boton.closest('[data-accion-preparar]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            if (estado) {
+                estado.textContent = 'Preparando movimiento…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.preparar', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo
+                    })
+                });
+            }).then(leerRespuesta).then(function () {
+                boton.textContent = 'Preparado';
+                if (estado) {
+                    estado.textContent = 'Movimiento marcado PARA_CERRAR. Actualizando la bandeja…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 700);
+            }).catch(function (error) {
+                boton.disabled = false;
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         raiz.addEventListener('click', function (evento) {
+            var accionPreparar = evento.target.closest('[data-preparar-movimiento]');
+            if (accionPreparar) {
+                prepararMovimiento(accionPreparar);
+                return;
+            }
             var boton = evento.target.closest('[data-abrir-detalle]');
             var fila = boton && boton.closest('tr');
             var plantilla = fila && fila.querySelector('[data-detalle-movimiento]');

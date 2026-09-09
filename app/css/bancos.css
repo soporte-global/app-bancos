@@ -595,6 +595,19 @@ body.bandeja-detalle-activo {
     text-transform: uppercase;
 }
 
+.bandeja-accion button {
+    min-height: var(--alto-control);
+    margin-top: 12px;
+    padding: 0 14px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font-weight: 800;
+}
+
+.bandeja-accion-estado {
+    min-height: 1.1em;
+}
+
 .bandeja-detalle-datos {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

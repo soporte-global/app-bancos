@@ -12,6 +12,7 @@ $datos = (object) [
     'solicitud' => false,
     'resultado' => null,
     'error' => null,
+    'escritura_habilitada' => BANCOS_DEBUG,
     'contexto' => [
         'cuentas' => [],
         'responsables' => [],

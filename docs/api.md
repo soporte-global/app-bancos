@@ -16,7 +16,23 @@ El primer contrato disponible es `GET api.php?accion=csrf`. Devuelve un token al
 4. exigir `Idempotency-Key` y ejecutar mediante `EjecutorComandoIdempotente`;
 5. persistir la respuesta y un evento de auditoría dentro de la misma transacción que el cambio funcional.
 
-Los estados de error reservados son `400` para acción inválida, `401` para sesión ausente o vencida, `403` para acceso/permiso/CSRF, `404` para acción no registrada, `405` para método incorrecto, `409` para reutilización incompatible de una clave idempotente, `422` para entrada inválida y `500` para fallos no publicables. Todavía no existe una mutación de negocio expuesta: agregar una requiere su caso de uso, permiso Hub, validaciones y prueba de integración.
+Los estados de error reservados son `400` para acción o JSON inválidos, `401` para sesión ausente o vencida, `403` para acceso/permiso/CSRF, `404` para acción o movimiento inexistentes, `405` para método incorrecto, `409` para transición o clave idempotente incompatibles, `415` para contenido distinto de JSON, `422` para entrada inválida, `503` para escritura deshabilitada y `500` para fallos no publicables.
+
+## Preparar movimiento mensual
+
+`POST api.php?accion=movimiento.preparar` es la primera mutación funcional. Sólo está habilitada cuando `bancos_debug = true`; en cualquier otro perfil devuelve `503` antes de abrir una transacción. Exige el permiso interno `movimiento-preparar` o nivel administrador, además de `X-CSRF-Token`, `Idempotency-Key` y `Content-Type: application/json`.
+
+Entrada:
+
+```json
+{
+  "movimiento_id": 123,
+  "cuenta_bancaria_id": "103500000000002811",
+  "inicio_periodo": "2026-09-01"
+}
+```
+
+El repositorio bloquea la fila y verifica que el ID pertenezca exactamente a esa cuenta/período. Sólo admite `ABIERTO -> PARA_CERRAR`; inserta un evento en `bancos_historial_asignacion` y actualiza la identidad/fecha de modificación del movimiento dentro de la transacción idempotente. No exige asociaciones ni borradores en esta primera regla confirmada, no modifica esos recursos y no escribe en el ERP. La respuesta contiene `movimiento_id`, estados anterior/nuevo, `historial_id` y fecha; `meta.repetida` indica si provino del resultado persistido.
 
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 

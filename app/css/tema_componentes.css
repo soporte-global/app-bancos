@@ -105,15 +105,23 @@ body:has(.bancos-app),
 }
 
 .bandeja-filtros > button,
-.bandeja-estado button {
+.bandeja-estado button,
+.bandeja-accion button {
     border-color: var(--ui-acento);
     background: var(--ui-acento);
     color: var(--ui-acento-texto);
 }
 
 .bandeja-filtros > button:hover,
-.bandeja-estado button:hover {
+.bandeja-estado button:hover,
+.bandeja-accion button:hover {
     background: var(--ui-acento-hover);
+}
+
+.bandeja-accion button:disabled {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
 }
 
 .bandeja-estado-icono {

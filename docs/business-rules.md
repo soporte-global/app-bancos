@@ -21,3 +21,7 @@
 - Validaciones adicionales para pasar a `PARA_CERRAR`.
 - Nombre, alcance y administración del permiso especial de cierre en Hub.
 - Secuencia contable exacta de la fusión y de la generación de asiento al efectuar el cierre.
+
+## Primera regla operativa implementada
+
+La transición `ABIERTO -> PARA_CERRAR` está implementada únicamente en el sandbox. El movimiento se bloquea y se valida dentro de su cuenta/período; se registra el usuario Hub y el evento de historial en la misma transacción idempotente. La ausencia de asociaciones o borrador no impide todavía la preparación, de acuerdo con la regla confirmada. No se alteran recursos ERP.

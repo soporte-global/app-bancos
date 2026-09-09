@@ -1,0 +1,42 @@
+:root {
+    --color-principal1: hsl(var(--hue-principal), 85%, 50%);
+    --color-principal2: #7698ad;
+    --color-principal3: #8bc8e8;
+    --color-secundario1: #ffffff;
+    --color-secundario2: #000000;
+    --color-secundario3: #607184;
+    --color-detalle1: hsl(147, 77%, 28%);
+}
+
+:root,
+.bancos-app {
+    color-scheme: light;
+    --ui-fondo-app: color-mix(in srgb, var(--color-secundario1) 88%, var(--color-secundario2));
+    --ui-superficie: color-mix(in srgb, var(--color-secundario1) 97%, var(--color-secundario2));
+    --ui-superficie-hundida: color-mix(in srgb, var(--color-secundario1) 93%, var(--color-secundario2));
+    --ui-campo: var(--color-secundario1);
+    --ui-borde: color-mix(in srgb, var(--color-secundario2) 15%, transparent);
+    --ui-texto: color-mix(in srgb, var(--color-principal1) 24%, var(--color-secundario2));
+    --ui-texto-suave: color-mix(in srgb, var(--color-secundario1) 40%, var(--color-secundario2));
+    --ui-acento: var(--color-principal1);
+    --ui-acento-hover: color-mix(in srgb, var(--color-principal1) 72%, var(--color-secundario2));
+    --ui-acento-texto: var(--color-secundario1);
+    --ui-foco: var(--color-principal1);
+    --ui-foco-suave: color-mix(in srgb, var(--color-principal1) 25%, transparent);
+    --ui-hover: color-mix(in srgb, var(--color-principal1) 12%, var(--color-secundario1));
+    --ui-tabla-cabecera: color-mix(in srgb, var(--color-principal1) 24%, var(--color-secundario2));
+    --ui-tabla-cabecera-texto: var(--color-secundario1);
+    --ui-info: var(--color-principal1);
+    --ui-info-fondo: color-mix(in srgb, var(--color-principal1) 12%, var(--color-secundario1));
+    --ui-info-texto: color-mix(in srgb, var(--color-principal1) 34%, var(--color-secundario2));
+    --ui-exito: var(--paleta-exito2);
+    --ui-exito-fondo: color-mix(in srgb, var(--paleta-exito2) 8%, var(--color-secundario1));
+    --ui-exito-texto: color-mix(in srgb, var(--paleta-exito2) 55%, var(--color-secundario2));
+    --ui-advertencia: var(--paleta-advertencia3);
+    --ui-advertencia-fondo: color-mix(in srgb, var(--paleta-advertencia3) 10%, var(--color-secundario1));
+    --ui-advertencia-texto: color-mix(in srgb, var(--paleta-advertencia3) 76%, var(--color-secundario2));
+    --ui-error: var(--paleta-error2);
+    --ui-error-fondo: color-mix(in srgb, var(--paleta-error2) 8%, var(--color-secundario1));
+    --ui-error-texto: var(--color-secundario1);
+    --ui-overlay: color-mix(in srgb, var(--color-secundario2) 54%, transparent);
+}

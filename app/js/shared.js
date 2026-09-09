@@ -15,46 +15,6 @@
         return meses[Number(coincidencia[2]) - 1] + ' de ' + coincidencia[1];
     }
 
-    function iniciarTema(raiz) {
-        var boton = raiz.querySelector('[data-alternar-tema]');
-        var clave = 'bandeja-tema';
-        var tema = 'claro';
-
-        if (!boton) {
-            return;
-        }
-
-        try {
-            tema = window.localStorage.getItem(clave) === 'oscuro' ? 'oscuro' : 'claro';
-        } catch (error) {
-            tema = 'claro';
-        }
-
-        function aplicarTema(nuevoTema) {
-            var oscuro = nuevoTema === 'oscuro';
-            tema = oscuro ? 'oscuro' : 'claro';
-            if (oscuro) {
-                raiz.setAttribute('data-tema', 'oscuro');
-                document.body.classList.add('bandeja-tema-oscuro');
-            } else {
-                raiz.removeAttribute('data-tema');
-                document.body.classList.remove('bandeja-tema-oscuro');
-            }
-            boton.setAttribute('aria-pressed', oscuro ? 'true' : 'false');
-            boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
-        }
-
-        aplicarTema(tema);
-        boton.addEventListener('click', function () {
-            aplicarTema(tema === 'oscuro' ? 'claro' : 'oscuro');
-            try {
-                window.localStorage.setItem(clave, tema);
-            } catch (error) {
-                // La preferencia sigue activa durante la vista aunque no pueda persistirse.
-            }
-        });
-    }
-
     function iniciarBarraContexto(raiz) {
         var formulario = raiz.querySelector('.bandeja-filtros');
         var barra = raiz.querySelector('[data-bandeja-contexto]');
@@ -120,6 +80,7 @@
         });
         function mostrarCarga() {
             actualizarContexto();
+            raiz.setAttribute('aria-busy', 'true');
             barra.setAttribute('data-cargando', 'true');
             salidaEstado.textContent = 'Cargando movimientos…';
             if (estadoCargando) {
@@ -303,36 +264,35 @@
         panel.addEventListener('keydown', function (evento) {
             if (evento.key === 'Escape') {
                 cerrarDetalle();
+                return;
+            }
+            if (evento.key === 'Tab') {
+                var enfocables = panel.querySelectorAll(
+                    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                );
+                if (enfocables.length === 0) {
+                    evento.preventDefault();
+                    return;
+                }
+                var primero = enfocables[0];
+                var ultimo = enfocables[enfocables.length - 1];
+                if (evento.shiftKey && document.activeElement === primero) {
+                    evento.preventDefault();
+                    ultimo.focus();
+                } else if (!evento.shiftKey && document.activeElement === ultimo) {
+                    evento.preventDefault();
+                    primero.focus();
+                }
             }
         });
     }
 
-    function iniciarFooter(raiz) {
-        var controles = raiz.querySelector('[data-controles-bandeja]');
-        var footer = document.querySelector('header.footer');
-        if (!controles || !footer) {
-            return;
-        }
-
-        footer.classList.add('bandeja-footer');
-        document.body.classList.add('bandeja-con-footer');
-        footer.appendChild(controles);
-        footer.removeAttribute('hidden');
-        footer.style.removeProperty('display');
-    }
-
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
-        if (bandejas.length > 0) {
-            document.documentElement.classList.add('bandeja-scroll');
-            document.body.classList.add('bandeja-scroll');
-        }
         Array.prototype.forEach.call(bandejas, function (bandeja) {
-            iniciarTema(bandeja);
             iniciarBarraContexto(bandeja);
             iniciarPaginacion(bandeja);
             iniciarDetalle(bandeja);
-            iniciarFooter(bandeja);
         });
     }
 

@@ -1,6 +1,6 @@
 <?php
 $vista = file_get_contents(__DIR__ . '/../app/html/bandeja-mensual.php');
-$css = file_get_contents(__DIR__ . '/../app/css/shared.css');
+$css = file_get_contents(__DIR__ . '/../app/css/bancos.css');
 $javascript = file_get_contents(__DIR__ . '/../app/js/shared.js');
 
 $comprobar = static function ($condicion, $mensaje) {
@@ -17,7 +17,7 @@ $comprobar(strpos($vista, 'data-contexto-estado') !== false, 'Falta el estado de
 $comprobar(strpos($vista, 'Filtros activos: ninguno') !== false, 'Falta el resumen de filtros activos.');
 $comprobar(
     preg_match('/\.bandeja-contexto\s*\{([^}]*)\}/s', $css, $reglaContexto) === 1
-    && strpos($reglaContexto[1], 'position: static') !== false,
+    && strpos($reglaContexto[1], 'position: sticky') === false,
     'La barra de contexto no debe ocultar información durante el scroll.'
 );
 $comprobar(strpos($javascript, "cuenta.addEventListener('input'") !== false, 'La cuenta no actualiza el contexto localmente.');

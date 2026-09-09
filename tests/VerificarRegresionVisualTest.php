@@ -1,6 +1,8 @@
 <?php
 $vista = file_get_contents(__DIR__ . '/../app/html/bandeja-mensual.php');
-$css = file_get_contents(__DIR__ . '/../app/css/shared.css');
+$css = file_get_contents(__DIR__ . '/../app/css/bancos.css');
+$temaClaro = file_get_contents(__DIR__ . '/../app/css/tema_claro.css');
+$temaOscuro = file_get_contents(__DIR__ . '/../app/css/tema_oscuro.css');
 $javascript = file_get_contents(__DIR__ . '/../app/js/shared.js');
 
 $comprobar = static function ($condicion, $mensaje) {
@@ -12,12 +14,15 @@ $comprobar = static function ($condicion, $mensaje) {
 
 $comprobar(strpos($vista, '<main class="afterheader bandeja-page">') !== false, 'La bandeja debe identificar su shell para liberar el scroll heredado.');
 $comprobar(strpos($css, '.afterheader.bandeja-page') !== false && strpos($css, 'overflow: visible') !== false, 'El contenedor debe permitir crecimiento vertical.');
-$comprobar(strpos($css, 'html.bandeja-scroll') !== false && strpos($css, 'body.bandeja-scroll') !== false, 'Documento y body deben recuperar scroll vertical.');
-$comprobar(strpos($javascript, "document.documentElement.classList.add('bandeja-scroll')") !== false, 'La corrección de scroll debe limitarse a la bandeja.');
+$comprobar(strpos($css, 'html.bandeja-scroll') === false && strpos($css, 'body.bandeja-scroll') === false, 'El scroll no debe depender de clases mutadas por JavaScript.');
+$comprobar(strpos($javascript, "classList.add('bandeja-scroll')") === false, 'La bandeja no debe mutar el scroll global al iniciar.');
 $comprobar(substr_count($vista, '<col class="bandeja-col-') === 10, 'La tabla debe definir sus diez columnas.');
 $comprobar(strpos($css, 'table-layout: fixed') !== false, 'La tabla desktop debe respetar la distribución explícita.');
-$comprobar(strpos($css, 'font-family: Arial, Helvetica, sans-serif') !== false, 'La bandeja debe usar tipografía proporcional legible.');
+$comprobar(strpos($css, 'font-family: inherit') !== false, 'La bandeja debe heredar Roboto Mono del shell compartido.');
 $comprobar(strpos($css, '.estado-etiqueta') !== false && strpos($css, 'white-space: nowrap') !== false, 'Las etiquetas de estado no deben partir palabras.');
+$comprobar(strpos($css, 'box-shadow: 0 4px 16px') === false, 'Los paneles de contenido no deben usar elevación decorativa.');
+$comprobar(strpos($temaClaro, 'color-scheme: light') !== false, 'Falta el tema claro.');
+$comprobar(strpos($temaOscuro, 'color-scheme: dark') !== false, 'Falta el tema oscuro.');
 
 preg_match_all('/\.bandeja-col-[a-z]+\s*\{\s*width:\s*([0-9.]+)%/', $css, $anchos);
 $comprobar(count($anchos[1]) === 10, 'Cada columna debe tener un ancho porcentual explícito.');

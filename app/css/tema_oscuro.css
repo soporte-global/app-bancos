@@ -1,0 +1,43 @@
+:root {
+    --color-principal1: hsl(var(--hue-principal), 85%, 50%);
+    --color-principal2: hsl(var(--hue-principal), 35%, 38%);
+    --color-principal3: #7698ad;
+    --color-principal4: hsl(var(--hue-principal), 48%, 48%);
+    --color-secundario1: #ffffff;
+    --color-secundario2: #000000;
+    --color-secundario3: #a5b9c7;
+    --color-detalle1: hsl(145, 55%, 58%);
+}
+
+:root,
+.bancos-app {
+    color-scheme: dark;
+    --ui-fondo-app: color-mix(in srgb, var(--color-secundario1) 6%, var(--color-secundario2));
+    --ui-superficie: color-mix(in srgb, var(--color-secundario1) 13%, var(--color-secundario2));
+    --ui-superficie-hundida: color-mix(in srgb, var(--color-secundario1) 11%, var(--color-secundario2));
+    --ui-campo: color-mix(in srgb, var(--color-secundario1) 8%, var(--color-secundario2));
+    --ui-borde: color-mix(in srgb, var(--color-secundario1) 15%, transparent);
+    --ui-texto: color-mix(in srgb, var(--color-principal1) 12%, var(--color-secundario1));
+    --ui-texto-suave: color-mix(in srgb, var(--color-secundario1) 75%, var(--color-secundario2));
+    --ui-acento: var(--color-principal1);
+    --ui-acento-hover: color-mix(in srgb, var(--color-principal1) 78%, var(--color-secundario1));
+    --ui-acento-texto: var(--color-secundario2);
+    --ui-foco: color-mix(in srgb, var(--color-principal1) 70%, var(--color-secundario1));
+    --ui-foco-suave: color-mix(in srgb, var(--color-principal1) 25%, transparent);
+    --ui-hover: color-mix(in srgb, var(--color-principal2) 54%, var(--color-secundario2));
+    --ui-tabla-cabecera: color-mix(in srgb, var(--color-principal1) 32%, var(--color-secundario2));
+    --ui-tabla-cabecera-texto: var(--color-secundario1);
+    --ui-info: color-mix(in srgb, var(--color-principal1) 65%, var(--color-secundario1));
+    --ui-info-fondo: color-mix(in srgb, var(--color-principal2) 54%, var(--color-secundario2));
+    --ui-info-texto: color-mix(in srgb, var(--color-principal1) 16%, var(--color-secundario1));
+    --ui-exito: color-mix(in srgb, var(--paleta-exito2) 70%, var(--color-secundario1));
+    --ui-exito-fondo: color-mix(in srgb, var(--paleta-exito2) 22%, var(--color-secundario2));
+    --ui-exito-texto: color-mix(in srgb, var(--paleta-exito2) 55%, var(--color-secundario1));
+    --ui-advertencia: color-mix(in srgb, var(--paleta-advertencia3) 72%, var(--color-secundario1));
+    --ui-advertencia-fondo: color-mix(in srgb, var(--paleta-advertencia3) 20%, var(--color-secundario2));
+    --ui-advertencia-texto: color-mix(in srgb, var(--paleta-advertencia3) 70%, var(--color-secundario1));
+    --ui-error: color-mix(in srgb, var(--paleta-error2) 72%, var(--color-secundario1));
+    --ui-error-fondo: color-mix(in srgb, var(--paleta-error2) 18%, var(--color-secundario2));
+    --ui-error-texto: var(--color-secundario2);
+    --ui-overlay: color-mix(in srgb, var(--color-secundario2) 76%, transparent);
+}

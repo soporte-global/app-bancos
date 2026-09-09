@@ -1,6 +1,6 @@
 <?php
 $vista = file_get_contents(__DIR__ . '/../app/html/bandeja-mensual.php');
-$css = file_get_contents(__DIR__ . '/../app/css/shared.css');
+$css = file_get_contents(__DIR__ . '/../app/css/bancos.css');
 $javascript = file_get_contents(__DIR__ . '/../app/js/shared.js');
 
 $comprobar = static function ($condicion, $mensaje) {
@@ -25,6 +25,7 @@ $comprobar(strpos($javascript, 'disparador.focus({ preventScroll: true })') !== 
 $comprobar(strpos($javascript, 'window.scrollTo(0, posicionScroll)') !== false, 'Cerrar el panel debe restaurar la posición de la lista.');
 $comprobar(strpos($javascript, "classList.add('bandeja-detalle-activo')") !== false, 'Abrir el panel debe bloquear el scroll de fondo.');
 $comprobar(strpos($javascript, "classList.remove('bandeja-detalle-activo')") !== false, 'Cerrar el panel debe restaurar el scroll de fondo.');
+$comprobar(strpos($javascript, "evento.key === 'Tab'") !== false, 'El diálogo debe contener el foco de teclado.');
 $comprobar(!preg_match('/(?:history\.(?:pushState|replaceState)|location\.(?:assign|replace))/', $javascript), 'Abrir detalle no debe modificar URL ni cursor.');
 
 $_GET = [];

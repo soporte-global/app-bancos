@@ -1,6 +1,6 @@
 <?php
 $vista = file_get_contents(__DIR__ . '/../app/html/bandeja-mensual.php');
-$css = file_get_contents(__DIR__ . '/../app/css/shared.css');
+$css = file_get_contents(__DIR__ . '/../app/css/bancos.css');
 $javascript = file_get_contents(__DIR__ . '/../app/js/shared.js');
 
 $comprobar = static function ($condicion, $mensaje) {

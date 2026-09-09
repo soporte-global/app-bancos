@@ -55,3 +55,9 @@ Se aplicó `016_bancos_debug_cargar_lote_sombra_2026_07.sql`: toma una única im
 ## Diseño UX/UI - 2026-09-08
 
 Se relevaron las pantallas de usuario y administración de BANCOS_MENSUAL y las tres pestañas de BANCOS. El diseño resultante, documentado en `docs/ux/navigation-and-ui.md`, conserva el alcance operativo pero reemplaza paneles fijos, pestañas sin URL y acciones mezcladas con la grilla por rutas autorizables, contexto de cuenta/período, detalle progresivo y acciones futuras separadas por permiso/estado.
+
+## Sistema visual de Consulta RRHH - 2026-09-09
+
+Se revisaron la vista, los estilos estructurales, los temas, la paleta compartida, las interacciones y las pruebas de `rrhh_consulta`, y se contrastaron con la bandeja actual. El resultado está en `docs/ux/rrhh-style/`: índice, auditoría, fundamentos, layout responsive, componentes, estados/accesibilidad, plan de implementación y QA visual. La decisión central es adoptar el sistema visual sin copiar el dominio ni el JavaScript de RRHH. El tema pasará a ser responsabilidad del shell y los paneles bancarios adoptarán la composición continua y densa de la referencia. No se modificó código de aplicación en esta sesión.
+
+En el incremento siguiente del mismo día se aplicó la especificación. Se incorporaron la paleta y sus aliases calculados, el resolver de temas, el selector compartido del header y cache busting de CSS. La bandeja quedó dividida en `bancos.css`, `tema_componentes.css`, `tema_claro.css` y `tema_oscuro.css`; conserva el formulario en `main`, elimina sombras decorativas y transforma la tabla en filas planas para móvil. El drawer corrige las colisiones con el `header` global, bloquea el fondo, contiene Tab/Shift+Tab y devuelve el foco. Las pruebas PHP/JS pasaron y el fixture se revisó en navegador a 1440 y 390 px, claro/oscuro, con resultados, error y detalle abierto. No se habilitaron escrituras.

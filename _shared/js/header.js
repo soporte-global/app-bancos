@@ -57,6 +57,17 @@ $(document).ready(function() {
     });
     // llama al evento input por primera vez sobre los valores predeterminados
     $('.color_slider').trigger('input');
+    // Alterna los temas configurados y conserva la elección entre recargas.
+    const temaApp = document.getElementById('tema_app');
+    const selectorTema = document.getElementById('tema_oscuro');
+    if (temaApp !== null && selectorTema !== null) {
+        $(selectorTema).on('change', function() {
+            const tema = this.checked ? 'oscuro' : 'claro';
+            temaApp.href = this.checked ? temaApp.dataset.temaOscuro : temaApp.dataset.temaClaro;
+            document.cookie = temaApp.dataset.cookieTema + '=' + tema
+                + '; path=/; max-age=31536000; SameSite=Lax';
+        });
+    }
     // al soltar el slider y definir un color, lo guarda en $_SESSION
     const guardar_colores = function(){
         let hue = $('#hue_slider').val();

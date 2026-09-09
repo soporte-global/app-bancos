@@ -14,6 +14,8 @@ return [
     'usa_cookies' => true, // mantiene la sesion; nunca guarda usuario ni contrasena en una cookie propia
     'mostrar_home_automatico' => true, // false deja home exclusivamente en manos de los permisos
     'diagnostico_habilitado' => false, // false oculta y bloquea la pagina compartida
+    'tema_claro_css' => 'app/css/tema_claro.css',
+    'tema_oscuro_css' => 'app/css/tema_oscuro.css',
     'login_max_age' => 12 * 60 * 60, // exige un nuevo login despues de doce horas
     'auth_cache_ttl' => 300, // relee identidad y permisos cada cinco minutos
     'protocolo' => 'http',

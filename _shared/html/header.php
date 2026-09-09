@@ -2,6 +2,7 @@
 $nombre = isset($sesion) ? $sesion->nombreMostrado() : null;
 $permitirCambiosColor = true;
 $permisosMenu = isset($permisos_app) && is_array($permisos_app) ? $permisos_app : [];
+$temaOscuro = TEMAS_DISPONIBLES && TEMA_ACTUAL === 'oscuro';
 ?>
 <audio id="successSound" src="src/audio/ok_bip.wav"></audio>
 <audio id="errorSound" src="src/audio/error.mp3"></audio>
@@ -87,6 +88,13 @@ $permisosMenu = isset($permisos_app) && is_array($permisos_app) ? $permisos_app 
                         <input type="range" step="0.01" min="0.5" max="1.5" value="<?php echo $lum; ?>" class="color_slider" id="lum_slider" list="snap-lum"><br>
                         <input type="button" class="boton" value="reset" id="reset_colors">
                     </div>
+                <?php endif; ?>
+
+                <?php if (!isset($error) && TEMAS_DISPONIBLES): ?>
+                    <label class="selector_tema" for="tema_oscuro">
+                        <span><i class="fas fa-moon"></i> TEMA OSCURO</span>
+                        <input id="tema_oscuro" class="switch blue" type="checkbox" <?php echo $temaOscuro ? 'checked' : ''; ?>>
+                    </label>
                 <?php endif; ?>
 
                 <?php if (isset($sesion) || isset($error)): ?>

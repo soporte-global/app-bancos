@@ -1,0 +1,248 @@
+.afterheader.bandeja-page,
+html:has(.bancos-app),
+body:has(.bancos-app),
+.bancos-app {
+    background: var(--ui-fondo-app);
+}
+
+.bancos-app {
+    color: var(--ui-texto);
+}
+
+.bancos-app h1,
+.bancos-app h2,
+.bancos-app h3,
+.bancos-app p,
+.bancos-app label {
+    color: var(--ui-texto);
+}
+
+.bandeja-introduccion,
+.bandeja-contexto-etiqueta,
+.bandeja-contexto-miga li + li::before,
+.bandeja-detalle-sobretitulo,
+.sin-dato,
+.bandeja-detalle-datos dt {
+    color: var(--ui-texto-suave);
+}
+
+.bandeja-contexto,
+.bandeja-panel,
+.bandeja-paginacion,
+.bandeja-detalle-resumen,
+.bandeja-detalle-seccion {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+}
+
+.bandeja-contexto-estado::before {
+    background: var(--ui-exito);
+}
+
+.bandeja-contexto[data-estado="espera"] .bandeja-contexto-estado::before {
+    background: var(--ui-texto-suave);
+}
+
+.bandeja-contexto[data-estado="error"] .bandeja-contexto-estado::before {
+    background: var(--ui-error);
+}
+
+.bandeja-contexto[data-cargando="true"] .bandeja-contexto-estado::before {
+    background: var(--ui-acento);
+    box-shadow: 0 0 0 3px var(--ui-foco-suave);
+}
+
+.bandeja-filtros-lista li {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto);
+}
+
+.bandeja-filtros-lista button {
+    color: var(--ui-texto);
+}
+
+.bandeja-filtros-lista button:hover {
+    background: var(--ui-hover);
+}
+
+.bandeja-filtros input {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.bandeja-filtros input:focus-visible,
+.bandeja-filtros > button:focus-visible,
+.bandeja-estado button:focus-visible,
+.bandeja-ver-detalle:focus-visible,
+.bandeja-pagina:focus-visible,
+.bandeja-filtros-lista button:focus-visible,
+.bandeja-detalle-cabecera button:focus-visible,
+.bandeja-table-region:focus-visible {
+    outline: 3px solid var(--ui-foco);
+    outline-offset: 2px;
+}
+
+.bandeja-filtros input:focus-visible {
+    border-color: var(--ui-acento);
+}
+
+.bandeja-filtros > button,
+.bandeja-estado button {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+}
+
+.bandeja-filtros > button:hover,
+.bandeja-estado button:hover {
+    background: var(--ui-acento-hover);
+}
+
+.bandeja-estado-icono {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
+}
+
+.bandeja-estado-error {
+    background: var(--ui-error-fondo);
+}
+
+.bandeja-estado-error .bandeja-estado-icono {
+    border-color: var(--ui-error);
+    background: var(--ui-error);
+    color: var(--ui-error-texto);
+}
+
+.bandeja-estado-vacio .bandeja-estado-icono {
+    border-color: var(--ui-advertencia);
+    color: var(--ui-advertencia-texto);
+}
+
+.bandeja-spinner {
+    border-color: var(--ui-borde);
+    border-top-color: var(--ui-acento);
+}
+
+.bandeja-skeleton span {
+    background: var(--ui-superficie-hundida);
+}
+
+.bandeja-table-region,
+.bandeja-tabla th,
+.bandeja-tabla td {
+    border-color: var(--ui-borde);
+}
+
+.bandeja-table-region,
+.bandeja-tabla tbody tr {
+    background: var(--ui-superficie);
+}
+
+.bandeja-tabla th {
+    background: var(--ui-tabla-cabecera);
+    color: var(--ui-tabla-cabecera-texto);
+}
+
+.bandeja-tabla tbody tr:nth-child(even) {
+    background: var(--ui-superficie-hundida);
+}
+
+.bandeja-tabla tbody tr:hover {
+    background: var(--ui-hover);
+}
+
+.bandeja-tabla td::before {
+    color: var(--ui-texto-suave);
+}
+
+.estado-etiqueta {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto);
+}
+
+.estado-etiqueta--abierto {
+    border-color: var(--ui-info);
+    background: var(--ui-info-fondo);
+    color: var(--ui-info-texto);
+}
+
+.estado-etiqueta--para-cerrar {
+    border-color: var(--ui-advertencia);
+    background: var(--ui-advertencia-fondo);
+    color: var(--ui-advertencia-texto);
+}
+
+.estado-etiqueta--cerrado {
+    border-color: var(--ui-exito);
+    background: var(--ui-exito-fondo);
+    color: var(--ui-exito-texto);
+}
+
+.bandeja-ver-detalle,
+.bandeja-pagina {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto);
+}
+
+.bandeja-ver-detalle:hover,
+.bandeja-pagina:hover:not([aria-disabled="true"]) {
+    border-color: var(--ui-acento);
+    background: var(--ui-hover);
+}
+
+.bandeja-pagina[aria-disabled="true"] {
+    opacity: 0.45;
+}
+
+.bandeja-detalle-fondo {
+    background: var(--ui-overlay);
+}
+
+.bandeja-detalle {
+    border-color: var(--ui-borde);
+    background: var(--ui-fondo-app);
+    color: var(--ui-texto);
+}
+
+.bandeja-detalle-cabecera {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+}
+
+.bandeja-detalle-cabecera button {
+    border-color: var(--ui-borde);
+    color: var(--ui-texto);
+}
+
+.bandeja-detalle-cabecera button:hover {
+    background: var(--ui-hover);
+}
+
+.bandeja-detalle-datos {
+    background: var(--ui-borde);
+}
+
+.bandeja-detalle-datos div {
+    background: var(--ui-superficie-hundida);
+}
+
+@media (max-width: 650px) {
+    .bandeja-tabla tbody {
+        background: var(--ui-borde);
+    }
+
+    .bandeja-tabla tbody tr,
+    .bandeja-tabla tbody tr:nth-child(even) {
+        border-color: var(--ui-borde);
+        background: var(--ui-superficie);
+    }
+
+    .bandeja-tabla td {
+        border-color: var(--ui-borde);
+    }
+}

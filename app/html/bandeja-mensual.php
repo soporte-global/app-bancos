@@ -31,7 +31,7 @@ if (($bandeja->error ?? null) !== null) {
 }
 ?>
 <main class="afterheader bandeja-page">
-<div class="bandeja-mensual" data-bandeja>
+<div class="bandeja-mensual bancos-app" data-bandeja aria-busy="false">
     <div class="bandeja-shell">
         <h1>Bandeja mensual</h1>
         <p class="bandeja-introduccion">Consulta de sólo lectura. En modo debug, los movimientos se leen desde <code>global_temp</code>.</p>
@@ -61,11 +61,10 @@ if (($bandeja->error ?? null) !== null) {
                         <?php endif; ?>
                     </ul>
                 </div>
-                <button class="bandeja-tema" type="button" aria-pressed="false" data-alternar-tema>Modo oscuro</button>
             </div>
         </nav>
 
-        <section class="bandeja-panel" aria-label="Consulta de movimientos" data-controles-bandeja>
+        <section class="bandeja-panel bandeja-selector" aria-label="Consulta de movimientos">
             <form class="bandeja-filtros" method="get" action="<?php echo $escapar(RUTA_WEB); ?>">
                 <input type="hidden" name="pag" value="bandeja-mensual">
                 <label>
@@ -121,6 +120,7 @@ if (($bandeja->error ?? null) !== null) {
             <p class="bandeja-resumen" id="bandeja-resultados-titulo"><?php echo count($resultado->movimientos); ?> movimientos en esta página.</p>
             <div class="bandeja-table-region" tabindex="0" role="region" aria-label="Movimientos de la bandeja">
             <table class="bandeja-tabla">
+            <caption class="visualmente_oculto">Movimientos bancarios del contexto seleccionado</caption>
             <colgroup>
                 <col class="bandeja-col-fecha">
                 <col class="bandeja-col-referencia">
@@ -134,7 +134,7 @@ if (($bandeja->error ?? null) !== null) {
                 <col class="bandeja-col-detalle">
             </colgroup>
             <thead>
-                <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th><th>Crédito</th><th>Débito</th><th>Estado</th><th>Asociación</th><th>Borrador</th><th>Último mensaje</th><th>Detalle</th></tr>
+                <tr><th scope="col">Fecha</th><th scope="col">Referencia</th><th scope="col">Descripción</th><th scope="col">Crédito</th><th scope="col">Débito</th><th scope="col">Estado</th><th scope="col">Asociación</th><th scope="col">Borrador</th><th scope="col">Último mensaje</th><th scope="col">Detalle</th></tr>
             </thead>
             <tbody>
             <?php foreach ($resultado->movimientos as $movimiento): ?>

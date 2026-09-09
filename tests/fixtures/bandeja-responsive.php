@@ -46,6 +46,7 @@ for ($indice = 3; $indice <= $cantidadFilasFixture; $indice++) {
 }
 
 $estadoFixture = $_GET['fixture_estado'] ?? 'resultados';
+$temaFixture = ($_GET['fixture_tema'] ?? 'claro') === 'oscuro' ? 'oscuro' : 'claro';
 $limiteFixture = max(1, min(100, (int) ($_GET['limite'] ?? 25)));
 $bandejaFixture = (object) [
     'resultado' => (object) [
@@ -84,10 +85,12 @@ $contextoApp = [
     <link rel="stylesheet" href="../../_shared/css/paleta_colores.css">
     <link rel="stylesheet" href="../../_shared/css/general.css">
     <link rel="stylesheet" href="../../_shared/css/header.css">
-    <link rel="stylesheet" href="../../app/css/shared.css">
+    <link rel="stylesheet" href="../../app/css/bancos.css">
+    <link rel="stylesheet" href="../../app/css/tema_componentes.css">
+    <link rel="stylesheet" href="../../app/css/tema_<?php echo $temaFixture; ?>.css">
     <script defer src="../../app/js/shared.js"></script>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background: #eef3f8; }
+        body { margin: 0; font-family: 'Roboto Mono', monospace; }
         .afterheader { width: 100%; }
         .fixture-menu { color: #1597e5; font-size: 28px; padding-left: 16px; }
         .fixture-logo { color: #fff; font-family: Arial, sans-serif; font-size: 28px; padding-right: 20px; }

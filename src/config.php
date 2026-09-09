@@ -1,5 +1,6 @@
 <?php
 define('RUTA', dirname(__DIR__));
+require_once RUTA . '/_shared/php/temas.php';
 //=============================================
 // CONFIGURACIÓN DE ESTA APP ------------------
 //=============================================
@@ -38,6 +39,14 @@ define('PROTOCOLO', $app_config['protocolo']);
 define('SESSION_NAME', $app_config['session_name']);
 define('AUTH_SESSION_KEY', 'GLOBAL_AUTH');
 define('CHARSET', 'utf8');
+
+$temas = resolver_temas($app_config, RUTA, FolderName, $_COOKIE);
+define('TEMA_CLARO_CSS', $temas['claro_css']);
+define('TEMA_OSCURO_CSS', $temas['oscuro_css']);
+define('TEMA_COOKIE', $temas['cookie']);
+define('TEMA_ACTUAL', $temas['actual']);
+define('TEMA_CSS_ACTIVO', $temas['css_activo']);
+define('TEMAS_DISPONIBLES', $temas['selector_disponible']);
 
 $session_save_path = trim((string) ($app_config['session_save_path'] ?? ''));
 if ($session_save_path === '') {

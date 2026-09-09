@@ -99,6 +99,12 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 
 La revisión visual final del usuario ajustó cinco decisiones: la barra de contexto dejó de ser sticky; el panel de detalle bloquea el scroll del documento mientras permanece abierto y contiene su propio desplazamiento sólo cuando resulta necesario; la bandeja incorpora modo oscuro persistente; el formulario de cuenta/período/límite reutiliza el footer existente de la estructura; y `Anterior` recupera la URL previa o la primera página del mismo contexto cuando se entra con un cursor sin historial de sesión. Todos los colores de ambos temas referencian exclusivamente variables existentes en `_shared/css/paleta_colores.css`.
 
+### Sistema visual objetivo
+
+El 2026-09-09 se relevó el front de `rrhh_consulta` como nueva referencia visual. El paquete [rrhh-style/README.md](rrhh-style/README.md) especifica la réplica para bancos: paleta derivada, tema claro/oscuro compartido, paneles contiguos, densidad, componentes, responsive, estados, accesibilidad, implementación y QA.
+
+Ese paquete reemplaza dos decisiones puramente presentacionales de la corrección anterior: el tema deja de ser local a la bandeja y el formulario deja de moverse al footer. Se conservan las decisiones funcionales ya validadas: barra no sticky, detalle con scroll bloqueado, navegación anterior por historial/contexto y uso exclusivo de variables de paleta. La implementación visual se completó el 2026-09-09 y queda pendiente archivar evidencia sobre la instalación integrada.
+
 ## Decisiones explícitas
 
 - No se conserva la navegación por pestañas como única forma de cambiar de módulo: las rutas permiten permisos, enlaces y recarga segura.

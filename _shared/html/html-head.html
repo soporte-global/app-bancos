@@ -34,26 +34,40 @@
     <script src="_shared/js/index.js"></script>	
     <script src="_shared/js/json_to_html.js"></script>
     <!-- CSS -->
-    <link rel="stylesheet" type="text/css" href="_shared/css/paleta_colores.css">
+    <link rel="stylesheet" type="text/css" href="_shared/css/paleta_colores.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/paleta_colores.css'); ?>">
     <link rel="stylesheet" type="text/css" href="lib/tablesorter-master/css/theme.default.css" >
-    <link rel="stylesheet" type="text/css" href="_shared/css/tablesorter-null.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/animations.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/general.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/autocomplete.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/scrollbars.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/switches.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/login.css">
+    <link rel="stylesheet" type="text/css" href="_shared/css/tablesorter-null.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/tablesorter-null.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/animations.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/animations.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/general.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/general.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/autocomplete.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/autocomplete.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/scrollbars.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/scrollbars.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/switches.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/switches.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/login.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/login.css'); ?>">
     <link rel="stylesheet" type="text/css" href="_shared/css/header.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/header.css'); ?>">
-    <link rel="stylesheet" type="text/css" href="_shared/css/botones.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/error.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/lector_cod_barras.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/sweet_alert2-swal.css">  
-    <link rel="stylesheet" type="text/css" href="_shared/css/jqueryUI-spinners.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/tabla_format1.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/mensaje_titularidad.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/selector_nodo.css">
-    <link rel="stylesheet" type="text/css" href="_shared/css/titleH.css">
-    <?php if (is_file(RUTA . '/app/css/shared.css')): ?>
-        <link rel="stylesheet" type="text/css" href="app/css/shared.css">
+    <link rel="stylesheet" type="text/css" href="_shared/css/botones.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/botones.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/error.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/error.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/lector_cod_barras.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/lector_cod_barras.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/sweet_alert2-swal.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/sweet_alert2-swal.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/jqueryUI-spinners.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/jqueryUI-spinners.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/tabla_format1.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/tabla_format1.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/mensaje_titularidad.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/mensaje_titularidad.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/selector_nodo.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/selector_nodo.css'); ?>">
+    <link rel="stylesheet" type="text/css" href="_shared/css/titleH.css?v=<?php echo (int) filemtime(RUTA . '/_shared/css/titleH.css'); ?>">
+    <?php if (is_file(RUTA . '/app/css/bancos.css')): ?>
+        <link rel="stylesheet" type="text/css" href="app/css/bancos.css?v=<?php echo (int) filemtime(RUTA . '/app/css/bancos.css'); ?>">
+    <?php endif; ?>
+    <?php if (is_file(RUTA . '/app/css/tema_componentes.css')): ?>
+        <link rel="stylesheet" type="text/css" href="app/css/tema_componentes.css?v=<?php echo (int) filemtime(RUTA . '/app/css/tema_componentes.css'); ?>">
+    <?php endif; ?>
+    <?php if (TEMA_CSS_ACTIVO !== ''): ?>
+        <link
+            id="tema_app"
+            rel="stylesheet"
+            type="text/css"
+            href="<?php echo htmlspecialchars(TEMA_CSS_ACTIVO . '?v=' . (int) filemtime(RUTA . '/' . TEMA_CSS_ACTIVO), ENT_QUOTES, 'UTF-8'); ?>"
+            data-tema-claro="<?php echo htmlspecialchars(TEMA_CLARO_CSS . (is_file(RUTA . '/' . TEMA_CLARO_CSS) ? '?v=' . (int) filemtime(RUTA . '/' . TEMA_CLARO_CSS) : ''), ENT_QUOTES, 'UTF-8'); ?>"
+            data-tema-oscuro="<?php echo htmlspecialchars(TEMA_OSCURO_CSS . (is_file(RUTA . '/' . TEMA_OSCURO_CSS) ? '?v=' . (int) filemtime(RUTA . '/' . TEMA_OSCURO_CSS) : ''), ENT_QUOTES, 'UTF-8'); ?>"
+            data-cookie-tema="<?php echo htmlspecialchars(TEMA_COOKIE, ENT_QUOTES, 'UTF-8'); ?>"
+        >
     <?php endif; ?>
 </head>

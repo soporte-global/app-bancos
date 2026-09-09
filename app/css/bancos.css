@@ -1,0 +1,785 @@
+.afterheader.bandeja-page {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+}
+
+html:has(.bancos-app),
+body:has(.bancos-app) {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+html.bandeja-detalle-activo,
+body.bandeja-detalle-activo {
+    overflow: hidden;
+}
+
+.bancos-app,
+.bancos-app *,
+.bancos-app *::before,
+.bancos-app *::after {
+    box-sizing: border-box;
+}
+
+.bancos-app {
+    --alto-control: 38px;
+    --radio-control: 8px;
+    --espacio-chico: 6px;
+    min-height: 100%;
+    padding: clamp(18px, 3vw, 34px) clamp(12px, 4vw, 60px) 48px;
+    font-family: inherit;
+}
+
+.bancos-app [hidden] {
+    display: none !important;
+}
+
+.bancos-app .visualmente_oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
+}
+
+.bancos-app button,
+.bancos-app input {
+    font: inherit;
+}
+
+.bancos-app button {
+    cursor: pointer;
+}
+
+.bancos-app button:disabled,
+.bancos-app [aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+.bandeja-shell {
+    width: min(100%, 1600px);
+    margin-inline: auto;
+}
+
+.bancos-app h1,
+.bancos-app h2,
+.bancos-app h3,
+.bancos-app p,
+.bancos-app ol,
+.bancos-app ul,
+.bancos-app dl {
+    margin-top: 0;
+}
+
+.bancos-app h1 {
+    margin-bottom: 0;
+    font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+    line-height: 1.2;
+}
+
+.bandeja-introduccion {
+    max-width: 78ch;
+    margin: 6px 0 18px;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.bandeja-contexto {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    padding: 10px 14px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: var(--radio-control) var(--radio-control) 0 0;
+}
+
+.bandeja-contexto-miga {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bandeja-contexto-miga li {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+}
+
+.bandeja-contexto-miga li + li::before {
+    content: "/";
+    margin: 0 10px;
+    font-weight: 400;
+}
+
+.bandeja-contexto-origen,
+.bandeja-contexto-etiqueta,
+.bandeja-detalle-sobretitulo {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.bandeja-contexto output {
+    overflow: hidden;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bandeja-contexto-meta {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.bandeja-contexto-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.bandeja-contexto-estado::before {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    content: "";
+}
+
+.bandeja-contexto-filtros {
+    font-size: 0.68rem;
+}
+
+.bandeja-filtros-lista {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bandeja-filtros-lista li {
+    display: inline-flex;
+    min-height: 26px;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 9px;
+    border: 1px solid;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.bandeja-filtros-lista button {
+    display: inline-grid;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.bandeja-panel {
+    padding: 14px;
+    border-style: solid;
+    border-width: 0 1px 1px;
+}
+
+.bandeja-panel:last-of-type {
+    border-radius: 0 0 var(--radio-control) var(--radio-control);
+}
+
+.bandeja-filtros {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.2fr) minmax(160px, 1fr) minmax(90px, 0.45fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.bandeja-filtros label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.bandeja-filtros input {
+    width: 100%;
+    height: var(--alto-control);
+    padding: 7px 10px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.bandeja-filtros > button,
+.bandeja-estado button,
+.bandeja-ver-detalle,
+.bandeja-pagina {
+    display: inline-flex;
+    min-height: var(--alto-control);
+    align-items: center;
+    justify-content: center;
+    padding: 7px 14px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font-weight: 800;
+    line-height: 1.25;
+    text-decoration: none;
+}
+
+.bandeja-estado {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    min-height: 116px;
+    padding-block: 20px;
+}
+
+.bandeja-estado h2,
+.bandeja-estado p {
+    margin-bottom: 0;
+}
+
+.bandeja-estado h2 {
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.bandeja-estado p {
+    margin-top: 5px;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.bandeja-estado button {
+    margin-top: 12px;
+}
+
+.bandeja-estado-icono {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid;
+    border-radius: 50%;
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.bandeja-estado-encabezado {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.bandeja-cargando {
+    min-height: 92px;
+}
+
+.bandeja-estado-encabezado h2,
+.bandeja-estado-encabezado p {
+    margin-bottom: 0;
+}
+
+.bandeja-estado-encabezado h2 {
+    font-size: 0.92rem;
+}
+
+.bandeja-estado-encabezado p {
+    margin-top: 4px;
+    font-size: 0.72rem;
+}
+
+.bandeja-spinner {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border: 3px solid;
+    border-radius: 50%;
+    animation: bandeja-girar 800ms linear infinite;
+}
+
+.bandeja-skeleton {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.bandeja-skeleton span {
+    display: block;
+    height: 13px;
+    border-radius: 4px;
+    animation: bandeja-pulso 1.2s ease-in-out infinite alternate;
+}
+
+.bandeja-skeleton span:nth-child(2) {
+    width: 82%;
+}
+
+.bandeja-skeleton span:nth-child(3) {
+    width: 64%;
+}
+
+.bandeja-resumen {
+    margin-bottom: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.bandeja-table-region {
+    max-width: 100%;
+    overflow: auto;
+    border: 1px solid;
+    border-radius: var(--radio-control) var(--radio-control) 0 0;
+}
+
+.bandeja-tabla {
+    width: 100%;
+    min-width: 1120px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.69rem;
+}
+
+.bandeja-col-fecha { width: 8%; }
+.bandeja-col-referencia { width: 8%; }
+.bandeja-col-descripcion { width: 15%; }
+.bandeja-col-credito { width: 7%; }
+.bandeja-col-debito { width: 7%; }
+.bandeja-col-estado { width: 9%; }
+.bandeja-col-asociacion { width: 10%; }
+.bandeja-col-borrador { width: 12%; }
+.bandeja-col-mensaje { width: 15%; }
+.bandeja-col-detalle { width: 9%; }
+
+.bandeja-tabla th,
+.bandeja-tabla td {
+    padding: 8px 9px;
+    border-bottom: 1px solid;
+    text-align: left;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.bandeja-tabla th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 0.64rem;
+    font-weight: 900;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+}
+
+.bandeja-tabla tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.bandeja-tabla .importe {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.bandeja-resumen-texto {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.45;
+}
+
+.sin-dato {
+    font-style: italic;
+}
+
+.estado-etiqueta {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 7px;
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.bandeja-ver-detalle {
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 0.64rem;
+}
+
+.bandeja-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-style: solid;
+    border-width: 0 1px 1px;
+    border-radius: 0 0 var(--radio-control) var(--radio-control);
+}
+
+.bandeja-posicion {
+    margin: 0;
+    font-size: 0.69rem;
+    font-weight: 800;
+}
+
+.bandeja-paginacion-controles {
+    display: flex;
+    gap: 6px;
+}
+
+.bandeja-pagina {
+    min-width: 90px;
+    min-height: 34px;
+    padding-block: 5px;
+    font-size: 0.68rem;
+}
+
+.bandeja-detalle-fondo {
+    position: fixed;
+    z-index: 9998;
+    inset: 0;
+}
+
+.bandeja-detalle {
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    width: min(92vw, 560px);
+    flex-direction: column;
+    border-left: 1px solid;
+    box-shadow: -10px 0 30px var(--black-a25);
+}
+
+.bandeja-detalle-cabecera {
+    position: static;
+    z-index: auto;
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 54px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid;
+}
+
+.bandeja-detalle-cabecera::before {
+    display: none;
+}
+
+.bandeja-detalle-cabecera h2 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.bandeja-detalle-cabecera button {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    padding: 0;
+    place-items: center;
+    border: 1px solid;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.bandeja-detalle > [data-detalle-cuerpo] {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.bandeja-detalle-contenido {
+    padding: 14px;
+}
+
+.bandeja-detalle-resumen,
+.bandeja-detalle-seccion {
+    padding: 14px;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.bandeja-detalle-resumen {
+    position: static;
+    z-index: auto;
+    display: block;
+    width: auto;
+    height: auto;
+    border-radius: var(--radio-control) var(--radio-control) 0 0;
+}
+
+.bandeja-detalle-resumen::before {
+    display: none;
+}
+
+.bandeja-detalle-seccion {
+    border-top: 0;
+}
+
+.bandeja-detalle-seccion:last-child {
+    border-radius: 0 0 var(--radio-control) var(--radio-control);
+}
+
+.bandeja-detalle-resumen h2,
+.bandeja-detalle-seccion h3,
+.bandeja-detalle-resumen p,
+.bandeja-detalle-seccion p {
+    margin-bottom: 0;
+}
+
+.bandeja-detalle-resumen h2 {
+    margin-top: 5px;
+    font-size: 1rem;
+}
+
+.bandeja-detalle-resumen p,
+.bandeja-detalle-seccion p {
+    margin-top: 7px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+}
+
+.bandeja-detalle-seccion h3 {
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bandeja-detalle-datos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin: 10px 0 0;
+}
+
+.bandeja-detalle-datos div {
+    padding: 9px;
+}
+
+.bandeja-detalle-datos dt {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bandeja-detalle-datos dd {
+    margin: 4px 0 0;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+@keyframes bandeja-girar {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bandeja-pulso {
+    from { opacity: 0.35; }
+    to { opacity: 0.8; }
+}
+
+@media (max-width: 900px) {
+    .bancos-app {
+        padding-inline: 18px;
+    }
+
+    .bandeja-contexto {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .bandeja-contexto-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .bandeja-filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bandeja-filtros label:last-of-type {
+        grid-column: 1 / 2;
+    }
+
+    .bandeja-filtros > button {
+        grid-column: 2 / 3;
+    }
+}
+
+@media (max-width: 650px) {
+    .bancos-app {
+        padding: 20px 12px 48px;
+    }
+
+    .bandeja-introduccion {
+        font-size: 0.7rem;
+    }
+
+    .bandeja-contexto-miga {
+        width: 100%;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .bandeja-contexto-miga li + li::before {
+        display: none;
+    }
+
+    .bandeja-contexto-meta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .bandeja-filtros {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bandeja-filtros label:last-of-type,
+    .bandeja-filtros > button {
+        grid-column: auto;
+    }
+
+    .bandeja-table-region {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .bandeja-tabla {
+        min-width: 0;
+    }
+
+    .bandeja-tabla thead,
+    .bandeja-tabla colgroup {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .bandeja-tabla tbody {
+        display: grid;
+        gap: 1px;
+    }
+
+    .bandeja-tabla tbody tr {
+        display: block;
+        padding: 10px 12px;
+        border: 1px solid;
+    }
+
+    .bandeja-tabla td {
+        display: grid;
+        grid-template-columns: minmax(104px, 0.75fr) minmax(0, 1.25fr);
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid;
+        text-align: left;
+    }
+
+    .bandeja-tabla td::before {
+        content: attr(data-label);
+        font-size: 0.61rem;
+        font-weight: 900;
+        letter-spacing: 0.045em;
+        text-transform: uppercase;
+    }
+
+    .bandeja-tabla td:last-child {
+        border-bottom: 0;
+    }
+
+    .bandeja-tabla .importe {
+        text-align: left;
+    }
+
+    .bandeja-resumen-texto {
+        display: block;
+        -webkit-line-clamp: unset;
+    }
+
+    .bandeja-paginacion {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .bandeja-paginacion-controles {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bandeja-pagina {
+        width: 100%;
+    }
+
+    .bandeja-detalle {
+        width: min(100vw, 560px);
+    }
+
+    .bandeja-detalle-datos {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .bandeja-tabla td {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bancos-app *,
+    .bancos-app *::before,
+    .bancos-app *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .bandeja-spinner,
+    .bandeja-skeleton span {
+        animation: none;
+    }
+}

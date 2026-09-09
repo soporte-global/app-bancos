@@ -1,92 +1,21 @@
+/* Paleta compartida. Las variaciones se calculan en cada componente. */
+@import url("compatibilidad_colores.css");
+
 :root {
-    /* color principal */
-        --hue-principal: 207; /* azul global = 207 */
-        --color-principal-300:      hsla(var(--hue-principal), 85%, 94%, 1.00);
-        --color-principal-300-a75:  hsla(var(--hue-principal), 85%, 94%, 0.75);
-        --color-principal-300-a50:  hsla(var(--hue-principal), 85%, 94%, 0.50);
-        --color-principal-300-a25:  hsla(var(--hue-principal), 85%, 94%, 0.25);
-
-        --color-principal-500:      hsla(var(--hue-principal), 85%, 50%, 1.00);
-        --color-principal-500-a75:  hsla(var(--hue-principal), 85%, 50%, 0.75);
-        --color-principal-500-a50:  hsla(var(--hue-principal), 85%, 50%, 0.50);
-        --color-principal-500-a25:  hsla(var(--hue-principal), 85%, 50%, 0.25);
-
-        --color-principal-700:      hsla(var(--hue-principal), 85%, 12%, 1.00);
-        --color-principal-700-a75:  hsla(var(--hue-principal), 85%, 12%, 0.75);
-        --color-principal-700-a50:  hsla(var(--hue-principal), 85%, 12%, 0.50);
-        --color-principal-700-a25:  hsla(var(--hue-principal), 85%, 12%, 0.25);
-        
-        /* versiones alternativas para parchear cosillas */
-        --color-principal-alt1:     hsl(var(--hue-principal), 100%, 50%);
-        --color-principal-alt2:     hsl(var(--hue-principal), 60%, 80%);
-        --color-principal-alt3:     hsl(var(--hue-principal), 60%, 20%);
-        --color-principal-alt4:     hsl(var(--hue-principal), 5%, 20%);
-        --color-principal-alt5:  hsla(var(--hue-principal), 100%, 50%, 0.25);
-
-        /* login titilante */
-        --color-principal-desde:     hsl(var(--hue-principal), 85%, 30%);
-        --color-principal-hasta:     hsl(var(--hue-principal), 85%, 60%);
-
-    /* negros con alpha */
-        --black: hsl(0, 0%, 0%);
-        --black-a10: hsla(0, 0%, 0%, 0.1);
-        --black-a15: hsla(0, 0%, 0%, 0.15);
-        --black-a20: hsla(0, 0%, 0%, 0.2);
-        --black-a25: hsla(0, 0%, 0%, 0.25);
-        --black-a33: hsla(0, 0%, 0%, 0.33);
-        --black-a40: hsla(0, 0%, 0%, 0.4);
-        --black-a50: hsla(0, 0%, 0%, 0.5);
-        --black-a60: hsla(0, 0%, 0%, 0.6);
-        --black-a75: hsla(0, 0%, 0%, 0.75);
-        --black-a90: hsla(0, 0%, 0%, 0.9);
-    /* grises planos */
-        --gris-10: hsl(0, 0%, 5%);
-        --gris-20: hsl(0, 0%, 15%);
-        --gris-30: hsl(0, 0%, 25%);
-        --gris-40: hsl(0, 0%, 40%);
-        --gris-50: hsl(0, 0%, 50%);
-        --gris-60: hsl(0, 0%, 60%);
-        --gris-70: hsl(0, 0%, 75%);
-        --gris-80: hsl(0, 0%, 85%);
-        --gris-90: hsl(0, 0%, 95%);
-    /* blancos con alpha */
-        --white: hsl(0, 0%, 100%);
-        --white-a10: hsla(0, 0%, 100%, 0.1);
-        --white-a15: hsla(0, 0%, 100%, 0.15);
-        --white-a20: hsla(0, 0%, 100%, 0.2);
-        --white-a25: hsla(0, 0%, 100%, 0.25);
-        --white-a33: hsla(0, 0%, 100%, 0.33);
-        --white-a40: hsla(0, 0%, 100%, 0.4);
-        --white-a50: hsla(0, 0%, 100%, 0.5);
-        --white-a60: hsla(0, 0%, 100%, 0.6);
-        --white-a75: hsla(0, 0%, 100%, 0.75);
-        --white-a90: hsla(0, 0%, 100%, 0.9);
-
-    /* pantalla de error */
-        --error-bg: hsl(35, 75%, 96%);
-        --error-inner: hsl(35, 74%, 92%);
-        --error-panel: hsla(35, 74%, 67%, 0.5);
-        --error-accent: hsl(35, 74%, 47%);
-
-    /* switches */
-        --switch-back: hsl(0, 0%, 33%);
-        --switch-border: hsl(0, 0%, 77%);
-        --switch-blue-back: hsl(207, 96%, 77%);
-        --switch-blue-border: hsl(207, 96%, 37%);
-        --switch-gold-back: hsl(35, 97%, 77%);
-        --switch-gold-border: hsl(35, 96%, 37%);
-        --switch-green-back: hsl(105, 96%, 77%);
-        --switch-green-border: hsl(105, 96%, 37%);
-        --switch-red-back: hsl(0, 96%, 77%);
-        --switch-red-border: hsl(0, 96%, 37%);
-
-    /* semaforeo general */
-        --color-red-back: hsl(0, 89%, 95%);
-        --color-red-strong: hsl(0, 100%, 50%);
-        --color-green-back: hsl(120, 89%, 95%);
-        --color-green-strong: hsl(120, 100%, 25%);
-        --color-gold-back: hsl(35, 89%, 95%);
-        --color-gold-strong: hsl(35, 100%, 45%);
-        --color-blue-back: hsl(207, 89%, 90%);
-        --color-blue-strong: hsl(207, 100%, 45%);
+    --hue-principal: 207;
+    --paleta-principal1: hsl(var(--hue-principal), 85%, 50%);
+    --paleta-principal2: hsl(var(--hue-principal), 100%, 50%);
+    --paleta-principal3: hsl(var(--hue-principal), 60%, 50%);
+    --paleta-secundario1: #ffffff;
+    --paleta-secundario2: #000000;
+    --paleta-secundario3: #68737d;
+    --paleta-exito1: hsl(120, 100%, 50%);
+    --paleta-exito2: #2a9d57;
+    --paleta-exito3: hsl(105, 96%, 50%);
+    --paleta-advertencia1: hsl(35, 100%, 50%);
+    --paleta-advertencia2: hsl(35, 74%, 50%);
+    --paleta-advertencia3: #d99a16;
+    --paleta-error1: hsl(0, 100%, 50%);
+    --paleta-error2: #c83d3d;
+    --paleta-detalle1: var(--paleta-principal2);
 }

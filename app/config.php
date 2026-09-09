@@ -3,7 +3,7 @@ return [
     'nombre' => 'APP BANCOS',
     'carpeta' => 'app-bancos', // debe coincidir con el directorio publicado, no con el nombre del repositorio
     'entorno' => 'prod', // tunel | testing | prod
-    'id_aplicacion' => 0, // sin aplicación asignada: la plantilla abre sin login hasta definir un id
+    'id_aplicacion' => 12, // APP BANCOS en global_prod.hub_aplicaciones
     'permisos_todas_las_apps' => false, // true publica el alcance completo, como necesitaría un hub
 
     'requiere_empleado' => true, // false permite cuentas operativas sin identidad laboral

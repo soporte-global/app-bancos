@@ -1,7 +1,7 @@
 # Backlog
 
 - Confirmar reglas contables y tratamiento de excepciones de cheques.
-- Configurar la aplicación, roles y permisos internos en el Hub de `nueva_app`.
+- Incorporar gradualmente los demás usuarios de APP BANCOS con acceso general y permisos internos específicos; el acceso administrador inicial queda limitado a `mcaballero` y `hvega`.
 - Elegir y fijar una versión publicada de hQuery, validando sus dependencias y contrato `vars`.
 - Incluir `GENERAL`, `NNNNN`, Mercado Pago y la excepción CREDICOOP en la conciliación de configuración; validar que su traducción a alcance global/múltiples cuentas coincida con las reglas de carga ya aplicadas.
 - Emitir y archivar la conciliación post-migración de `010` a `013`: conteos, importes, claves, relaciones, trazabilidad, omisiones y excepciones esperadas.
@@ -14,5 +14,4 @@
 - Diseñar migraciones y contratos API antes de toda escritura ERP.
 - Validar con `EXPLAIN (ANALYZE, BUFFERS)` el plan de CTEs e índices propuestos sobre volumen representativo, antes de crear índices adicionales o habilitar autoasignación.
 - Definir con DBA el eventual índice compuesto de `public.valor` y la disponibilidad de extensiones para búsqueda textual; no alterar tablas ERP desde este módulo sin medición y aprobación.
-- Configurar permisos de aplicación/sesión en Hub y definir `id_aplicacion` en la nueva base.
 - Revisar con negocio/TI los resultados de conciliación y autorizar el cambio gradual de consumidores desde las tablas legacy.

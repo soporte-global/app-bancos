@@ -18,7 +18,7 @@ comprobar_sesion(AUTH_CACHE_TTL === 300, 'AUTH_CACHE_TTL no equivale a cinco min
 comprobar_sesion(REQUIERE_ZWEB_USER === false, 'La plantilla exige un usuario Zweb por defecto.');
 comprobar_sesion(REQUIERE_CLIENTE === false, 'La plantilla exige un cliente por defecto.');
 comprobar_sesion(PERMISOS_TODAS_LAS_APPS === false, 'La plantilla publica permisos de otras aplicaciones por defecto.');
-comprobar_sesion(ID_APLICACION === 0, 'La plantilla tiene una aplicacion asignada.');
+comprobar_sesion(ID_APLICACION === 12, 'APP BANCOS no usa la aplicacion Hub configurada.');
 comprobar_sesion(SESSION_NAME === 'GLOBAL_APPS_AUTH', 'La plantilla no usa la cookie de autenticacion compartida.');
 comprobar_sesion(AUTH_SESSION_KEY === 'GLOBAL_AUTH', 'La sesion no usa el espacio de autenticacion comun.');
 comprobar_sesion($cookieParams['lifetime'] === LOGIN_MAX_AGE, 'La cookie de sesion no dura lo mismo que el login.');

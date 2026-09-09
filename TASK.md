@@ -17,6 +17,8 @@ Validación de cobertura: `tests/CompararCasosSombra017Test.php` confirmó parid
 
 La bandeja de sólo lectura ya muestra estados legibles, asociaciones, último mensaje y resumen del borrador activo (fecha, modelo, debe y haber), con contraste reforzado para la tabla y los controles.
 
+Acceso inicial configurado: la migración `018_bancos_hub_acceso_inicial.sql` registró `APP BANCOS` como aplicación Hub 12 y concedió acceso administrador y acceso a `bandeja-mensual` exclusivamente a las cuentas activas `mcaballero` y `hvega`, mediante asignaciones directas. La aplicación ya exige ese `id_aplicacion`.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

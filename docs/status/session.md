@@ -67,3 +67,7 @@ Como pulido final, la fila de tema recuperó el layout de la referencia dentro d
 La prueba integrada detectó que esa posición se perdía al navegar con el cursor de la URL porque sólo vivía en `sessionStorage`. Se versionó el cursor firmado para transportar página e inicio, se mantuvo lectura compatible de cursores anteriores y el render pasó a usar exclusivamente los metadatos validados por el servidor. La clave keyset sigue formada por fecha e ID.
 
 Se corrigió además el detalle con páginas cortas: el filtro dinámico del shell establece al `<body>` como bloque contenedor de los elementos fijos, por lo que una sola fila recortaba visualmente el panel y el overlay. El shell conserva ahora al menos `100dvh`, y ambos elementos declaran una altura completa con fallback `100vh`.
+
+## Acceso inicial de APP BANCOS - 2026-09-09
+
+Se creó y aplicó `018_bancos_hub_acceso_inicial.sql` en el entorno conectado por túnel. La migración registra `APP BANCOS` con ID 12, crea el permiso de acceso administrador y el destino interno `bandeja-mensual`, y los asigna directamente a las cuentas activas `mcaballero` y `hvega`. También invalida cualquier ruta heredada del permiso administrador para mantener ese rol limitado a ambos usuarios. La verificación sobre `hub_permisos_efectivos_usuario` confirmó dos administradores y cuatro rutas efectivas en total, todas directas. `app/config.php` ya exige la aplicación 12; se agregó un rollback que desactiva de forma auditable las filas creadas.

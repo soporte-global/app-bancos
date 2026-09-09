@@ -27,7 +27,7 @@ ob_start();
 include __DIR__ . '/fixtures/bandeja-responsive.php';
 $html = ob_get_clean();
 
-$comprobar(strpos($html, 'Página 1 · movimientos 1–2') !== false, 'La primera página debe mostrar un rango amigable.');
+$comprobar(strpos($html, 'Página 1 · registros 1–2 · 2 en esta página') !== false, 'La primera página debe mostrar rango y cantidad de registros.');
 $comprobar(strpos($html, '>Anterior<') !== false && strpos($html, '>Siguiente<') !== false, 'Deben renderizarse ambos controles.');
 $comprobar(strpos($html, 'Límite: 25') !== false, 'El límite no predeterminado debe mostrarse como filtro activo.');
 $comprobar(strpos($html, 'cursor-opaco-de-ejemplo') !== false, 'Siguiente debe conservar el cursor opaco existente.');

@@ -189,8 +189,10 @@
         }
 
         if (estado && estado.pagina) {
-            var fin = estado.inicio === 0 ? 0 : estado.inicio + cantidad - 1;
-            posicion.textContent = 'Página ' + estado.pagina + ' · movimientos ' + estado.inicio + '–' + fin;
+            var inicioVisible = cantidad > 0 ? estado.inicio : 0;
+            var fin = cantidad > 0 ? estado.inicio + cantidad - 1 : 0;
+            posicion.textContent = 'Página ' + estado.pagina + ' · registros ' + inicioVisible + '–' + fin
+                + ' · ' + cantidad + ' en esta página';
         }
 
         if (estado && estado.anterior) {

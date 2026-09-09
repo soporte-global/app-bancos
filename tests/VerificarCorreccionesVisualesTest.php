@@ -7,6 +7,8 @@ $temaComponentes = file_get_contents(__DIR__ . '/../app/css/tema_componentes.css
 $javascript = file_get_contents(__DIR__ . '/../app/js/shared.js');
 $paleta = file_get_contents(__DIR__ . '/../_shared/css/paleta_colores.css');
 $compatibilidad = file_get_contents(__DIR__ . '/../_shared/css/compatibilidad_colores.css');
+$header = file_get_contents(__DIR__ . '/../_shared/css/header.css');
+$configuracion = require __DIR__ . '/../app/config.php';
 
 $comprobar = static function ($condicion, $mensaje) {
     if (!$condicion) {
@@ -30,6 +32,9 @@ $comprobar(strpos($css, 'overscroll-behavior: contain') !== false, 'El panel no 
 $comprobar(strpos($vista, 'data-controles-bandeja') === false, 'El formulario debe permanecer en su landmark original.');
 $comprobar(strpos($javascript, 'footer.appendChild(controles)') === false, 'El formulario no debe moverse al footer.');
 $comprobar(strpos($css, '.bancos-app') !== false, 'Los estilos propios deben quedar encapsulados.');
+$comprobar(strpos($header, '.dropdown-menu .selector_tema') !== false, 'El selector de tema debe ocupar una fila propia dentro del menú.');
+$comprobar(strpos($header, 'justify-content: space-between') !== false, 'El texto y el switch deben quedar alineados dentro de la fila.');
+$comprobar($configuracion['nombre'] === 'APP BANCOS', 'La identidad visible de la aplicación debe ser APP BANCOS.');
 
 preg_match('/\.bandeja-contexto\s*\{([^}]*)\}/s', $css, $contexto);
 $comprobar(!isset($contexto[1]) || strpos($contexto[1], 'position: sticky') === false, 'La barra no debe permanecer sticky.');

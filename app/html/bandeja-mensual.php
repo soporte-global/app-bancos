@@ -241,9 +241,9 @@ if (($bandeja->error ?? null) !== null) {
             <nav class="bandeja-paginacion" aria-label="Paginación de movimientos" data-paginacion data-cantidad="<?php echo $escapar($cantidadMovimientos); ?>">
                 <p class="bandeja-posicion" aria-live="polite" data-posicion-pagina>
                     <?php if (!isset($_GET['cursor'])): ?>
-                        Página 1 · movimientos <?php echo $cantidadMovimientos > 0 ? '1–' . $escapar($cantidadMovimientos) : '0'; ?>
+                        Página 1 · registros <?php echo $cantidadMovimientos > 0 ? '1–' . $escapar($cantidadMovimientos) : '0'; ?> · <?php echo $escapar($cantidadMovimientos); ?> en esta página
                     <?php else: ?>
-                        Página actual · <?php echo $escapar($cantidadMovimientos); ?> movimientos visibles
+                        Página actual · <?php echo $escapar($cantidadMovimientos); ?> registros en esta página
                     <?php endif; ?>
                 </p>
                 <div class="bandeja-paginacion-controles">

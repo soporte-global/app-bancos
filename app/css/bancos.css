@@ -630,6 +630,21 @@ body.bandeja-detalle-activo {
     border-radius: var(--radio-control);
 }
 
+.bandeja-accion .bandeja-opcion-compartida {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+}
+
+.bandeja-accion .bandeja-opcion-compartida input {
+    width: 18px;
+    min-height: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+}
+
 .bandeja-borrador-datos,
 .bandeja-borrador-linea {
     display: grid;

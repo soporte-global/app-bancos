@@ -22,6 +22,8 @@ final class MovimientoMensualRepository
     private $lineasBorrador;
     private $nodosErp;
     private $cuentasErp;
+    private $asientosErp;
+    private $movimientosErp;
 
     public function __construct(PDO $pdo, EsquemaBancos $esquema)
     {
@@ -37,6 +39,8 @@ final class MovimientoMensualRepository
         $this->lineasBorrador = $esquema->tablaBancos('bancos_linea_borrador_asiento');
         $this->nodosErp = $esquema->tablaLecturaErp('nodo');
         $this->cuentasErp = $esquema->tablaLecturaErp('cuenta');
+        $this->asientosErp = $esquema->tablaLecturaErp('asiento');
+        $this->movimientosErp = $esquema->tablaLecturaErp('movimiento');
     }
 
     public function preparar($movimientoId, $cuentaBancariaId, $inicioPeriodo, $usuarioId, $clave)
@@ -345,6 +349,160 @@ final class MovimientoMensualRepository
             'movimiento_id' => (int) $movimientoId,
             'valor_zetti_id' => (int) $valorId,
             'monto_asociado' => $montoMovimiento,
+            'reserva_id' => (int) $reservaId,
+            'asociacion_id' => (int) $asociacionId,
+        ];
+    }
+
+    public function asociarAsiento(
+        $movimientoId,
+        $cuentaBancariaId,
+        $inicioPeriodo,
+        $asientoId,
+        $compartido,
+        $usuarioId,
+        $clave
+    ) {
+        $movimiento = $this->bloquearMovimiento(
+            $movimientoId,
+            $cuentaBancariaId,
+            $inicioPeriodo
+        );
+        if ($movimiento['estado_actual'] !== 'ABIERTO') {
+            throw new TransicionMovimientoException(
+                'Solo se pueden asociar asientos a un movimiento ABIERTO.'
+            );
+        }
+        $montoMovimiento = (float) $movimiento['credito'] > 0
+            ? (string) $movimiento['credito']
+            : (string) $movimiento['debito'];
+
+        // Serializa las decisiones sobre un asiento incluso cuando todavía no
+        // existen filas operativas que puedan bloquearse con FOR UPDATE.
+        $consulta = $this->pdo->prepare('SELECT pg_advisory_xact_lock(CAST(:asiento_id AS bigint))');
+        $consulta->execute([':asiento_id' => (string) $asientoId]);
+
+        $consulta = $this->pdo->prepare(
+            "SELECT a.id, a.fecha, a.numero, a.nombre,
+                    count(m.id) AS cantidad_lineas,
+                    COALESCE(sum(CASE WHEN m.debita THEN abs(m.monto) ELSE 0 END), 0) AS total_debe,
+                    COALESCE(sum(CASE WHEN NOT m.debita THEN abs(m.monto) ELSE 0 END), 0) AS total_haber,
+                    COALESCE(max(abs(m.monto)), 0) AS importe_maximo
+             FROM {$this->asientosErp} a
+             LEFT JOIN {$this->movimientosErp} m ON m.asiento = a.id
+             WHERE a.id = :asiento_id
+             GROUP BY a.id, a.fecha, a.numero, a.nombre"
+        );
+        $consulta->execute([':asiento_id' => (int) $asientoId]);
+        $asiento = $consulta->fetch(PDO::FETCH_ASSOC);
+        if ($asiento === false) {
+            throw new RecursoNoDisponibleException('El asiento ERP indicado no existe.');
+        }
+        if ((int) $asiento['cantidad_lineas'] < 2) {
+            throw new RecursoNoDisponibleException('El asiento ERP no tiene suficientes lineas contables.');
+        }
+        if ((string) $asiento['total_debe'] !== (string) $asiento['total_haber']) {
+            throw new RecursoNoDisponibleException('El asiento ERP no esta balanceado.');
+        }
+        if (!$compartido && (string) $asiento['importe_maximo'] !== $montoMovimiento) {
+            throw new RecursoNoDisponibleException(
+                'El importe del movimiento no coincide con el asiento ERP exclusivo.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "SELECT EXISTS (
+                 SELECT 1 FROM {$this->asociaciones}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND asiento_zetti_id IS NOT NULL
+             ) OR EXISTS (
+                 SELECT 1 FROM {$this->reservas}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND asiento_zetti_id IS NOT NULL
+             )"
+        );
+        $consulta->execute([':movimiento_id' => (int) $movimientoId]);
+        if ($consulta->fetchColumn()) {
+            throw new RecursoNoDisponibleException(
+                'El movimiento ya tiene un asiento asociado o reservado.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "SELECT count(*) AS cantidad,
+                    COALESCE(bool_or(compartido), false) AS alguno_compartido,
+                    COALESCE(bool_or(NOT compartido), false) AS alguno_exclusivo
+             FROM (
+                 SELECT compartido FROM {$this->asociaciones}
+                 WHERE asiento_zetti_id = :asiento_id AND activo IS TRUE
+                 UNION ALL
+                 SELECT compartido FROM {$this->reservas}
+                 WHERE asiento_zetti_id = :asiento_id AND activo IS TRUE
+             ) usos"
+        );
+        $consulta->execute([':asiento_id' => (int) $asientoId]);
+        $usos = $consulta->fetch(PDO::FETCH_ASSOC);
+        $cantidadUsos = (int) $usos['cantidad'];
+        $hayExclusivo = in_array($usos['alguno_exclusivo'], [true, 1, '1', 't'], true);
+        if ((!$compartido && $cantidadUsos > 0) || ($compartido && $hayExclusivo)) {
+            throw new RecursoNoDisponibleException(
+                'El asiento ERP ya tiene un uso activo incompatible con la modalidad solicitada.'
+            );
+        }
+
+        $observacion = 'API|ASOCIAR_ASIENTO|' . $clave;
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->reservas}
+                (movimiento_id, asiento_zetti_id, compartido, activo, reservado_por, motivo, observacion)
+             VALUES
+                (:movimiento_id, :asiento_id, :compartido, true, :usuario_id, 'ASOCIACION_ASIENTO', :observacion)
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':asiento_id' => (int) $asientoId,
+            ':compartido' => $compartido ? 'true' : 'false',
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => $observacion,
+        ]);
+        $reservaId = $consulta->fetchColumn();
+
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->asociaciones}
+                (movimiento_id, asiento_zetti_id, monto_asociado, compartido,
+                 activo, observacion, usuario_creacion)
+             VALUES
+                (:movimiento_id, :asiento_id, :monto, :compartido,
+                 true, :observacion, :usuario_id)
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':asiento_id' => (int) $asientoId,
+            ':monto' => $montoMovimiento,
+            ':compartido' => $compartido ? 'true' : 'false',
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => $observacion,
+        ]);
+        $asociacionId = $consulta->fetchColumn();
+        if ($reservaId === false || $asociacionId === false) {
+            throw new RuntimeException('No se pudo reservar y asociar el asiento ERP.');
+        }
+
+        $consulta = $this->pdo->prepare(
+            "UPDATE {$this->movimientos}
+             SET fecha_modificacion = current_timestamp, usuario_modificacion = :usuario_id
+             WHERE id = :movimiento_id"
+        );
+        $consulta->execute([
+            ':usuario_id' => (int) $usuarioId,
+            ':movimiento_id' => (int) $movimientoId,
+        ]);
+
+        return [
+            'movimiento_id' => (int) $movimientoId,
+            'asiento_zetti_id' => (int) $asientoId,
+            'compartido' => (bool) $compartido,
+            'monto_asociado' => $montoMovimiento,
+            'cantidad_lineas_asiento' => (int) $asiento['cantidad_lineas'],
             'reserva_id' => (int) $reservaId,
             'asociacion_id' => (int) $asociacionId,
         ];

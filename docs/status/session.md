@@ -105,3 +105,9 @@ La migración reversible `022` agregó los índices únicos parciales por movimi
 Se caracterizaron 5.169 borradores activos migrados: todos balanceados, entre 2 y 141 líneas, pero sólo 2.338 coinciden con el importe del extracto. El contrato nuevo exige balance y 2 a 200 líneas, admite cuentas repetidas y no fuerza igualdad con el movimiento. Los importes se normalizan a cinco decimales con suma exacta por cadenas.
 
 Se implementó `POST api.php?accion=movimiento.crear-borrador` y un editor dinámico en el drawer. La acción valida nodo y cuentas en ERP de sólo lectura y crea cabecera, líneas, reserva, asociación y auditoría en una transacción idempotente de `global_temp`. La migración `023` registró el permiso sin usuarios nuevos. La prueba rechazó un desbalance de `0.00001`, confirmó persistencia y exclusividad y limpió todas sus filas. El siguiente incremento seguro es asociar asientos ERP existentes sin materializarlos ni modificarlos.
+
+## Asociación segura de asiento ERP - 2026-09-10
+
+Se caracterizaron 911.337 asociaciones activas: 441.654 exclusivas con coincidencia exacta de importe y 469.683 compartidas sobre 9.481 asientos. Todos los asientos asociados tenían líneas balanceadas y no existían mezclas de modalidad. Con esa evidencia se implementó `POST api.php?accion=movimiento.asociar-asiento`, limitado a movimientos `ABIERTO` y a debug.
+
+La operación valida el asiento y sus líneas mediante lectura de ERP, serializa el recurso con un advisory lock, deriva el monto del extracto y crea reserva/asociación/auditoría en una transacción idempotente. La migración `024` registró el permiso sin asignaciones. La prueba integrada confirmó exclusividad, dos usos compartidos, rechazo de mezcla y limpieza del sandbox. El próximo incremento visible es sustituir IDs manuales por búsquedas asistidas empezando por los recursos de estas acciones.

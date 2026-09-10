@@ -29,6 +29,8 @@ Asociación segura de valor: `movimiento.asociar-valor` reserva y asocia por ID 
 
 Borrador contable multílínea: `movimiento.crear-borrador` valida nodo, cuentas, fecha, modelo, exclusividad por línea y balance exacto de 2 a 200 líneas. Crea cabecera, líneas, reserva, asociación y auditoría en una transacción idempotente de `global_temp`, sin escribir ERP. La migración `023` registró el permiso granular sin asignaciones nuevas. La interfaz todavía recibe IDs exactos de nodo y cuenta.
 
+Asociación segura de asiento: `movimiento.asociar-asiento` valida por lectura que el asiento ERP exista, tenga al menos dos líneas y esté balanceado. La modalidad exclusiva exige coincidencia de importe y disponibilidad; la compartida admite varios movimientos, pero no puede mezclarse con usos exclusivos. La reserva, asociación y auditoría se escriben atómicamente sólo en `global_temp`. La migración `024` registró el permiso sin usuarios nuevos.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

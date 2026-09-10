@@ -486,6 +486,71 @@
             });
         }
 
+        function asociarAsiento(boton) {
+            var bloque = boton.closest('[data-accion-asociar-asiento]');
+            var asientoControl = bloque && bloque.querySelector('[data-asiento-zetti-id]');
+            var compartidoControl = bloque && bloque.querySelector('[data-asiento-compartido]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var asientoId = asientoControl ? Number(asientoControl.value) : 0;
+            if (!Number.isInteger(asientoId) || asientoId <= 0) {
+                if (estado) {
+                    estado.textContent = 'Ingresá un ID de asiento ERP válido.';
+                }
+                if (asientoControl) {
+                    asientoControl.focus();
+                }
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            asientoControl.disabled = true;
+            compartidoControl.disabled = true;
+            if (estado) {
+                estado.textContent = 'Validando, reservando y asociando asiento…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.asociar-asiento', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo,
+                        asiento_zetti_id: asientoId,
+                        compartido: compartidoControl.checked
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                boton.textContent = 'Asiento asociado';
+                if (estado) {
+                    estado.textContent = 'Asiento #' + contenido.data.asiento_zetti_id +
+                        ' asociado por ' + contenido.data.monto_asociado +
+                        (contenido.data.compartido ? ' como compartido. ' : '. ') + 'Actualizando…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 900);
+            }).catch(function (error) {
+                boton.disabled = false;
+                asientoControl.disabled = false;
+                compartidoControl.disabled = false;
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         function agregarLineaBorrador(boton) {
             var bloque = boton.closest('[data-accion-crear-borrador]');
             var contenedor = bloque && bloque.querySelector('[data-borrador-lineas]');
@@ -626,6 +691,11 @@
             var accionAsociarValor = evento.target.closest('[data-asociar-valor]');
             if (accionAsociarValor) {
                 asociarValor(accionAsociarValor);
+                return;
+            }
+            var accionAsociarAsiento = evento.target.closest('[data-asociar-asiento]');
+            if (accionAsociarAsiento) {
+                asociarAsiento(accionAsociarAsiento);
                 return;
             }
             var accionRevertir = evento.target.closest('[data-revertir-preparacion]');

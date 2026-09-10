@@ -11,8 +11,7 @@
 - Implementar todos los repositorios BANCOS a través de `EsquemaBancos`; queda prohibido calificar tablas operativas o ERP directamente con `global_prod` o `public`.
 - Definir y ejecutar el corte controlado: respaldo recuperable, ventana de convivencia, lecturas en sombra y regla de un único escritor para las tablas canónicas.
 - Detallar las validaciones futuras para `PARA_CERRAR`, el permiso especial de cierre en Hub y la secuencia contable definitiva de fusión/generación de asiento.
-- Implementar la asociación segura de asientos ERP existentes en `global_temp`, preservando la semántica de asiento compartido y sin mutar ERP.
-- Reemplazar los IDs manuales de nodo/cuenta/valor por búsquedas asistidas una vez definidos los filtros y permisos de consulta.
+- Reemplazar los IDs manuales de nodo/cuenta/valor/asiento por búsquedas asistidas una vez definidos los filtros y permisos de consulta.
 - Definir con negocio el algoritmo y umbral de candidatos antes de reemplazar el ingreso manual de `valor_zetti_id` por sugerencias automáticas.
 - Agregar pruebas de concurrencia con dos conexiones para la misma clave idempotente antes de habilitar tráfico de escritura.
 - Validar con `EXPLAIN (ANALYZE, BUFFERS)` el plan de CTEs e índices propuestos sobre volumen representativo, antes de crear índices adicionales o habilitar autoasignación.

@@ -56,6 +56,12 @@ Cada importe admite hasta cinco decimales y se normaliza sin aritmética binaria
 
 La acción sólo admite movimientos `ABIERTO` sin otro borrador activo. Valida nodo y cuentas contra el ERP de sólo lectura, crea borrador y líneas, y luego reserva/asocia el borrador en la misma transacción idempotente. La respuesta `201` incluye los IDs del borrador, reserva y asociación y la cantidad de líneas. No genera operación, asiento ni movimiento ERP.
 
+## Asociar un asiento ERP existente
+
+`POST api.php?accion=movimiento.asociar-asiento` recibe el contexto, `asiento_zetti_id` y el booleano obligatorio `compartido`. Exige `movimiento-asociar-asiento` o nivel administrador y conserva las protecciones comunes de debug, CSRF, JSON e idempotencia.
+
+El movimiento debe estar `ABIERTO` y no tener otro asiento activo. El servidor obtiene el asiento y sus líneas desde `public`, exige al menos dos líneas y balance exacto, y deriva `monto_asociado` del extracto. En modalidad exclusiva, el monto debe coincidir con el mayor importe absoluto de sus líneas y el asiento no puede tener otro uso activo. En modalidad compartida se permite más de un movimiento, pero se rechaza cualquier mezcla con usos exclusivos. Un bloqueo transaccional por ID de asiento serializa esa decisión aun cuando todavía no existan reservas. La respuesta incluye asiento, modalidad, monto, cantidad de líneas, reserva y asociación; no modifica el ERP.
+
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 
 La primera lectura materializada es la pantalla interna `?pag=bandeja-mensual`. Recibe por query string `cuenta_bancaria_id`, `inicio_periodo`, `limite` (1 a 100), los filtros opcionales `estado`, `responsable_id`, `asociacion=CON|SIN` y `mensajes=CON|SIN`; desde la segunda página recibe además `cursor`. Cuenta y período se eligen desde importaciones existentes, con una etiqueta ERP que identifica nodo, banco, tipo, nombre y código. El cursor versión 3 firma la posición, la cuenta, el período y los filtros; los cursores anteriores sólo se aceptan sin filtros. El cliente no puede enviar directamente la fecha ni el ID de ordenamiento.

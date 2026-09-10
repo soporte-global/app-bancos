@@ -46,7 +46,7 @@ Sólo admite `PARA_CERRAR -> ABIERTO`. Con la fila bloqueada, desactiva las asoc
 
 La acción sólo admite movimientos `ABIERTO`. El servidor deriva `monto_asociado` del crédito o débito del movimiento: el cliente no puede elegirlo. El valor se lee desde `public.valor`, debe existir, no puede estar en los estados `7`, `20` o `36` y su monto absoluto debe cubrir el movimiento. Con el movimiento bloqueado, se rechaza otra reserva/asociación activa de valor y se insertan reserva y asociación mediante los índices únicos parciales. Un conflicto deja ambas operaciones revertidas.
 
-La interfaz inicial solicita el ID exacto del valor. No intenta sugerir candidatos ni puntuar coincidencias: esas reglas continúan pendientes de validación. La respuesta `201` contiene movimiento, valor, importe, reserva y asociación; la auditoría conserva la misma evidencia. No se actualiza ninguna fila ERP.
+La interfaz permite buscar opciones contextuales o ingresar el ID exacto. La búsqueda no puntúa ni autoselecciona: esas reglas continúan pendientes de validación. La respuesta `201` contiene movimiento, valor, importe, reserva y asociación; la auditoría conserva la misma evidencia. Los IDs ERP viajan como texto decimal para no perder precisión en JavaScript. No se actualiza ninguna fila ERP.
 
 ## Crear borrador contable
 
@@ -62,10 +62,30 @@ La acción sólo admite movimientos `ABIERTO` sin otro borrador activo. Valida n
 
 El movimiento debe estar `ABIERTO` y no tener otro asiento activo. El servidor obtiene el asiento y sus líneas desde `public`, exige al menos dos líneas y balance exacto, y deriva `monto_asociado` del extracto. En modalidad exclusiva, el monto debe coincidir con el mayor importe absoluto de sus líneas y el asiento no puede tener otro uso activo. En modalidad compartida se permite más de un movimiento, pero se rechaza cualquier mezcla con usos exclusivos. Un bloqueo transaccional por ID de asiento serializa esa decisión aun cuando todavía no existan reservas. La respuesta incluye asiento, modalidad, monto, cantidad de líneas, reserva y asociación; no modifica el ERP.
 
+## Búsqueda asistida de recursos ERP
+
+`GET api.php?accion=erp.buscar-valores` recibe el contexto exacto del movimiento y `limite` entre 1 y 20. Requiere el mismo permiso que la asociación de valores. Devuelve valores de la cuenta bancaria con estado permitido, monto suficiente y sin reserva/asociación activa, ordenados por cercanía de importe, fecha e ID.
+
+`GET api.php?accion=erp.buscar-asientos` agrega `compartido=0|1` y requiere el permiso de asociación de asientos. Examina una ventana de ±45 días, acota primero los 500 asientos temporalmente más cercanos, exige al menos dos líneas balanceadas y aplica las reglas de importe/disponibilidad de la modalidad elegida. Ambas búsquedas son de sólo lectura, sólo funcionan para movimientos `ABIERTO`, devuelven como máximo 20 resultados y nunca confirman una asociación ni seleccionan automáticamente una opción.
+
+`GET api.php?accion=erp.buscar-nodos` recibe el mismo contexto y una `busqueda` opcional de hasta 80 caracteres. `GET api.php?accion=erp.buscar-cuentas` agrega `nodo_zetti_id` y exige una `busqueda` de 2 a 80 caracteres. Ambos reutilizan `movimiento-crear-borrador`: nodo prioriza el asociado a la cuenta bancaria; cuenta busca por ID, código o nombre en todo el catálogo y sólo usa el nodo seleccionado para ordenar y explicitar coincidencia. No filtra por nodo ni por `imputable`, porque los borradores históricos válidos demuestran que esas condiciones no son universales. La confirmación del borrador vuelve a validar la existencia de todos los recursos.
+
+## Mensajería y lecturas
+
+`POST api.php?accion=movimiento.agregar-mensaje` recibe el contexto exacto y `cuerpo` entre 1 y 2000 caracteres. Requiere `movimiento-agregar-mensaje` o nivel administrador, además de debug, JSON, CSRF e idempotencia. El servidor deriva `tipo_mensaje=USUARIO` y `emisor_hub_id` de la sesión; ningún dato de identidad se acepta desde el cliente. La conversación puede continuar en cualquier estado, incluidos los movimientos cerrados, de acuerdo con el histórico migrado. La inserción del mensaje, su recepción leída para el propio emisor y la auditoría son atómicas.
+
+`POST api.php?accion=movimiento.marcar-mensajes-leidos` recibe sólo el contexto y exige `movimiento-marcar-mensajes-leidos` o nivel administrador con las mismas protecciones. Crea o completa la recepción del operador para todos los mensajes ajenos de ese movimiento y conserva la primera fecha de lectura. La ausencia de una recepción se interpreta como pendiente: no se generan destinatarios ni lecturas para otros usuarios. La respuesta informa `mensajes_leidos` y `leido_en`.
+
+## Asignación de responsable
+
+`POST api.php?accion=movimiento.asignar-responsable` recibe el contexto y `responsable_id`. Requiere `movimiento-asignar-responsable` o nivel administrador y las protecciones comunes de debug, JSON, CSRF e idempotencia. El destino debe ser una cuenta activa con acceso efectivo general a APP BANCOS; actualmente el catálogo contiene únicamente `mcaballero` y `hvega`, y se actualizará automáticamente al incorporar accesos en Hub.
+
+La acción no cambia el estado: bloquea el movimiento, copia su estado vigente en un nuevo evento de historial y registra al responsable como `usuario_hub_id`. El operador real permanece en auditoría y en la observación técnica del evento. Reasignar al responsable vigente es un no-op auditado y no duplica el historial. La respuesta incluye responsable anterior/nuevo, usuario, evento y `cambio`.
+
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 
 La primera lectura materializada es la pantalla interna `?pag=bandeja-mensual`. Recibe por query string `cuenta_bancaria_id`, `inicio_periodo`, `limite` (1 a 100), los filtros opcionales `estado`, `responsable_id`, `asociacion=CON|SIN` y `mensajes=CON|SIN`; desde la segunda página recibe además `cursor`. Cuenta y período se eligen desde importaciones existentes, con una etiqueta ERP que identifica nodo, banco, tipo, nombre y código. El cursor versión 3 firma la posición, la cuenta, el período y los filtros; los cursores anteriores sólo se aceptan sin filtros. El cliente no puede enviar directamente la fecha ni el ID de ordenamiento.
 
-Cada movimiento de la página contiene el resumen necesario para la grilla y colecciones completas de `asociaciones`, `mensajes`, `borradores.lineas` e `historial`. Esas colecciones se consultan por lote para los IDs visibles. La pantalla no ejecuta mutaciones y su carga se realiza sólo después de que el enrutador normal resuelva y autorice el destino.
+Cada movimiento de la página contiene el resumen necesario para la grilla y colecciones completas de `asociaciones`, `mensajes`, `borradores.lineas` e `historial`. Esas colecciones se consultan por lote para los IDs visibles. Cuando existe una sesión, cada mensaje incluye su estado de lectura para el usuario actual y el movimiento informa `mensajes_no_leidos`. La carga se realiza sólo después de que el enrutador normal resuelva y autorice el destino.
 
 El contrato de transición admite `ABIERTO -> PARA_CERRAR` para un usuario autorizado de la aplicación, `PARA_CERRAR -> ABIERTO` con `motivo` obligatorio y `PARA_CERRAR -> CERRADO` sólo con permiso de cierre. No existe endpoint de reapertura. Preparar asociaciones o borradores no escribe ERP; el endpoint de cierre es el único que puede materializar el efecto contable y debe ser transaccional. El plan de consultas que respalda esos contratos está en [query-plan.md](database/query-plan.md).

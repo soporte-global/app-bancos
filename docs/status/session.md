@@ -111,3 +111,27 @@ Se implementó `POST api.php?accion=movimiento.crear-borrador` y un editor diná
 Se caracterizaron 911.337 asociaciones activas: 441.654 exclusivas con coincidencia exacta de importe y 469.683 compartidas sobre 9.481 asientos. Todos los asientos asociados tenían líneas balanceadas y no existían mezclas de modalidad. Con esa evidencia se implementó `POST api.php?accion=movimiento.asociar-asiento`, limitado a movimientos `ABIERTO` y a debug.
 
 La operación valida el asiento y sus líneas mediante lectura de ERP, serializa el recurso con un advisory lock, deriva el monto del extracto y crea reserva/asociación/auditoría en una transacción idempotente. La migración `024` registró el permiso sin asignaciones. La prueba integrada confirmó exclusividad, dos usos compartidos, rechazo de mezcla y limpieza del sandbox. El próximo incremento visible es sustituir IDs manuales por búsquedas asistidas empezando por los recursos de estas acciones.
+
+## Búsqueda asistida de valores y asientos - 2026-09-10
+
+Se agregaron dos consultas GET autenticadas que reutilizan los permisos de asociación. Valores se acota por cuenta, estado, monto y disponibilidad; asientos se acota por fecha, balance, importe y modalidad exclusiva/compartida. La interfaz presenta hasta 12 opciones seleccionables, mantiene el ID exacto como alternativa y no aplica puntaje ni selección automática.
+
+Las consultas sólo leen ERP y tablas operativas, vuelven a validarse al confirmar y proyectan los IDs ERP como texto para preservar `bigint` en JavaScript. La prueba integrada verificó opciones reales, límites, contexto ABIERTO y ausencia de cambios en asociaciones/reservas. El siguiente incremento de asistencia corresponde a nodo y cuentas contables del borrador.
+
+## Búsqueda asistida de nodos y cuentas - 2026-09-10
+
+El editor de borradores reemplazó los IDs manuales por selectores buscables, conservando el ingreso de un ID exacto como alternativa. Nodo busca por ID, código y nombre y prioriza el asociado a la cuenta bancaria. Cada línea busca cuentas por ID, código o nombre, conserva IDs `bigint` como texto y muestra nodo e imputabilidad antes de seleccionar.
+
+La caracterización evitó una regla incorrecta: 10.777 de 10.801 líneas activas y 5.157 de 5.169 borradores usan cuentas de un nodo distinto al de la cabecera; además existen 10 líneas con cuentas no imputables. Por eso el nodo y la imputabilidad ordenan e informan, pero no filtran. Los nuevos `GET` reutilizan `movimiento-crear-borrador`, no agregan DDL ni DML, y la prueba integrada confirmó resultados, límites, validación contextual y ausencia de cambios operativos. El siguiente incremento funcional vuelve al circuito colaborativo de bajo riesgo: mensajes, lecturas y asignación de responsable.
+
+## Mensajería y lecturas - 2026-09-10
+
+Se implementaron `movimiento.agregar-mensaje` y `movimiento.marcar-mensajes-leidos` con identidad de sesión, contexto cuenta/período, CSRF, idempotencia y auditoría. La publicación fija `USUARIO`, admite conversación en cualquier estado y registra al emisor como lector propio. La lectura crea o completa sólo las recepciones del operador para mensajes ajenos; no materializa listas de destinatarios.
+
+La decisión surge de los datos: los 13 mensajes productivos pertenecen a movimientos hoy cerrados y no existe ninguna recepción migrada. La bandeja ahora proyecta pendientes por usuario y ofrece ambas acciones en el drawer. La migración `025` registró los dos permisos sin asignaciones nuevas y fue aplicada correctamente. La prueba integrada usó `mcaballero` como emisor y `hvega` como lector, verificó reintentos, contexto, auditoría, render antes/después y limpieza. El siguiente incremento es asignar/reasignar responsable una vez cerrado el conjunto válido de destinatarios.
+
+## Asignación de responsable - 2026-09-10
+
+El conjunto válido se cerró con la fuente de autoridad de Hub: sólo pueden elegirse cuentas activas con permiso general efectivo para APP BANCOS. Actualmente devuelve exactamente `mcaballero` y `hvega`; futuras altas aparecerán sin modificar código. `movimiento.asignar-responsable` conserva el estado vigente, inserta historial únicamente ante un cambio y separa responsable de operador mediante historial, observación técnica y auditoría.
+
+La migración `026` registró el permiso granular sin concederlo a usuarios nuevos y fue aplicada. La prueba integrada confirmó asignación, reasignación, idempotencia, rechazo de un usuario externo, conservación del estado, operador y catálogo exacto, y eliminó todos sus datos artificiales. Con esto queda completo el primer bloque colaborativo de bajo riesgo. El próximo incremento corresponde a importación/configuración o, antes de eso, a cerrar los prerrequisitos operativos de corte que siguen abiertos.

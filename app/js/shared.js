@@ -426,12 +426,329 @@
             });
         }
 
+        function crearOpcionRecurso(datos, tipo) {
+            var boton = document.createElement('button');
+            var titulo = document.createElement('strong');
+            var detalle = document.createElement('span');
+            boton.type = 'button';
+            boton.className = 'bandeja-recurso-opcion';
+            boton.setAttribute('aria-pressed', 'false');
+            if (tipo === 'valor') {
+                boton.dataset.seleccionarValor = datos.id;
+                titulo.textContent = '#' + datos.id + ' · ' + (datos.subtipo || datos.tipo || 'Valor ERP');
+                detalle.textContent = datos.monto_principal + ' · ' + (datos.estado || 'Estado #' + datos.estado_id) +
+                    (datos.fecha_emision ? ' · ' + datos.fecha_emision.slice(0, 10) : '') +
+                    (datos.codigo_externo ? ' · ' + datos.codigo_externo : '');
+            } else if (tipo === 'asiento') {
+                boton.dataset.seleccionarAsiento = datos.id;
+                titulo.textContent = '#' + datos.id + ' · ' + (datos.nombre || 'Asiento ERP');
+                detalle.textContent = datos.importe_maximo + ' · ' + datos.cantidad_lineas + ' líneas' +
+                    (datos.fecha ? ' · ' + datos.fecha.slice(0, 10) : '') +
+                    (datos.nodo ? ' · ' + datos.nodo : '') +
+                    (datos.tiene_usos === true || datos.tiene_usos === 't' ? ' · con usos compartidos' : '');
+            } else if (tipo === 'nodo') {
+                boton.dataset.seleccionarNodo = datos.id;
+                titulo.textContent = (datos.codigo_jerarquico || 'Sin código') + ' · ' + (datos.nombre || 'Nodo ERP');
+                detalle.textContent = '#' + datos.id +
+                    (datos.nombre_corto ? ' · ' + datos.nombre_corto : '') +
+                    (datos.preferido === true || datos.preferido === 't' ? ' · nodo de la cuenta bancaria' : '');
+            } else {
+                boton.dataset.seleccionarCuenta = datos.id;
+                titulo.textContent = (datos.codigo || 'Sin código') + ' · ' + (datos.nombre || 'Cuenta ERP');
+                detalle.textContent = '#' + datos.id + ' · ' + (datos.nodo || 'Nodo #' + datos.nodo_id) +
+                    (datos.imputable === true || datos.imputable === 't' ? ' · imputable' : ' · no imputable') +
+                    (datos.coincide_nodo === true || datos.coincide_nodo === 't' ? ' · mismo nodo' : '');
+            }
+            boton.appendChild(titulo);
+            boton.appendChild(detalle);
+            return boton;
+        }
+
+        function buscarRecursos(boton, tipo) {
+            var esValor = tipo === 'valor';
+            var bloque = boton.closest(esValor ? '[data-accion-asociar-valor]' : '[data-accion-asociar-asiento]');
+            var accion = bloque && bloque.querySelector(esValor ? '[data-asociar-valor]' : '[data-asociar-asiento]');
+            var resultados = bloque && bloque.querySelector(esValor ? '[data-resultados-valores]' : '[data-resultados-asientos]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var compartido = bloque && bloque.querySelector('[data-asiento-compartido]');
+            if (!accion || !resultados) {
+                return;
+            }
+            var parametros = new URLSearchParams({
+                accion: esValor ? 'erp.buscar-valores' : 'erp.buscar-asientos',
+                movimiento_id: accion.dataset.movimientoId,
+                cuenta_bancaria_id: accion.dataset.cuentaBancariaId,
+                inicio_periodo: accion.dataset.inicioPeriodo,
+                limite: '12'
+            });
+            if (!esValor) {
+                parametros.set('compartido', compartido.checked ? '1' : '0');
+            }
+            boton.disabled = true;
+            resultados.textContent = '';
+            if (estado) {
+                estado.textContent = esValor ? 'Buscando valores disponibles…' : 'Buscando asientos compatibles…';
+            }
+            fetch(window.contextoApp.app.ruta + '/api.php?' + parametros.toString(), {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerRespuesta).then(function (contenido) {
+                if (!contenido.data.length) {
+                    var vacio = document.createElement('p');
+                    vacio.className = 'sin-dato';
+                    vacio.textContent = esValor
+                        ? 'No hay valores contextuales disponibles.'
+                        : 'No hay asientos compatibles en la ventana de 45 días.';
+                    resultados.appendChild(vacio);
+                } else {
+                    contenido.data.forEach(function (recurso) {
+                        resultados.appendChild(crearOpcionRecurso(recurso, tipo));
+                    });
+                }
+                if (estado) {
+                    estado.textContent = contenido.data.length + ' opciones encontradas. Elegí una para completar el ID.';
+                }
+            }).catch(function (error) {
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            }).finally(function () {
+                boton.disabled = false;
+            });
+        }
+
+        function seleccionarRecurso(boton, tipo) {
+            var esValor = tipo === 'valor';
+            var bloque = boton.closest(esValor ? '[data-accion-asociar-valor]' : '[data-accion-asociar-asiento]');
+            var control = bloque && bloque.querySelector(esValor ? '[data-valor-zetti-id]' : '[data-asiento-zetti-id]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var atributo = esValor ? 'data-seleccionar-valor' : 'data-seleccionar-asiento';
+            if (!control) {
+                return;
+            }
+            Array.prototype.forEach.call(bloque.querySelectorAll('[' + atributo + ']'), function (opcion) {
+                opcion.setAttribute('aria-pressed', opcion === boton ? 'true' : 'false');
+            });
+            control.value = boton.getAttribute(atributo);
+            if (estado) {
+                estado.textContent = (esValor ? 'Valor #' : 'Asiento #') + control.value + ' seleccionado. Revisá y confirmá la asociación.';
+            }
+        }
+
+        function buscarRecursoBorrador(boton, tipo) {
+            var esNodo = tipo === 'nodo';
+            var bloque = boton.closest('[data-accion-crear-borrador]');
+            var accion = bloque && bloque.querySelector('[data-crear-borrador]');
+            var alcance = esNodo ? bloque.querySelector('[data-selector-nodo]') : boton.closest('[data-borrador-linea]');
+            var busqueda = alcance && alcance.querySelector(esNodo ? '[data-borrador-nodo-busqueda]' : '[data-linea-cuenta-busqueda]');
+            var resultados = alcance && alcance.querySelector(esNodo ? '[data-resultados-nodos]' : '[data-resultados-cuentas]');
+            var nodo = bloque && bloque.querySelector('[data-borrador-nodo]');
+            var nodoBusqueda = bloque && bloque.querySelector('[data-borrador-nodo-busqueda]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var termino = busqueda ? busqueda.value.trim() : '';
+            var nodoId = nodo && nodo.value ? nodo.value : (nodoBusqueda ? nodoBusqueda.value.trim() : '');
+            if (!esNodo && !/^[1-9][0-9]{0,9}$/.test(nodoId)) {
+                estado.textContent = 'Elegí primero el nodo del borrador.';
+                nodoBusqueda.focus();
+                return;
+            }
+            if (!esNodo && (termino.length < 2 || termino.length > 80)) {
+                estado.textContent = 'Ingresá al menos 2 caracteres para buscar la cuenta.';
+                busqueda.focus();
+                return;
+            }
+            var parametros = new URLSearchParams({
+                accion: esNodo ? 'erp.buscar-nodos' : 'erp.buscar-cuentas',
+                movimiento_id: accion.dataset.movimientoId,
+                cuenta_bancaria_id: accion.dataset.cuentaBancariaId,
+                inicio_periodo: accion.dataset.inicioPeriodo,
+                busqueda: termino,
+                limite: '12'
+            });
+            if (!esNodo) {
+                parametros.set('nodo_zetti_id', nodoId);
+            }
+            boton.disabled = true;
+            resultados.textContent = '';
+            estado.textContent = esNodo ? 'Buscando nodos ERP…' : 'Buscando cuentas contables…';
+            fetch(window.contextoApp.app.ruta + '/api.php?' + parametros.toString(), {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerRespuesta).then(function (contenido) {
+                if (!contenido.data.length) {
+                    var vacio = document.createElement('p');
+                    vacio.className = 'sin-dato';
+                    vacio.textContent = esNodo ? 'No se encontraron nodos.' : 'No se encontraron cuentas.';
+                    resultados.appendChild(vacio);
+                } else {
+                    contenido.data.forEach(function (recurso) {
+                        resultados.appendChild(crearOpcionRecurso(recurso, tipo));
+                    });
+                }
+                estado.textContent = contenido.data.length + ' opciones encontradas. Elegí una para continuar.';
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                boton.disabled = false;
+            });
+        }
+
+        function seleccionarRecursoBorrador(boton, tipo) {
+            var esNodo = tipo === 'nodo';
+            var bloque = boton.closest('[data-accion-crear-borrador]');
+            var alcance = esNodo ? bloque.querySelector('[data-selector-nodo]') : boton.closest('[data-borrador-linea]');
+            var oculto = alcance.querySelector(esNodo ? '[data-borrador-nodo]' : '[data-linea-cuenta]');
+            var visible = alcance.querySelector(esNodo ? '[data-borrador-nodo-busqueda]' : '[data-linea-cuenta-busqueda]');
+            var titulo = boton.querySelector('strong');
+            var atributo = esNodo ? 'data-seleccionar-nodo' : 'data-seleccionar-cuenta';
+            var estado = bloque.querySelector('[data-accion-estado]');
+            oculto.value = boton.getAttribute(atributo);
+            visible.value = titulo ? titulo.textContent + ' (#' + oculto.value + ')' : oculto.value;
+            Array.prototype.forEach.call(alcance.querySelectorAll('[' + atributo + ']'), function (opcion) {
+                opcion.setAttribute('aria-pressed', opcion === boton ? 'true' : 'false');
+            });
+            if (esNodo) {
+                Array.prototype.forEach.call(bloque.querySelectorAll('[data-borrador-linea]'), function (fila) {
+                    fila.querySelector('[data-linea-cuenta]').value = '';
+                    fila.querySelector('[data-linea-cuenta-busqueda]').value = '';
+                    fila.querySelector('[data-resultados-cuentas]').textContent = '';
+                });
+            }
+            estado.textContent = (esNodo ? 'Nodo #' : 'Cuenta #') + oculto.value + ' seleccionado.';
+        }
+
+        function ejecutarMensajeria(boton, accion) {
+            var bloque = boton.closest('[data-mensajeria-movimiento]');
+            var estado = bloque && bloque.querySelector('[data-mensajeria-estado]');
+            var cuerpo = bloque && bloque.querySelector('[data-mensaje-cuerpo]');
+            var esAgregar = accion === 'movimiento.agregar-mensaje';
+            var texto = cuerpo ? cuerpo.value.trim() : '';
+            if (esAgregar && (texto.length < 1 || texto.length > 2000)) {
+                if (estado) {
+                    estado.textContent = 'El mensaje debe contener entre 1 y 2000 caracteres.';
+                }
+                if (cuerpo) {
+                    cuerpo.focus();
+                }
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            Array.prototype.forEach.call(bloque.querySelectorAll('button, textarea'), function (control) {
+                control.disabled = true;
+            });
+            if (estado) {
+                estado.textContent = esAgregar ? 'Publicando mensaje…' : 'Registrando lectura…';
+            }
+            obtenerCsrf().then(function (token) {
+                var entrada = {
+                    movimiento_id: Number(boton.dataset.movimientoId),
+                    cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                    inicio_periodo: boton.dataset.inicioPeriodo
+                };
+                if (esAgregar) {
+                    entrada.cuerpo = texto;
+                }
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=' + accion, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify(entrada)
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                if (estado) {
+                    estado.textContent = esAgregar
+                        ? 'Mensaje publicado. Actualizando conversación…'
+                        : contenido.data.mensajes_leidos + ' mensajes marcados como leídos. Actualizando…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 700);
+            }).catch(function (error) {
+                Array.prototype.forEach.call(bloque.querySelectorAll('button, textarea'), function (control) {
+                    control.disabled = false;
+                });
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
+        function asignarResponsable(boton) {
+            var bloque = boton.closest('[data-accion-asignar-responsable]');
+            var control = bloque && bloque.querySelector('[data-responsable-id]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var responsableId = control ? Number(control.value) : 0;
+            if (!Number.isInteger(responsableId) || responsableId <= 0) {
+                if (estado) {
+                    estado.textContent = 'Seleccioná un responsable válido.';
+                }
+                if (control) {
+                    control.focus();
+                }
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            control.disabled = true;
+            if (estado) {
+                estado.textContent = 'Asignando responsable…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.asignar-responsable', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo,
+                        responsable_id: responsableId
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                if (estado) {
+                    estado.textContent = contenido.data.cambio
+                        ? 'Responsable asignado a ' + contenido.data.responsable + '. Actualizando…'
+                        : contenido.data.responsable + ' ya era responsable. Actualizando…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 700);
+            }).catch(function (error) {
+                boton.disabled = false;
+                control.disabled = false;
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         function asociarValor(boton) {
             var bloque = boton.closest('[data-accion-asociar-valor]');
             var valorControl = bloque && bloque.querySelector('[data-valor-zetti-id]');
             var estado = bloque && bloque.querySelector('[data-accion-estado]');
-            var valorId = valorControl ? Number(valorControl.value) : 0;
-            if (!Number.isInteger(valorId) || valorId <= 0) {
+            var valorId = valorControl ? valorControl.value.trim() : '';
+            if (!/^[1-9][0-9]{0,19}$/.test(valorId)) {
                 if (estado) {
                     estado.textContent = 'Ingresá un ID de valor ERP válido.';
                 }
@@ -491,8 +808,8 @@
             var asientoControl = bloque && bloque.querySelector('[data-asiento-zetti-id]');
             var compartidoControl = bloque && bloque.querySelector('[data-asiento-compartido]');
             var estado = bloque && bloque.querySelector('[data-accion-estado]');
-            var asientoId = asientoControl ? Number(asientoControl.value) : 0;
-            if (!Number.isInteger(asientoId) || asientoId <= 0) {
+            var asientoId = asientoControl ? asientoControl.value.trim() : '';
+            if (!/^[1-9][0-9]{0,19}$/.test(asientoId)) {
                 if (estado) {
                     estado.textContent = 'Ingresá un ID de asiento ERP válido.';
                 }
@@ -564,8 +881,11 @@
                     ? '0'
                     : '';
             });
+            Array.prototype.forEach.call(nueva.querySelectorAll('[data-resultados-cuentas]'), function (resultados) {
+                resultados.textContent = '';
+            });
             contenedor.appendChild(nueva);
-            nueva.querySelector('[data-linea-cuenta]').focus();
+            nueva.querySelector('[data-linea-cuenta-busqueda]').focus();
         }
 
         function quitarLineaBorrador(boton) {
@@ -585,6 +905,7 @@
             var bloque = boton.closest('[data-accion-crear-borrador]');
             var estado = bloque && bloque.querySelector('[data-accion-estado]');
             var nodo = bloque && bloque.querySelector('[data-borrador-nodo]');
+            var nodoBusqueda = bloque && bloque.querySelector('[data-borrador-nodo-busqueda]');
             var fecha = bloque && bloque.querySelector('[data-borrador-fecha]');
             var modelo = bloque && bloque.querySelector('[data-borrador-modelo]');
             var filas = bloque && bloque.querySelectorAll('[data-borrador-linea]');
@@ -592,15 +913,18 @@
             var totalDebe = 0;
             var totalHaber = 0;
             var errorEntrada = '';
-            if (!nodo || !Number.isInteger(Number(nodo.value)) || Number(nodo.value) <= 0 || !fecha.value || !modelo.value.trim()) {
-                errorEntrada = 'Completá nodo, fecha contable y modelo.';
+            var nodoId = nodo && nodo.value ? nodo.value : (nodoBusqueda ? nodoBusqueda.value.trim() : '');
+            if (!/^[1-9][0-9]{0,9}$/.test(nodoId) || !fecha.value || !modelo.value.trim()) {
+                errorEntrada = 'Seleccioná un nodo y completá fecha contable y modelo.';
             }
             Array.prototype.forEach.call(filas || [], function (fila) {
-                var cuenta = Number(fila.querySelector('[data-linea-cuenta]').value);
+                var cuentaControl = fila.querySelector('[data-linea-cuenta]');
+                var cuentaBusqueda = fila.querySelector('[data-linea-cuenta-busqueda]');
+                var cuenta = cuentaControl.value || cuentaBusqueda.value.trim();
                 var debe = Number(fila.querySelector('[data-linea-debe]').value || 0);
                 var haber = Number(fila.querySelector('[data-linea-haber]').value || 0);
-                if (!Number.isInteger(cuenta) || cuenta <= 0 || debe < 0 || haber < 0 || (debe > 0) === (haber > 0)) {
-                    errorEntrada = 'Cada línea necesita una cuenta y un importe positivo sólo en debe o haber.';
+                if (!/^[1-9][0-9]{0,19}$/.test(cuenta) || debe < 0 || haber < 0 || (debe > 0) === (haber > 0)) {
+                    errorEntrada = 'Cada línea necesita una cuenta seleccionada y un importe positivo sólo en debe o haber.';
                 }
                 totalDebe += debe;
                 totalHaber += haber;
@@ -643,7 +967,7 @@
                         movimiento_id: Number(boton.dataset.movimientoId),
                         cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
                         inicio_periodo: boton.dataset.inicioPeriodo,
-                        nodo_zetti_id: Number(nodo.value),
+                        nodo_zetti_id: nodoId,
                         fecha_contable: fecha.value,
                         modelo: modelo.value.trim(),
                         lineas: lineas
@@ -673,6 +997,61 @@
         }
 
         raiz.addEventListener('click', function (evento) {
+            var asignar = evento.target.closest('[data-asignar-responsable]');
+            if (asignar) {
+                asignarResponsable(asignar);
+                return;
+            }
+            var agregarMensaje = evento.target.closest('[data-agregar-mensaje]');
+            if (agregarMensaje) {
+                ejecutarMensajeria(agregarMensaje, 'movimiento.agregar-mensaje');
+                return;
+            }
+            var marcarMensajesLeidos = evento.target.closest('[data-marcar-mensajes-leidos]');
+            if (marcarMensajesLeidos) {
+                ejecutarMensajeria(marcarMensajesLeidos, 'movimiento.marcar-mensajes-leidos');
+                return;
+            }
+            var seleccionarNodo = evento.target.closest('[data-seleccionar-nodo]');
+            if (seleccionarNodo) {
+                seleccionarRecursoBorrador(seleccionarNodo, 'nodo');
+                return;
+            }
+            var seleccionarCuenta = evento.target.closest('[data-seleccionar-cuenta]');
+            if (seleccionarCuenta) {
+                seleccionarRecursoBorrador(seleccionarCuenta, 'cuenta');
+                return;
+            }
+            var buscarNodos = evento.target.closest('[data-buscar-nodos]');
+            if (buscarNodos) {
+                buscarRecursoBorrador(buscarNodos, 'nodo');
+                return;
+            }
+            var buscarCuentas = evento.target.closest('[data-buscar-cuentas]');
+            if (buscarCuentas) {
+                buscarRecursoBorrador(buscarCuentas, 'cuenta');
+                return;
+            }
+            var seleccionarValor = evento.target.closest('[data-seleccionar-valor]');
+            if (seleccionarValor) {
+                seleccionarRecurso(seleccionarValor, 'valor');
+                return;
+            }
+            var seleccionarAsiento = evento.target.closest('[data-seleccionar-asiento]');
+            if (seleccionarAsiento) {
+                seleccionarRecurso(seleccionarAsiento, 'asiento');
+                return;
+            }
+            var buscarValores = evento.target.closest('[data-buscar-valores]');
+            if (buscarValores) {
+                buscarRecursos(buscarValores, 'valor');
+                return;
+            }
+            var buscarAsientos = evento.target.closest('[data-buscar-asientos]');
+            if (buscarAsientos) {
+                buscarRecursos(buscarAsientos, 'asiento');
+                return;
+            }
             var agregarLinea = evento.target.closest('[data-agregar-linea]');
             if (agregarLinea) {
                 agregarLineaBorrador(agregarLinea);
@@ -724,6 +1103,43 @@
             document.documentElement.classList.add('bandeja-detalle-activo');
             document.body.classList.add('bandeja-detalle-activo');
             cerrar.focus();
+        });
+
+        raiz.addEventListener('input', function (evento) {
+            if (evento.target.matches('[data-borrador-nodo-busqueda]')) {
+                var bloque = evento.target.closest('[data-accion-crear-borrador]');
+                var nodo = bloque && bloque.querySelector('[data-borrador-nodo]');
+                if (nodo) {
+                    nodo.value = '';
+                }
+                return;
+            }
+            if (evento.target.matches('[data-linea-cuenta-busqueda]')) {
+                var fila = evento.target.closest('[data-borrador-linea]');
+                var cuenta = fila && fila.querySelector('[data-linea-cuenta]');
+                if (cuenta) {
+                    cuenta.value = '';
+                }
+            }
+        });
+
+        raiz.addEventListener('change', function (evento) {
+            if (!evento.target.matches('[data-asiento-compartido]')) {
+                return;
+            }
+            var bloque = evento.target.closest('[data-accion-asociar-asiento]');
+            var control = bloque && bloque.querySelector('[data-asiento-zetti-id]');
+            var resultados = bloque && bloque.querySelector('[data-resultados-asientos]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            if (control) {
+                control.value = '';
+            }
+            if (resultados) {
+                resultados.textContent = '';
+            }
+            if (estado) {
+                estado.textContent = 'La modalidad cambió. Buscá nuevamente un asiento compatible.';
+            }
         });
 
         cerrar.addEventListener('click', cerrarDetalle);

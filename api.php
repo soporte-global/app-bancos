@@ -8,12 +8,18 @@ use AppBancos\Application\EjecutorComandoIdempotente;
 use AppBancos\Application\AsociarValorMovimientoMensual;
 use AppBancos\Application\AsociarAsientoMovimientoMensual;
 use AppBancos\Application\CrearBorradorMovimientoMensual;
+use AppBancos\Application\BuscarRecursosErpMovimientoMensual;
+use AppBancos\Application\GestionarMensajesMovimientoMensual;
+use AppBancos\Application\AsignarResponsableMovimientoMensual;
 use AppBancos\Application\PrepararMovimientoMensual;
 use AppBancos\Application\RevertirPreparacionMovimientoMensual;
 use AppBancos\Infrastructure\EsquemaBancos;
 use AppBancos\Repository\AuditoriaRepository;
 use AppBancos\Repository\IdempotenciaRepository;
 use AppBancos\Repository\MovimientoMensualRepository;
+use AppBancos\Repository\BusquedaRecursosErpRepository;
+use AppBancos\Repository\MensajeriaMovimientoRepository;
+use AppBancos\Repository\AsignacionMovimientoRepository;
 use AppBancos\Security\AutorizadorAccion;
 use AppBancos\Security\ProteccionCsrf;
 use GlobalApps\Core\Acceso\PoliticaAcceso;
@@ -76,6 +82,129 @@ try {
     }
     if ($accion === 'csrf') {
         throw new ApiException(405, 'METODO_NO_PERMITIDO', 'La accion csrf solo acepta GET.');
+    }
+
+    if (in_array($accion, [
+        'erp.buscar-valores',
+        'erp.buscar-asientos',
+        'erp.buscar-nodos',
+        'erp.buscar-cuentas',
+    ], true)) {
+        if ($metodo !== 'GET') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'La busqueda ERP solo acepta GET.');
+        }
+        if ($accion === 'erp.buscar-valores') {
+            $permiso = 'movimiento-asociar-valor';
+        } elseif ($accion === 'erp.buscar-asientos') {
+            $permiso = 'movimiento-asociar-asiento';
+        } else {
+            $permiso = 'movimiento-crear-borrador';
+        }
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, $permiso);
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $busqueda = new BuscarRecursosErpMovimientoMensual(
+            new BusquedaRecursosErpRepository($conexion, $esquema)
+        );
+        if ($accion === 'erp.buscar-valores') {
+            $resultado = $busqueda->buscarValores($_GET);
+        } elseif ($accion === 'erp.buscar-asientos') {
+            $resultado = $busqueda->buscarAsientos($_GET);
+        } elseif ($accion === 'erp.buscar-nodos') {
+            $resultado = $busqueda->buscarNodos($_GET);
+        } else {
+            $resultado = $busqueda->buscarCuentas($_GET);
+        }
+        responderJson(200, [
+            'data' => $resultado['resultados'],
+            'meta' => array_diff_key($resultado, ['resultados' => true]),
+        ]);
+    }
+
+    if ($accion === 'movimiento.asignar-responsable') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Asignar responsable solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'Las escrituras funcionales solo estan habilitadas en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'movimiento-asignar-responsable');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new AsignarResponsableMovimientoMensual(
+            new AsignacionMovimientoRepository($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
+    }
+
+    if (in_array($accion, [
+        'movimiento.agregar-mensaje',
+        'movimiento.marcar-mensajes-leidos',
+    ], true)) {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'La mensajeria solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'Las escrituras funcionales solo estan habilitadas en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        $permiso = $accion === 'movimiento.agregar-mensaje'
+            ? 'movimiento-agregar-mensaje'
+            : 'movimiento-marcar-mensajes-leidos';
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, $permiso);
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $mensajeria = new GestionarMensajesMovimientoMensual(
+            new MensajeriaMovimientoRepository($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        );
+        $resultado = $accion === 'movimiento.agregar-mensaje'
+            ? $mensajeria->agregar($entrada, $sesion->cuenta()->id(), $claveIdempotencia)
+            : $mensajeria->marcarLeidos($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
     }
 
     if ($accion === 'movimiento.preparar') {

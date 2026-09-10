@@ -18,7 +18,6 @@ final class ContextoBandejaMensualRepository
     public function consultar()
     {
         $importacion = $this->esquemas->tablaBancos('bancos_importacion_extracto');
-        $historial = $this->esquemas->tablaBancos('bancos_historial_asignacion');
         $entidad = $this->esquemas->tablaLecturaErp('entidad');
         $cuentaBancaria = $this->esquemas->tablaLecturaErp('cuenta_bancaria');
         $tipoCuenta = $this->esquemas->tablaLecturaErp('tipo_cuenta_bancaria');
@@ -70,15 +69,21 @@ final class ContextoBandejaMensualRepository
             $cuentas[$id]['periodos'][] = $fila['inicio_periodo'];
         }
 
-        $sqlResponsables = sprintf(
+        $sqlResponsables =
             "SELECT DISTINCT rl.id, rl.usuario, lower(rl.usuario) AS orden
-             FROM %s AS h
-             JOIN global_prod.rrhh_login AS rl ON rl.id = h.usuario_hub_id
+             FROM global_prod.rrhh_login AS rl
              WHERE rl.habilitado IS TRUE
                AND rl.fecha_eliminacion IS NULL
-             ORDER BY lower(rl.usuario), rl.id",
-            $historial
-        );
+               AND EXISTS (
+                   SELECT 1
+                   FROM global_prod.hub_permisos_efectivos_usuario e
+                   JOIN global_prod.hub_permisos p ON p.id = e.permiso
+                   WHERE e.usuario = rl.id
+                     AND p.aplicacion = " . (int) ID_APLICACION . "
+                     AND p.tipo_permiso = 1
+                     AND p.ignorado IS NULL
+               )
+             ORDER BY lower(rl.usuario), rl.id";
         $responsables = $this->pdo->query($sqlResponsables)->fetchAll(PDO::FETCH_ASSOC);
 
         return [

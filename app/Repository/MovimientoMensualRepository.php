@@ -347,7 +347,7 @@ final class MovimientoMensualRepository
 
         return [
             'movimiento_id' => (int) $movimientoId,
-            'valor_zetti_id' => (int) $valorId,
+            'valor_zetti_id' => (string) $valorId,
             'monto_asociado' => $montoMovimiento,
             'reserva_id' => (int) $reservaId,
             'asociacion_id' => (int) $asociacionId,
@@ -499,7 +499,7 @@ final class MovimientoMensualRepository
 
         return [
             'movimiento_id' => (int) $movimientoId,
-            'asiento_zetti_id' => (int) $asientoId,
+            'asiento_zetti_id' => (string) $asientoId,
             'compartido' => (bool) $compartido,
             'monto_asociado' => $montoMovimiento,
             'cantidad_lineas_asiento' => (int) $asiento['cantidad_lineas'],

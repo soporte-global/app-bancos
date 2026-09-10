@@ -43,7 +43,13 @@ try {
 
     $datos->solicitud = true;
     $consulta = new AppBancos\Application\ConsultarBandejaMensual(
-        new AppBancos\Repository\BandejaMensualRepository($conexion, $esquemas),
+        new AppBancos\Repository\BandejaMensualRepository(
+            $conexion,
+            $esquemas,
+            isset($sesion) && $sesion instanceof GlobalApps\Core\Identidad\Sesion
+                ? $sesion->cuenta()->id()
+                : null
+        ),
         new AppBancos\Application\CursorBandejaMensual(BANCOS_BANDEJA_CURSOR_SECRET)
     );
     $datos->resultado = (object) $consulta->ejecutar($_GET);

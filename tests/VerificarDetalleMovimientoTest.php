@@ -15,6 +15,11 @@ $comprobar(strpos($vista, '<template data-detalle-movimiento>') !== false, 'El d
 $comprobar(strpos($vista, 'data-panel-detalle hidden') !== false, 'Falta el panel lateral inicialmente cerrado.');
 $comprobar(strpos($vista, '<h3>Asociaciones</h3>') !== false, 'Falta la sección Asociaciones.');
 $comprobar(strpos($vista, '<h3>Mensajes</h3>') !== false, 'Falta la sección Mensajes.');
+$comprobar(strpos($vista, 'data-agregar-mensaje') !== false, 'Falta la acción para publicar mensajes.');
+$comprobar(strpos($vista, 'data-marcar-mensajes-leidos') !== false, 'Falta la acción para registrar lecturas.');
+$comprobar(strpos($vista, 'mensaje-no-leido') !== false, 'Falta la identificación de mensajes pendientes.');
+$comprobar(strpos($vista, 'data-asignar-responsable') !== false, 'Falta la asignación de responsable.');
+$comprobar(strpos($vista, 'acceso efectivo a APP BANCOS') !== false, 'La interfaz no explica el alcance de responsables.');
 $comprobar(strpos($vista, '<h3>Borradores</h3>') !== false, 'Falta la sección Borradores.');
 $comprobar(strpos($vista, '<h3>Historial</h3>') !== false, 'Falta la sección Historial.');
 $comprobar(strpos($vista, 'Sin eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
@@ -28,6 +33,9 @@ $comprobar(strpos($javascript, 'window.scrollTo(0, posicionScroll)') !== false, 
 $comprobar(strpos($javascript, "classList.add('bandeja-detalle-activo')") !== false, 'Abrir el panel debe bloquear el scroll de fondo.');
 $comprobar(strpos($javascript, "classList.remove('bandeja-detalle-activo')") !== false, 'Cerrar el panel debe restaurar el scroll de fondo.');
 $comprobar(strpos($javascript, "evento.key === 'Tab'") !== false, 'El diálogo debe contener el foco de teclado.');
+$comprobar(strpos($javascript, 'movimiento.agregar-mensaje') !== false, 'El cliente no publica mensajes por el endpoint esperado.');
+$comprobar(strpos($javascript, 'movimiento.marcar-mensajes-leidos') !== false, 'El cliente no registra lecturas por el endpoint esperado.');
+$comprobar(strpos($javascript, 'movimiento.asignar-responsable') !== false, 'El cliente no asigna responsables por el endpoint esperado.');
 $comprobar(!preg_match('/(?:history\.(?:pushState|replaceState)|location\.(?:assign|replace))/', $javascript), 'Abrir detalle no debe modificar URL ni cursor.');
 
 $_GET = [];

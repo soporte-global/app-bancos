@@ -54,7 +54,7 @@ final class AsociarValorMovimientoMensual
                 'recurso_id' => (string) $movimientoId,
                 'resultado' => 'EXITOSA',
                 'detalles' => [
-                    'valor_zetti_id' => (int) $valorId,
+                    'valor_zetti_id' => (string) $valorId,
                     'cuenta_bancaria_id' => $cuentaBancariaId,
                     'inicio_periodo' => $inicioPeriodo,
                 ],

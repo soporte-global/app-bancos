@@ -59,7 +59,7 @@ final class AsociarAsientoMovimientoMensual
                 'recurso_id' => (string) $movimientoId,
                 'resultado' => 'EXITOSA',
                 'detalles' => [
-                    'asiento_zetti_id' => (int) $asientoId,
+                    'asiento_zetti_id' => (string) $asientoId,
                     'compartido' => $compartido,
                     'cuenta_bancaria_id' => $cuentaBancariaId,
                     'inicio_periodo' => $inicioPeriodo,

@@ -9,11 +9,13 @@ final class BandejaMensualRepository
 {
     private $pdo;
     private $esquemas;
+    private $usuarioHubId;
 
-    public function __construct(PDO $pdo, EsquemaBancos $esquemas)
+    public function __construct(PDO $pdo, EsquemaBancos $esquemas, $usuarioHubId = null)
     {
         $this->pdo = $pdo;
         $this->esquemas = $esquemas;
+        $this->usuarioHubId = $usuarioHubId === null ? null : (int) $usuarioHubId;
     }
 
     public function listar($cuentaBancariaId, $inicioPeriodo, array $cursor = null, $limite = 50, array $filtros = [])
@@ -46,6 +48,7 @@ final class BandejaMensualRepository
         $historial = $this->esquemas->tablaBancos('bancos_historial_asignacion');
         $asociacion = $this->esquemas->tablaBancos('bancos_asociacion_movimiento');
         $mensaje = $this->esquemas->tablaBancos('bancos_mensaje_movimiento');
+        $recepcionMensaje = $this->esquemas->tablaBancos('bancos_recepcion_mensaje');
         $estado = $this->esquemas->tablaBancos('bancos_estado');
         $borrador = $this->esquemas->tablaBancos('bancos_borrador_asiento');
         $lineaBorrador = $this->esquemas->tablaBancos('bancos_linea_borrador_asiento');
@@ -178,7 +181,16 @@ final class BandejaMensualRepository
             array_pop($movimientos);
         }
 
-        $this->cargarDetalles($movimientos, $asociacion, $mensaje, $historial, $estado, $borrador, $lineaBorrador);
+        $this->cargarDetalles(
+            $movimientos,
+            $asociacion,
+            $mensaje,
+            $recepcionMensaje,
+            $historial,
+            $estado,
+            $borrador,
+            $lineaBorrador
+        );
 
         return ['movimientos' => $movimientos, 'hay_mas' => $hayMas];
     }
@@ -187,6 +199,7 @@ final class BandejaMensualRepository
         array &$movimientos,
         $asociacion,
         $mensaje,
+        $recepcionMensaje,
         $historial,
         $estado,
         $borrador,
@@ -203,6 +216,7 @@ final class BandejaMensualRepository
             $ids[] = $id;
             $movimiento['asociaciones'] = [];
             $movimiento['mensajes'] = [];
+            $movimiento['mensajes_no_leidos'] = 0;
             $movimiento['historial'] = [];
             $movimiento['borradores'] = [];
         }
@@ -222,17 +236,28 @@ final class BandejaMensualRepository
             $movimientos[$indices[(int) $fila['movimiento_id']]]['asociaciones'][] = $fila;
         }
 
+        $usuarioHubId = $this->usuarioHubId !== null && $this->usuarioHubId > 0
+            ? $this->usuarioHubId
+            : 0;
         $filas = $this->consultarIds(
             "SELECT mm.movimiento_id, mm.id, mm.tipo_mensaje, mm.cuerpo,
-                    mm.emitido_en, mm.emisor_hub_id, rl.usuario AS emisor
+                    mm.emitido_en, mm.emisor_hub_id, rl.usuario AS emisor,
+                    rm.leido_en,
+                    (mm.emisor_hub_id = {$usuarioHubId} OR rm.leido_en IS NOT NULL) AS leido
              FROM {$mensaje} AS mm
              LEFT JOIN global_prod.rrhh_login AS rl ON rl.id = mm.emisor_hub_id
+             LEFT JOIN {$recepcionMensaje} AS rm
+               ON rm.mensaje_id = mm.id AND rm.receptor_hub_id = {$usuarioHubId}
              WHERE mm.movimiento_id IN (%IDS%)
              ORDER BY mm.movimiento_id, mm.emitido_en, mm.id",
             $ids
         );
         foreach ($filas as $fila) {
-            $movimientos[$indices[(int) $fila['movimiento_id']]]['mensajes'][] = $fila;
+            $indice = $indices[(int) $fila['movimiento_id']];
+            $movimientos[$indice]['mensajes'][] = $fila;
+            if (!in_array($fila['leido'], [true, 1, '1', 't'], true)) {
+                $movimientos[$indice]['mensajes_no_leidos']++;
+            }
         }
 
         $filas = $this->consultarIds(

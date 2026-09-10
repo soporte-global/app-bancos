@@ -622,7 +622,8 @@ body.bandeja-detalle-activo {
     border-radius: var(--radio-control);
 }
 
-.bandeja-accion input {
+.bandeja-accion input,
+.bandeja-accion select {
     width: 100%;
     min-height: var(--alto-control);
     padding: 0 9px;
@@ -645,6 +646,51 @@ body.bandeja-detalle-activo {
     padding: 0;
 }
 
+.bandeja-resultados-recurso {
+    display: grid;
+    gap: 6px;
+    max-height: 248px;
+    margin-top: 8px;
+    overflow-y: auto;
+}
+
+.bandeja-accion .bandeja-recurso-opcion {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    min-height: 0;
+    margin-top: 0;
+    padding: 9px 10px;
+    text-align: left;
+}
+
+.bandeja-recurso-opcion strong,
+.bandeja-recurso-opcion span {
+    overflow-wrap: anywhere;
+}
+
+.bandeja-selector-recurso {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 8px;
+    align-items: end;
+}
+
+.bandeja-selector-recurso > label,
+.bandeja-selector-recurso > button {
+    margin-top: 0;
+}
+
+.bandeja-selector-recurso > .bandeja-resultados-recurso {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.bandeja-recurso-opcion span {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
 .bandeja-borrador-datos,
 .bandeja-borrador-linea {
     display: grid;
@@ -659,11 +705,15 @@ body.bandeja-detalle-activo {
 }
 
 .bandeja-borrador-linea {
-    grid-template-columns: minmax(100px, 1fr) repeat(2, minmax(82px, 0.75fr)) minmax(120px, 1.25fr) 38px;
+    grid-template-columns: repeat(2, minmax(82px, 0.75fr)) minmax(120px, 1.25fr) 38px;
     align-items: end;
     padding: 8px;
     border: 1px solid;
     border-radius: var(--radio-control);
+}
+
+.bandeja-selector-cuenta {
+    grid-column: 1 / -1;
 }
 
 .bandeja-borrador-linea label {
@@ -690,6 +740,14 @@ body.bandeja-detalle-activo {
 
     .bandeja-borrador-linea [data-quitar-linea] {
         justify-self: end;
+    }
+
+    .bandeja-selector-recurso {
+        grid-template-columns: 1fr;
+    }
+
+    .bandeja-selector-recurso > .bandeja-resultados-recurso {
+        grid-column: 1;
     }
 }
 
@@ -742,6 +800,11 @@ body.bandeja-detalle-activo {
 .bandeja-detalle-lista small {
     display: block;
     margin-top: 4px;
+}
+
+.bandeja-mensajeria textarea {
+    min-height: 84px;
+    resize: vertical;
 }
 
 .bandeja-borrador + .bandeja-borrador {

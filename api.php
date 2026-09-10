@@ -6,6 +6,7 @@ require_once $raiz . '/src/autoload.php';
 use AppBancos\Http\ApiException;
 use AppBancos\Application\EjecutorComandoIdempotente;
 use AppBancos\Application\PrepararMovimientoMensual;
+use AppBancos\Application\RevertirPreparacionMovimientoMensual;
 use AppBancos\Infrastructure\EsquemaBancos;
 use AppBancos\Repository\AuditoriaRepository;
 use AppBancos\Repository\IdempotenciaRepository;
@@ -101,6 +102,47 @@ try {
         $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
         $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
         $resultado = (new PrepararMovimientoMensual(
+            new MovimientoMensualRepository($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
+    }
+
+    if ($accion === 'movimiento.revertir-preparacion') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Revertir la preparacion solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'Las escrituras funcionales solo estan habilitadas en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+
+        $csrf = new ProteccionCsrf();
+        $csrf->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'movimiento-revertir-preparacion');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new RevertirPreparacionMovimientoMensual(
             new MovimientoMensualRepository($conexion, $esquema),
             new EjecutorComandoIdempotente(
                 $conexion,

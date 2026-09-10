@@ -11,7 +11,7 @@
 - Implementar todos los repositorios BANCOS a través de `EsquemaBancos`; queda prohibido calificar tablas operativas o ERP directamente con `global_prod` o `public`.
 - Definir y ejecutar el corte controlado: respaldo recuperable, ventana de convivencia, lecturas en sombra y regla de un único escritor para las tablas canónicas.
 - Detallar las validaciones futuras para `PARA_CERRAR`, el permiso especial de cierre en Hub y la secuencia contable definitiva de fusión/generación de asiento.
-- Implementar la reversión controlada `PARA_CERRAR -> ABIERTO` en `global_temp`, con motivo obligatorio y descarte transaccional de la preparación; no habilitar todavía cierre ni escritura ERP.
+- Implementar la creación/reserva controlada de asociaciones y borradores en `global_temp`, con exclusividad concurrente y validación de importes; no habilitar todavía cierre ni escritura ERP.
 - Agregar pruebas de concurrencia con dos conexiones para la misma clave idempotente antes de habilitar tráfico de escritura.
 - Validar con `EXPLAIN (ANALYZE, BUFFERS)` el plan de CTEs e índices propuestos sobre volumen representativo, antes de crear índices adicionales o habilitar autoasignación.
 - Definir con DBA el eventual índice compuesto de `public.valor` y la disponibilidad de extensiones para búsqueda textual; no alterar tablas ERP desde este módulo sin medición y aprobación.

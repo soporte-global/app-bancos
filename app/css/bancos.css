@@ -52,7 +52,8 @@ body.bandeja-detalle-activo {
 }
 
 .bancos-app button,
-.bancos-app input {
+.bancos-app input,
+.bancos-app textarea {
     font: inherit;
 }
 
@@ -602,6 +603,23 @@ body.bandeja-detalle-activo {
     border: 1px solid;
     border-radius: var(--radio-control);
     font-weight: 800;
+}
+
+.bandeja-accion label {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.bandeja-accion textarea {
+    width: 100%;
+    min-height: 76px;
+    padding: 9px;
+    resize: vertical;
+    border: 1px solid;
+    border-radius: var(--radio-control);
 }
 
 .bandeja-accion-estado {

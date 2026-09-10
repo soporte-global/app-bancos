@@ -87,3 +87,9 @@ La prueba unitaria cubre token y matriz de autorización. La prueba integrada en
 Se implementó `POST api.php?accion=movimiento.preparar` y su acción visible en el detalle de la bandeja. La operación exige sesión, nivel administrador o permiso `movimiento-preparar`, CSRF, JSON e idempotencia. Sólo está disponible con `bancos_debug = true`; bloquea el movimiento dentro de la cuenta/período recibidos y admite exclusivamente `ABIERTO -> PARA_CERRAR`. Inserta historial, actualiza la identidad de modificación y registra auditoría en una sola transacción. No requiere todavía asociaciones/borradores y no escribe ERP.
 
 La migración reversible `020` registró el permiso interno sin asignaciones nuevas. La prueba integrada creó un movimiento temporal aislado, confirmó una sola transición/auditoría ante reintento, rechazó una segunda transición y otro contexto, y limpió todas sus filas. El siguiente incremento seguro es la reversión a `ABIERTO` con motivo y descarte transaccional de preparación.
+
+## Reversión controlada de preparación - 2026-09-10
+
+Se implementó `POST api.php?accion=movimiento.revertir-preparacion` y el formulario con motivo dentro del detalle de un movimiento `PARA_CERRAR`. La acción está limitada a debug, exige nivel administrador o el nuevo permiso granular, CSRF, JSON e idempotencia. Bloquea el movimiento, desactiva asociaciones, reservas y borradores activos, registra `ABIERTO` con motivo/operador y conserva todas las filas históricas. No modifica mensajes, líneas ni ERP.
+
+La migración reversible `021` agregó el permiso interno sin concedérselo a usuarios nuevos. La prueba integrada construyó preparación auxiliar completa y comprobó descarte, conteos, motivo, identidad, reintento y transición inválida; luego dejó el sandbox sin filas de prueba. El próximo incremento funcional seguro es crear y reservar recursos de preparación con garantías de exclusividad concurrente.

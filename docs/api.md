@@ -34,6 +34,12 @@ Entrada:
 
 El repositorio bloquea la fila y verifica que el ID pertenezca exactamente a esa cuenta/período. Sólo admite `ABIERTO -> PARA_CERRAR`; inserta un evento en `bancos_historial_asignacion` y actualiza la identidad/fecha de modificación del movimiento dentro de la transacción idempotente. No exige asociaciones ni borradores en esta primera regla confirmada, no modifica esos recursos y no escribe en el ERP. La respuesta contiene `movimiento_id`, estados anterior/nuevo, `historial_id` y fecha; `meta.repetida` indica si provino del resultado persistido.
 
+## Revertir preparación
+
+`POST api.php?accion=movimiento.revertir-preparacion` acepta el mismo contexto más `motivo`, obligatorio entre 3 y 200 caracteres. Requiere el permiso interno homónimo o nivel administrador y conserva las mismas protecciones de sandbox, CSRF, JSON e idempotencia.
+
+Sólo admite `PARA_CERRAR -> ABIERTO`. Con la fila bloqueada, desactiva las asociaciones, reservas y borradores activos del movimiento; no elimina ninguna fila ni las líneas de los borradores. Luego registra el motivo y operador en `bancos_historial_asignacion`, actualiza el movimiento y deja auditoría en la misma transacción. La respuesta incluye el conteo por tipo bajo `data.descartados`. Mensajes y ERP quedan intactos.
+
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 
 La primera lectura materializada es la pantalla interna `?pag=bandeja-mensual`. Recibe por query string `cuenta_bancaria_id`, `inicio_periodo`, `limite` (1 a 100), los filtros opcionales `estado`, `responsable_id`, `asociacion=CON|SIN` y `mensajes=CON|SIN`; desde la segunda página recibe además `cursor`. Cuenta y período se eligen desde importaciones existentes, con una etiqueta ERP que identifica nodo, banco, tipo, nombre y código. El cursor versión 3 firma la posición, la cuenta, el período y los filtros; los cursores anteriores sólo se aceptan sin filtros. El cliente no puede enviar directamente la fecha ni el ID de ordenamiento.

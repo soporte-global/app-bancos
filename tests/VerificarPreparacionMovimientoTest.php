@@ -9,6 +9,9 @@ foreach ([
     'data-preparar-movimiento',
     'No crea ni modifica datos del ERP',
     'movimiento-preparar',
+    'data-revertir-preparacion',
+    'movimiento-revertir-preparacion',
+    'El historial se conserva',
 ] as $fragmento) {
     if (strpos($vista, $fragmento) === false) {
         throw new RuntimeException('La vista no contiene el contrato de preparacion: ' . $fragmento);
@@ -18,6 +21,8 @@ foreach ([
     'X-CSRF-Token',
     'Idempotency-Key',
     'movimiento.preparar',
+    'movimiento.revertir-preparacion',
+    'motivo: motivo',
     'formularioBandeja.requestSubmit()',
 ] as $fragmento) {
     if (strpos($javascript, $fragmento) === false) {
@@ -27,6 +32,7 @@ foreach ([
 foreach ([
     "if (!BANCOS_DEBUG)",
     "'movimiento-preparar'",
+    "'movimiento-revertir-preparacion'",
     "'application/json'",
 ] as $fragmento) {
     if (strpos($api, $fragmento) === false) {

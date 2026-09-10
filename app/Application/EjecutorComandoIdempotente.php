@@ -83,6 +83,15 @@ final class EjecutorComandoIdempotente
                 throw new RuntimeException('El comando devolvio un estado HTTP no exitoso.');
             }
 
+            if (isset($resultado['detalles_auditoria']) && is_array($resultado['detalles_auditoria'])) {
+                $detallesBase = isset($eventoAuditoria['detalles']) && is_array($eventoAuditoria['detalles'])
+                    ? $eventoAuditoria['detalles']
+                    : [];
+                $eventoAuditoria['detalles'] = array_merge(
+                    $detallesBase,
+                    $resultado['detalles_auditoria']
+                );
+            }
             $this->auditoria->registrar($solicitud['id'], $usuarioId, $eventoAuditoria);
             $this->idempotencia->completar($solicitud['id'], $codigoHttp, $resultado['respuesta']);
             $this->pdo->commit();

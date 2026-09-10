@@ -363,7 +363,75 @@
             });
         }
 
+        function revertirPreparacion(boton) {
+            var bloque = boton.closest('[data-accion-revertir]');
+            var motivoControl = bloque && bloque.querySelector('[data-motivo-reversion]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var motivo = motivoControl ? motivoControl.value.trim() : '';
+            if (motivo.length < 3) {
+                if (estado) {
+                    estado.textContent = 'Ingresá un motivo de al menos 3 caracteres.';
+                }
+                if (motivoControl) {
+                    motivoControl.focus();
+                }
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            motivoControl.disabled = true;
+            if (estado) {
+                estado.textContent = 'Revirtiendo preparación…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.revertir-preparacion', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo,
+                        motivo: motivo
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                var descartados = contenido.data.descartados;
+                boton.textContent = 'Preparación revertida';
+                if (estado) {
+                    estado.textContent = 'Movimiento ABIERTO. Se desactivaron ' +
+                        descartados.asociaciones + ' asociaciones, ' +
+                        descartados.reservas + ' reservas y ' +
+                        descartados.borradores + ' borradores.';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 900);
+            }).catch(function (error) {
+                boton.disabled = false;
+                motivoControl.disabled = false;
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         raiz.addEventListener('click', function (evento) {
+            var accionRevertir = evento.target.closest('[data-revertir-preparacion]');
+            if (accionRevertir) {
+                revertirPreparacion(accionRevertir);
+                return;
+            }
             var accionPreparar = evento.target.closest('[data-preparar-movimiento]');
             if (accionPreparar) {
                 prepararMovimiento(accionPreparar);

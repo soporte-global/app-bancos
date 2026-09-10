@@ -23,6 +23,8 @@ Infraestructura de escritura preparada: `api.php` expone un único front control
 
 Primera mutación funcional: la acción `movimiento.preparar` permite a los administradores actuales pasar un movimiento `ABIERTO` a `PARA_CERRAR` desde el detalle de la bandeja. Sólo funciona con `bancos_debug = true`, exige CSRF e idempotencia, bloquea la fila, valida cuenta/período, registra historial y auditoría, y no toca asociaciones, borradores ni ERP. La migración `020` registró el permiso interno `movimiento-preparar` sin asignarlo a usuarios adicionales.
 
+Reversión funcional: `movimiento.revertir-preparacion` permite devolver `PARA_CERRAR` a `ABIERTO` con motivo obligatorio. En una sola transacción desactiva asociaciones, reservas y borradores activos sin borrar su evidencia, conserva mensajes/líneas/historial y registra operador y auditoría. Sigue limitada a debug. La migración `021` registró su permiso interno sin asignaciones nuevas.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

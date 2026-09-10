@@ -25,3 +25,5 @@
 ## Primera regla operativa implementada
 
 La transición `ABIERTO -> PARA_CERRAR` está implementada únicamente en el sandbox. El movimiento se bloquea y se valida dentro de su cuenta/período; se registra el usuario Hub y el evento de historial en la misma transacción idempotente. La ausencia de asociaciones o borrador no impide todavía la preparación, de acuerdo con la regla confirmada. No se alteran recursos ERP.
+
+La transición `PARA_CERRAR -> ABIERTO` también está implementada únicamente en el sandbox. Exige un motivo de 3 a 200 caracteres y desactiva asociaciones, reservas y borradores activos sin eliminarlos. Las líneas del borrador, mensajes e historial permanecen disponibles como evidencia. Todo ocurre en una transacción idempotente y no altera el ERP.

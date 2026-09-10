@@ -12,6 +12,9 @@ foreach ([
     'data-revertir-preparacion',
     'movimiento-revertir-preparacion',
     'El historial se conserva',
+    'data-asociar-valor',
+    'movimiento-asociar-valor',
+    'El importe asociado se toma del movimiento',
 ] as $fragmento) {
     if (strpos($vista, $fragmento) === false) {
         throw new RuntimeException('La vista no contiene el contrato de preparacion: ' . $fragmento);
@@ -23,6 +26,8 @@ foreach ([
     'movimiento.preparar',
     'movimiento.revertir-preparacion',
     'motivo: motivo',
+    'movimiento.asociar-valor',
+    'valor_zetti_id: valorId',
     'formularioBandeja.requestSubmit()',
 ] as $fragmento) {
     if (strpos($javascript, $fragmento) === false) {
@@ -33,6 +38,7 @@ foreach ([
     "if (!BANCOS_DEBUG)",
     "'movimiento-preparar'",
     "'movimiento-revertir-preparacion'",
+    "'movimiento-asociar-valor'",
     "'application/json'",
 ] as $fragmento) {
     if (strpos($api, $fragmento) === false) {

@@ -93,3 +93,9 @@ La migración reversible `020` registró el permiso interno sin asignaciones nue
 Se implementó `POST api.php?accion=movimiento.revertir-preparacion` y el formulario con motivo dentro del detalle de un movimiento `PARA_CERRAR`. La acción está limitada a debug, exige nivel administrador o el nuevo permiso granular, CSRF, JSON e idempotencia. Bloquea el movimiento, desactiva asociaciones, reservas y borradores activos, registra `ABIERTO` con motivo/operador y conserva todas las filas históricas. No modifica mensajes, líneas ni ERP.
 
 La migración reversible `021` agregó el permiso interno sin concedérselo a usuarios nuevos. La prueba integrada construyó preparación auxiliar completa y comprobó descarte, conteos, motivo, identidad, reintento y transición inválida; luego dejó el sandbox sin filas de prueba. El próximo incremento funcional seguro es crear y reservar recursos de preparación con garantías de exclusividad concurrente.
+
+## Asociación segura de valor - 2026-09-10
+
+Se implementó `POST api.php?accion=movimiento.asociar-valor` y el formulario por ID exacto dentro del detalle de movimientos `ABIERTO`. El importe se toma del movimiento, no del request. La API valida existencia, estado, monto y disponibilidad del valor; bloquea el movimiento y crea reserva/asociación dentro de la transacción idempotente. No modifica el ERP ni aplica todavía sugerencias automáticas.
+
+La migración reversible `022` agregó los índices únicos parciales por movimiento/tipo después de comprobar cero duplicados activos en producción y sandbox. También registró el permiso granular sin asignaciones. La prueba integrada enfrentó dos movimientos por el mismo valor y confirmó una sola reserva/asociación, auditoría completa, reintento seguro y ausencia de filas parciales; la limpieza dejó `global_temp` sin datos artificiales. El siguiente incremento es el borrador contable multílínea.

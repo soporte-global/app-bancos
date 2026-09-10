@@ -8,7 +8,8 @@ $escrituraHabilitada = (bool) ($bandeja->escritura_habilitada ?? false);
 $sesionActual = is_array($contextoApp['sesion'] ?? null) ? $contextoApp['sesion'] : [];
 $puedePreparar = (int) ($sesionActual['nivel_acceso'] ?? 2) === 1;
 $puedeRevertirPreparacion = $puedePreparar;
-if (!$puedePreparar || !$puedeRevertirPreparacion) {
+$puedeAsociarValor = $puedePreparar;
+if (!$puedePreparar || !$puedeRevertirPreparacion || !$puedeAsociarValor) {
     $permisosAcceso = $sesionActual['user']['permisos'] ?? [];
     foreach ($permisosAcceso as $permisoAcceso) {
         foreach ($permisoAcceso['permisos_internos'] ?? [] as $permisoInterno) {
@@ -17,6 +18,9 @@ if (!$puedePreparar || !$puedeRevertirPreparacion) {
             }
             if (($permisoInterno['nombre_interno'] ?? null) === 'movimiento-revertir-preparacion') {
                 $puedeRevertirPreparacion = true;
+            }
+            if (($permisoInterno['nombre_interno'] ?? null) === 'movimiento-asociar-valor') {
+                $puedeAsociarValor = true;
             }
         }
     }
@@ -108,7 +112,7 @@ $describirAsociacion = static function (array $asociacion) {
 <div class="bandeja-mensual bancos-app" data-bandeja aria-busy="false">
     <div class="bandeja-shell">
         <h1>Bandeja mensual</h1>
-        <p class="bandeja-introduccion"><?php echo $escrituraHabilitada && ($puedePreparar || $puedeRevertirPreparacion) ? 'Consulta de extractos y preparación controlada en el sandbox.' : 'Consulta de sólo lectura de los extractos y su seguimiento.'; ?></p>
+        <p class="bandeja-introduccion"><?php echo $escrituraHabilitada && ($puedePreparar || $puedeRevertirPreparacion || $puedeAsociarValor) ? 'Consulta de extractos y preparación controlada en el sandbox.' : 'Consulta de sólo lectura de los extractos y su seguimiento.'; ?></p>
 
         <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto data-estado="<?php echo $estadoContexto; ?>">
             <ol class="bandeja-contexto-miga">
@@ -193,6 +197,7 @@ $describirAsociacion = static function (array $asociacion) {
             <tbody>
             <?php foreach ($resultado->movimientos as $movimiento): ?>
                 <?php $estadoCodigo = (string) ($movimiento['estado_codigo'] ?? 'SIN_ESTADO'); $estadoClase = strtolower(str_replace('_', '-', $estadoCodigo)); $asociaciones = $movimiento['asociaciones'] ?? []; if (!$asociaciones) { foreach (['valor_zetti_id', 'asiento_zetti_id', 'borrador_asiento_id'] as $destino) { if (($movimiento[$destino] ?? null) !== null) { $asociaciones[] = ['valor_zetti_id' => null, 'asiento_zetti_id' => null, 'borrador_asiento_id' => null, 'monto_asociado' => null, 'compartido' => false, 'observacion' => null, $destino => $movimiento[$destino]]; } } } $mensajes = $movimiento['mensajes'] ?? []; $historial = $movimiento['historial'] ?? []; $borradores = $movimiento['borradores'] ?? []; ?>
+                <?php $tieneValorAsociado = false; foreach ($asociaciones as $asociacionActual) { if (($asociacionActual['valor_zetti_id'] ?? null) !== null) { $tieneValorAsociado = true; break; } } ?>
                 <tr>
                     <td data-label="Fecha"><?php echo $escapar($movimiento['fecha_operacion']); ?></td><td data-label="Referencia"><?php echo $escapar($movimiento['referencia']); ?></td><td data-label="Descripción"><?php echo $escapar($movimiento['descripcion']); ?></td><td class="importe" data-label="Crédito"><?php echo $escapar($movimiento['credito']); ?></td><td class="importe" data-label="Débito"><?php echo $escapar($movimiento['debito']); ?></td>
                     <td data-label="Estado"><span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span></td>
@@ -202,6 +207,7 @@ $describirAsociacion = static function (array $asociacion) {
                     <td data-label="Detalle"><button class="bandeja-ver-detalle" type="button" data-abrir-detalle aria-label="Ver detalle de <?php echo $escapar($movimiento['referencia']); ?>">Ver detalle</button>
                         <template data-detalle-movimiento><article class="bandeja-detalle-contenido">
                             <header class="bandeja-detalle-resumen"><p class="bandeja-detalle-sobretitulo">Movimiento <?php echo $escapar($movimiento['referencia']); ?></p><h2><?php echo $escapar($movimiento['descripcion']); ?></h2><p><?php echo $escapar($movimiento['fecha_operacion']); ?> · Crédito <?php echo $escapar($movimiento['credito']); ?> · Débito <?php echo $escapar($movimiento['debito']); ?></p><span class="estado-etiqueta estado-etiqueta--<?php echo $escapar($estadoClase); ?>"><?php echo $escapar($estadoCodigo); ?></span></header>
+                            <?php if ($escrituraHabilitada && $puedeAsociarValor && $estadoCodigo === 'ABIERTO' && !$tieneValorAsociado): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-asociar-valor><h3>Asociar valor ERP</h3><p>Reserva y vincula un valor disponible. El importe asociado se toma del movimiento; esta acción no modifica el ERP.</p><label>ID del valor ERP<input type="number" min="1" required inputmode="numeric" data-valor-zetti-id></label><button type="button" data-asociar-valor data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Reservar y asociar</button><p class="bandeja-accion-estado" role="status" aria-live="polite" data-accion-estado></p></section><?php endif; ?>
                             <?php if ($escrituraHabilitada && $puedePreparar && $estadoCodigo === 'ABIERTO'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-preparar><h3>Preparación</h3><p>Marca el movimiento como listo para cierre. No crea ni modifica datos del ERP.</p><button type="button" data-preparar-movimiento data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Marcar para cerrar</button><p class="bandeja-accion-estado" role="status" aria-live="polite" data-accion-estado></p></section><?php endif; ?>
                             <?php if ($escrituraHabilitada && $puedeRevertirPreparacion && $estadoCodigo === 'PARA_CERRAR'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-revertir><h3>Revertir preparación</h3><p>Vuelve el movimiento a ABIERTO y desactiva sus asociaciones, reservas y borradores activos. El historial se conserva.</p><label>Motivo<textarea maxlength="200" minlength="3" required data-motivo-reversion placeholder="Indicá por qué debe volver a ABIERTO"></textarea></label><button type="button" data-revertir-preparacion data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Volver a abierto</button><p class="bandeja-accion-estado" role="status" aria-live="polite" data-accion-estado></p></section><?php endif; ?>
                             <section class="bandeja-detalle-seccion"><h3>Asociaciones</h3><?php if ($asociaciones): ?><ol class="bandeja-detalle-lista"><?php foreach ($asociaciones as $asociacion): ?><li><strong><?php echo $escapar($describirAsociacion($asociacion)); ?></strong><?php if ($asociacion['monto_asociado'] !== null): ?> · <?php echo $escapar($asociacion['monto_asociado']); ?><?php endif; ?><?php if ($asociacion['compartido'] === true || $asociacion['compartido'] === 't'): ?> · compartido<?php endif; ?><?php if ($asociacion['observacion']): ?><small><?php echo $escapar($asociacion['observacion']); ?></small><?php endif; ?></li><?php endforeach; ?></ol><?php else: ?><p class="sin-dato">Sin asociaciones registradas.</p><?php endif; ?></section>

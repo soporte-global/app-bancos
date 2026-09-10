@@ -40,6 +40,14 @@ El repositorio bloquea la fila y verifica que el ID pertenezca exactamente a esa
 
 Sólo admite `PARA_CERRAR -> ABIERTO`. Con la fila bloqueada, desactiva las asociaciones, reservas y borradores activos del movimiento; no elimina ninguna fila ni las líneas de los borradores. Luego registra el motivo y operador en `bancos_historial_asignacion`, actualiza el movimiento y deja auditoría en la misma transacción. La respuesta incluye el conteo por tipo bajo `data.descartados`. Mensajes y ERP quedan intactos.
 
+## Asociar un valor ERP
+
+`POST api.php?accion=movimiento.asociar-valor` recibe `movimiento_id`, `valor_zetti_id`, `cuenta_bancaria_id` e `inicio_periodo`. Exige el permiso `movimiento-asociar-valor` o nivel administrador, y conserva las protecciones de debug, CSRF, JSON e idempotencia.
+
+La acción sólo admite movimientos `ABIERTO`. El servidor deriva `monto_asociado` del crédito o débito del movimiento: el cliente no puede elegirlo. El valor se lee desde `public.valor`, debe existir, no puede estar en los estados `7`, `20` o `36` y su monto absoluto debe cubrir el movimiento. Con el movimiento bloqueado, se rechaza otra reserva/asociación activa de valor y se insertan reserva y asociación mediante los índices únicos parciales. Un conflicto deja ambas operaciones revertidas.
+
+La interfaz inicial solicita el ID exacto del valor. No intenta sugerir candidatos ni puntuar coincidencias: esas reglas continúan pendientes de validación. La respuesta `201` contiene movimiento, valor, importe, reserva y asociación; la auditoría conserva la misma evidencia. No se actualiza ninguna fila ERP.
+
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 
 La primera lectura materializada es la pantalla interna `?pag=bandeja-mensual`. Recibe por query string `cuenta_bancaria_id`, `inicio_periodo`, `limite` (1 a 100), los filtros opcionales `estado`, `responsable_id`, `asociacion=CON|SIN` y `mensajes=CON|SIN`; desde la segunda página recibe además `cursor`. Cuenta y período se eligen desde importaciones existentes, con una etiqueta ERP que identifica nodo, banco, tipo, nombre y código. El cursor versión 3 firma la posición, la cuenta, el período y los filtros; los cursores anteriores sólo se aceptan sin filtros. El cliente no puede enviar directamente la fecha ni el ID de ordenamiento.

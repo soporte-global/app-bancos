@@ -2,6 +2,7 @@
 namespace AppBancos\Repository;
 
 use AppBancos\Application\MovimientoNoEncontradoException;
+use AppBancos\Application\RecursoNoDisponibleException;
 use AppBancos\Application\TransicionMovimientoException;
 use AppBancos\Infrastructure\EsquemaBancos;
 use PDO;
@@ -17,6 +18,7 @@ final class MovimientoMensualRepository
     private $asociaciones;
     private $reservas;
     private $borradores;
+    private $valoresErp;
 
     public function __construct(PDO $pdo, EsquemaBancos $esquema)
     {
@@ -28,6 +30,7 @@ final class MovimientoMensualRepository
         $this->asociaciones = $esquema->tablaBancos('bancos_asociacion_movimiento');
         $this->reservas = $esquema->tablaBancos('bancos_reserva_recurso');
         $this->borradores = $esquema->tablaBancos('bancos_borrador_asiento');
+        $this->valoresErp = $esquema->tablaLecturaErp('valor');
     }
 
     public function preparar($movimientoId, $cuentaBancariaId, $inicioPeriodo, $usuarioId, $clave)
@@ -215,10 +218,136 @@ final class MovimientoMensualRepository
         ];
     }
 
+    public function asociarValor(
+        $movimientoId,
+        $cuentaBancariaId,
+        $inicioPeriodo,
+        $valorId,
+        $usuarioId,
+        $clave
+    ) {
+        $movimiento = $this->bloquearMovimiento(
+            $movimientoId,
+            $cuentaBancariaId,
+            $inicioPeriodo
+        );
+        if ($movimiento['estado_actual'] !== 'ABIERTO') {
+            throw new TransicionMovimientoException(
+                'Solo se pueden asociar valores a un movimiento ABIERTO.'
+            );
+        }
+        $montoMovimiento = (float) $movimiento['credito'] > 0
+            ? (string) $movimiento['credito']
+            : (string) $movimiento['debito'];
+
+        $consulta = $this->pdo->prepare(
+            "SELECT id, monto_principal, estado,
+                    abs(monto_principal) >= CAST(:monto AS numeric) AS monto_suficiente
+             FROM {$this->valoresErp}
+             WHERE id = :valor_id
+             FOR SHARE"
+        );
+        $consulta->execute([
+            ':valor_id' => (int) $valorId,
+            ':monto' => $montoMovimiento,
+        ]);
+        $valor = $consulta->fetch(PDO::FETCH_ASSOC);
+        if ($valor === false) {
+            throw new RecursoNoDisponibleException('El valor ERP indicado no existe.');
+        }
+        if (in_array((int) $valor['estado'], [7, 20, 36], true)) {
+            throw new RecursoNoDisponibleException('El estado actual del valor ERP no permite asociarlo.');
+        }
+        if (!in_array($valor['monto_suficiente'], [true, 1, '1', 't'], true)) {
+            throw new RecursoNoDisponibleException(
+                'El monto disponible del valor ERP es menor que el movimiento.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "SELECT EXISTS (
+                 SELECT 1 FROM {$this->asociaciones}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND valor_zetti_id IS NOT NULL
+             ) OR EXISTS (
+                 SELECT 1 FROM {$this->reservas}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND valor_zetti_id IS NOT NULL
+             )"
+        );
+        $consulta->execute([':movimiento_id' => (int) $movimientoId]);
+        if ($consulta->fetchColumn()) {
+            throw new RecursoNoDisponibleException(
+                'El movimiento ya tiene un valor asociado o reservado.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->reservas}
+                (movimiento_id, valor_zetti_id, activo, reservado_por, motivo, observacion)
+             VALUES
+                (:movimiento_id, :valor_id, true, :usuario_id, 'ASOCIACION_VALOR', :observacion)
+             ON CONFLICT (valor_zetti_id) WHERE activo AND valor_zetti_id IS NOT NULL
+             DO NOTHING
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':valor_id' => (int) $valorId,
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => 'API|ASOCIAR_VALOR|' . $clave,
+        ]);
+        $reservaId = $consulta->fetchColumn();
+        if ($reservaId === false) {
+            throw new RecursoNoDisponibleException(
+                'El valor ERP fue reservado por otro movimiento.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->asociaciones}
+                (movimiento_id, valor_zetti_id, monto_asociado, activo, observacion, usuario_creacion)
+             VALUES
+                (:movimiento_id, :valor_id, :monto, true, :observacion, :usuario_id)
+             ON CONFLICT (valor_zetti_id) WHERE activo AND valor_zetti_id IS NOT NULL
+             DO NOTHING
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':valor_id' => (int) $valorId,
+            ':monto' => $montoMovimiento,
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => 'API|ASOCIAR_VALOR|' . $clave,
+        ]);
+        $asociacionId = $consulta->fetchColumn();
+        if ($asociacionId === false) {
+            throw new RecursoNoDisponibleException(
+                'El valor ERP ya esta asociado a otro movimiento.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare(
+            "UPDATE {$this->movimientos}
+             SET fecha_modificacion = current_timestamp, usuario_modificacion = :usuario_id
+             WHERE id = :movimiento_id"
+        );
+        $consulta->execute([
+            ':usuario_id' => (int) $usuarioId,
+            ':movimiento_id' => (int) $movimientoId,
+        ]);
+
+        return [
+            'movimiento_id' => (int) $movimientoId,
+            'valor_zetti_id' => (int) $valorId,
+            'monto_asociado' => $montoMovimiento,
+            'reserva_id' => (int) $reservaId,
+            'asociacion_id' => (int) $asociacionId,
+        ];
+    }
+
     private function bloquearMovimiento($movimientoId, $cuentaBancariaId, $inicioPeriodo)
     {
         $consulta = $this->pdo->prepare(
-            "SELECT m.id,
+            "SELECT m.id, m.credito, m.debito, m.moneda,
                     COALESCE((
                         SELECT eh.codigo
                         FROM {$this->historial} h

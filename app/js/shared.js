@@ -426,7 +426,72 @@
             });
         }
 
+        function asociarValor(boton) {
+            var bloque = boton.closest('[data-accion-asociar-valor]');
+            var valorControl = bloque && bloque.querySelector('[data-valor-zetti-id]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var valorId = valorControl ? Number(valorControl.value) : 0;
+            if (!Number.isInteger(valorId) || valorId <= 0) {
+                if (estado) {
+                    estado.textContent = 'Ingresá un ID de valor ERP válido.';
+                }
+                if (valorControl) {
+                    valorControl.focus();
+                }
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            valorControl.disabled = true;
+            if (estado) {
+                estado.textContent = 'Reservando y asociando valor…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.asociar-valor', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo,
+                        valor_zetti_id: valorId
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                boton.textContent = 'Valor asociado';
+                if (estado) {
+                    estado.textContent = 'Valor #' + contenido.data.valor_zetti_id +
+                        ' asociado por ' + contenido.data.monto_asociado + '. Actualizando…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 900);
+            }).catch(function (error) {
+                boton.disabled = false;
+                valorControl.disabled = false;
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         raiz.addEventListener('click', function (evento) {
+            var accionAsociarValor = evento.target.closest('[data-asociar-valor]');
+            if (accionAsociarValor) {
+                asociarValor(accionAsociarValor);
+                return;
+            }
             var accionRevertir = evento.target.closest('[data-revertir-preparacion]');
             if (accionRevertir) {
                 revertirPreparacion(accionRevertir);

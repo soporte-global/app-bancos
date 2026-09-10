@@ -622,6 +622,14 @@ body.bandeja-detalle-activo {
     border-radius: var(--radio-control);
 }
 
+.bandeja-accion input {
+    width: 100%;
+    min-height: var(--alto-control);
+    padding: 0 9px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
 .bandeja-accion-estado {
     min-height: 1.1em;
 }

@@ -124,13 +124,15 @@ body:has(.bancos-app),
     color: var(--ui-texto-suave);
 }
 
-.bandeja-accion textarea {
+.bandeja-accion textarea,
+.bandeja-accion input {
     border-color: var(--ui-borde);
     background: var(--ui-superficie);
     color: var(--ui-texto);
 }
 
-.bandeja-accion textarea:focus-visible {
+.bandeja-accion textarea:focus-visible,
+.bandeja-accion input:focus-visible {
     border-color: var(--ui-acento);
     outline: 2px solid var(--ui-foco);
     outline-offset: 1px;

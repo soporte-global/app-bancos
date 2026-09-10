@@ -19,6 +19,9 @@ final class MovimientoMensualRepository
     private $reservas;
     private $borradores;
     private $valoresErp;
+    private $lineasBorrador;
+    private $nodosErp;
+    private $cuentasErp;
 
     public function __construct(PDO $pdo, EsquemaBancos $esquema)
     {
@@ -31,6 +34,9 @@ final class MovimientoMensualRepository
         $this->reservas = $esquema->tablaBancos('bancos_reserva_recurso');
         $this->borradores = $esquema->tablaBancos('bancos_borrador_asiento');
         $this->valoresErp = $esquema->tablaLecturaErp('valor');
+        $this->lineasBorrador = $esquema->tablaBancos('bancos_linea_borrador_asiento');
+        $this->nodosErp = $esquema->tablaLecturaErp('nodo');
+        $this->cuentasErp = $esquema->tablaLecturaErp('cuenta');
     }
 
     public function preparar($movimientoId, $cuentaBancariaId, $inicioPeriodo, $usuarioId, $clave)
@@ -341,6 +347,171 @@ final class MovimientoMensualRepository
             'monto_asociado' => $montoMovimiento,
             'reserva_id' => (int) $reservaId,
             'asociacion_id' => (int) $asociacionId,
+        ];
+    }
+
+    public function crearBorrador(
+        $movimientoId,
+        $cuentaBancariaId,
+        $inicioPeriodo,
+        $nodoId,
+        $fechaContable,
+        $modelo,
+        array $lineas,
+        $usuarioId,
+        $clave
+    ) {
+        $movimiento = $this->bloquearMovimiento(
+            $movimientoId,
+            $cuentaBancariaId,
+            $inicioPeriodo
+        );
+        if ($movimiento['estado_actual'] !== 'ABIERTO') {
+            throw new TransicionMovimientoException(
+                'Solo se puede crear un borrador para un movimiento ABIERTO.'
+            );
+        }
+
+        $consulta = $this->pdo->prepare("SELECT 1 FROM {$this->nodosErp} WHERE id = :id");
+        $consulta->execute([':id' => (int) $nodoId]);
+        if ($consulta->fetchColumn() === false) {
+            throw new RecursoNoDisponibleException('El nodo ERP indicado no existe.');
+        }
+
+        $cuentas = array_values(array_unique(array_map(function ($linea) {
+            return (int) $linea['cuenta_zetti_id'];
+        }, $lineas)));
+        $marcadores = [];
+        $parametros = [];
+        foreach ($cuentas as $indice => $cuentaId) {
+            $marcador = ':cuenta_' . $indice;
+            $marcadores[] = $marcador;
+            $parametros[$marcador] = $cuentaId;
+        }
+        $consulta = $this->pdo->prepare(
+            "SELECT count(*) FROM {$this->cuentasErp} WHERE id IN (" . implode(', ', $marcadores) . ')'
+        );
+        $consulta->execute($parametros);
+        if ((int) $consulta->fetchColumn() !== count($cuentas)) {
+            throw new RecursoNoDisponibleException('Una o mas cuentas ERP no existen.');
+        }
+
+        $consulta = $this->pdo->prepare(
+            "SELECT EXISTS (
+                 SELECT 1 FROM {$this->borradores}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE
+             ) OR EXISTS (
+                 SELECT 1 FROM {$this->reservas}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND borrador_asiento_id IS NOT NULL
+             ) OR EXISTS (
+                 SELECT 1 FROM {$this->asociaciones}
+                 WHERE movimiento_id = :movimiento_id AND activo IS TRUE AND borrador_asiento_id IS NOT NULL
+             )"
+        );
+        $consulta->execute([':movimiento_id' => (int) $movimientoId]);
+        if ($consulta->fetchColumn()) {
+            throw new RecursoNoDisponibleException('El movimiento ya tiene un borrador activo.');
+        }
+
+        $consulta = $this->pdo->prepare(
+            "SELECT id FROM {$this->estados} WHERE codigo = 'ABIERTO' AND activo IS TRUE"
+        );
+        $consulta->execute();
+        $estadoId = $consulta->fetchColumn();
+        if ($estadoId === false) {
+            throw new RuntimeException('El estado ABIERTO no esta configurado.');
+        }
+
+        $claveBorrador = 'API|' . hash('sha256', (string) $clave);
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->borradores}
+                (movimiento_id, nodo_zetti_id, fecha_contable, estado_id,
+                 clave_idempotencia, modelo, activo, observacion,
+                 usuario_creacion, usuario_modificacion)
+             VALUES
+                (:movimiento_id, :nodo_id, :fecha_contable, :estado_id,
+                 :clave, :modelo, true, 'BORRADOR_API', :usuario_id, :usuario_id)
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':nodo_id' => (int) $nodoId,
+            ':fecha_contable' => $fechaContable,
+            ':estado_id' => (int) $estadoId,
+            ':clave' => $claveBorrador,
+            ':modelo' => $modelo,
+            ':usuario_id' => (int) $usuarioId,
+        ]);
+        $borradorId = $consulta->fetchColumn();
+        if ($borradorId === false) {
+            throw new RuntimeException('No se pudo crear el borrador contable.');
+        }
+
+        $insertarLinea = $this->pdo->prepare(
+            "INSERT INTO {$this->lineasBorrador}
+                (borrador_asiento_id, cuenta_zetti_id, debe, haber, observacion)
+             VALUES
+                (:borrador_id, :cuenta_id, :debe, :haber, :observacion)"
+        );
+        foreach ($lineas as $linea) {
+            $insertarLinea->execute([
+                ':borrador_id' => (int) $borradorId,
+                ':cuenta_id' => (int) $linea['cuenta_zetti_id'],
+                ':debe' => $linea['debe'],
+                ':haber' => $linea['haber'],
+                ':observacion' => $linea['observacion'],
+            ]);
+        }
+
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->reservas}
+                (movimiento_id, borrador_asiento_id, activo, reservado_por, motivo, observacion)
+             VALUES
+                (:movimiento_id, :borrador_id, true, :usuario_id, 'BORRADOR', :observacion)
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':borrador_id' => (int) $borradorId,
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => 'API|CREAR_BORRADOR|' . $clave,
+        ]);
+        $reservaId = $consulta->fetchColumn();
+
+        $consulta = $this->pdo->prepare(
+            "INSERT INTO {$this->asociaciones}
+                (movimiento_id, borrador_asiento_id, activo, observacion, usuario_creacion)
+             VALUES
+                (:movimiento_id, :borrador_id, true, :observacion, :usuario_id)
+             RETURNING id"
+        );
+        $consulta->execute([
+            ':movimiento_id' => (int) $movimientoId,
+            ':borrador_id' => (int) $borradorId,
+            ':usuario_id' => (int) $usuarioId,
+            ':observacion' => 'API|CREAR_BORRADOR|' . $clave,
+        ]);
+        $asociacionId = $consulta->fetchColumn();
+        if ($reservaId === false || $asociacionId === false) {
+            throw new RuntimeException('No se pudo reservar y asociar el borrador.');
+        }
+
+        $consulta = $this->pdo->prepare(
+            "UPDATE {$this->movimientos}
+             SET fecha_modificacion = current_timestamp, usuario_modificacion = :usuario_id
+             WHERE id = :movimiento_id"
+        );
+        $consulta->execute([
+            ':usuario_id' => (int) $usuarioId,
+            ':movimiento_id' => (int) $movimientoId,
+        ]);
+
+        return [
+            'movimiento_id' => (int) $movimientoId,
+            'borrador_id' => (int) $borradorId,
+            'reserva_id' => (int) $reservaId,
+            'asociacion_id' => (int) $asociacionId,
+            'cantidad_lineas' => count($lineas),
         ];
     }
 

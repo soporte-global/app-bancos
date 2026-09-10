@@ -27,6 +27,8 @@ Reversión funcional: `movimiento.revertir-preparacion` permite devolver `PARA_C
 
 Asociación segura de valor: `movimiento.asociar-valor` reserva y asocia por ID exacto un valor ERP a un movimiento `ABIERTO`. El importe se deriva del movimiento, el ERP permanece de sólo lectura y los estados/montos/disponibilidad se validan en servidor. La migración `022` agregó índices únicos parciales por movimiento y tipo en ambos esquemas, y registró el permiso granular sin asignaciones. La búsqueda/puntuación automática de candidatos no está habilitada todavía.
 
+Borrador contable multílínea: `movimiento.crear-borrador` valida nodo, cuentas, fecha, modelo, exclusividad por línea y balance exacto de 2 a 200 líneas. Crea cabecera, líneas, reserva, asociación y auditoría en una transacción idempotente de `global_temp`, sin escribir ERP. La migración `023` registró el permiso granular sin asignaciones nuevas. La interfaz todavía recibe IDs exactos de nodo y cuenta.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

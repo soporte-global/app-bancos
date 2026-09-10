@@ -15,6 +15,9 @@ foreach ([
     'data-asociar-valor',
     'movimiento-asociar-valor',
     'El importe asociado se toma del movimiento',
+    'data-crear-borrador',
+    'movimiento-crear-borrador',
+    'El borrador debe tener entre 2 y 200 líneas',
 ] as $fragmento) {
     if (strpos($vista, $fragmento) === false) {
         throw new RuntimeException('La vista no contiene el contrato de preparacion: ' . $fragmento);
@@ -28,6 +31,8 @@ foreach ([
     'motivo: motivo',
     'movimiento.asociar-valor',
     'valor_zetti_id: valorId',
+    'movimiento.crear-borrador',
+    'lineas: lineas',
     'formularioBandeja.requestSubmit()',
 ] as $fragmento) {
     if (strpos($javascript, $fragmento) === false) {
@@ -39,6 +44,7 @@ foreach ([
     "'movimiento-preparar'",
     "'movimiento-revertir-preparacion'",
     "'movimiento-asociar-valor'",
+    "'movimiento-crear-borrador'",
     "'application/json'",
 ] as $fragmento) {
     if (strpos($api, $fragmento) === false) {

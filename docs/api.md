@@ -48,6 +48,14 @@ La acción sólo admite movimientos `ABIERTO`. El servidor deriva `monto_asociad
 
 La interfaz inicial solicita el ID exacto del valor. No intenta sugerir candidatos ni puntuar coincidencias: esas reglas continúan pendientes de validación. La respuesta `201` contiene movimiento, valor, importe, reserva y asociación; la auditoría conserva la misma evidencia. No se actualiza ninguna fila ERP.
 
+## Crear borrador contable
+
+`POST api.php?accion=movimiento.crear-borrador` recibe el contexto del movimiento, `nodo_zetti_id`, `fecha_contable`, `modelo` y entre 2 y 200 `lineas`. Cada línea contiene `cuenta_zetti_id`, `debe`, `haber` y una observación opcional. Exige `movimiento-crear-borrador` o nivel administrador, además de las protecciones comunes.
+
+Cada importe admite hasta cinco decimales y se normaliza sin aritmética binaria. Una línea debe tener un valor positivo exclusivamente en debe o haber, y ambos totales deben coincidir exactamente. Se aceptan cuentas repetidas porque existen borradores migrados válidos con esa forma. No se fuerza que el total coincida con el extracto: sólo 2.338 de los 5.169 borradores activos migrados cumplen esa igualdad, mientras que todos están balanceados.
+
+La acción sólo admite movimientos `ABIERTO` sin otro borrador activo. Valida nodo y cuentas contra el ERP de sólo lectura, crea borrador y líneas, y luego reserva/asocia el borrador en la misma transacción idempotente. La respuesta `201` incluye los IDs del borrador, reserva y asociación y la cantidad de líneas. No genera operación, asiento ni movimiento ERP.
+
 Los contratos se separarán por caso de uso: consulta/paginación de extractos, importación, candidatos, reserva/asociación, mensajería, cambio de estado/cierre y conciliación de cheque. Las listas reciben `cuenta_bancaria_id`, `inicio_periodo`, filtros permitidos y cursor opaco; no aceptan fragmentos SQL ni orden arbitrario. Las operaciones que escriben reciben una clave de idempotencia y devuelven el identificador interno, el estado y la evidencia de auditoría.
 
 La primera lectura materializada es la pantalla interna `?pag=bandeja-mensual`. Recibe por query string `cuenta_bancaria_id`, `inicio_periodo`, `limite` (1 a 100), los filtros opcionales `estado`, `responsable_id`, `asociacion=CON|SIN` y `mensajes=CON|SIN`; desde la segunda página recibe además `cursor`. Cuenta y período se eligen desde importaciones existentes, con una etiqueta ERP que identifica nodo, banco, tipo, nombre y código. El cursor versión 3 firma la posición, la cuenta, el período y los filtros; los cursores anteriores sólo se aceptan sin filtros. El cliente no puede enviar directamente la fecha ni el ID de ordenamiento.

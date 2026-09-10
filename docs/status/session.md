@@ -99,3 +99,9 @@ La migración reversible `021` agregó el permiso interno sin concedérselo a us
 Se implementó `POST api.php?accion=movimiento.asociar-valor` y el formulario por ID exacto dentro del detalle de movimientos `ABIERTO`. El importe se toma del movimiento, no del request. La API valida existencia, estado, monto y disponibilidad del valor; bloquea el movimiento y crea reserva/asociación dentro de la transacción idempotente. No modifica el ERP ni aplica todavía sugerencias automáticas.
 
 La migración reversible `022` agregó los índices únicos parciales por movimiento/tipo después de comprobar cero duplicados activos en producción y sandbox. También registró el permiso granular sin asignaciones. La prueba integrada enfrentó dos movimientos por el mismo valor y confirmó una sola reserva/asociación, auditoría completa, reintento seguro y ausencia de filas parciales; la limpieza dejó `global_temp` sin datos artificiales. El siguiente incremento es el borrador contable multílínea.
+
+## Borrador contable multílínea - 2026-09-10
+
+Se caracterizaron 5.169 borradores activos migrados: todos balanceados, entre 2 y 141 líneas, pero sólo 2.338 coinciden con el importe del extracto. El contrato nuevo exige balance y 2 a 200 líneas, admite cuentas repetidas y no fuerza igualdad con el movimiento. Los importes se normalizan a cinco decimales con suma exacta por cadenas.
+
+Se implementó `POST api.php?accion=movimiento.crear-borrador` y un editor dinámico en el drawer. La acción valida nodo y cuentas en ERP de sólo lectura y crea cabecera, líneas, reserva, asociación y auditoría en una transacción idempotente de `global_temp`. La migración `023` registró el permiso sin usuarios nuevos. La prueba rechazó un desbalance de `0.00001`, confirmó persistencia y exclusividad y limpió todas sus filas. El siguiente incremento seguro es asociar asientos ERP existentes sin materializarlos ni modificarlos.

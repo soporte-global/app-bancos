@@ -486,7 +486,143 @@
             });
         }
 
+        function agregarLineaBorrador(boton) {
+            var bloque = boton.closest('[data-accion-crear-borrador]');
+            var contenedor = bloque && bloque.querySelector('[data-borrador-lineas]');
+            var referencia = contenedor && contenedor.querySelector('[data-borrador-linea]');
+            if (!contenedor || !referencia || contenedor.querySelectorAll('[data-borrador-linea]').length >= 200) {
+                return;
+            }
+            var nueva = referencia.cloneNode(true);
+            Array.prototype.forEach.call(nueva.querySelectorAll('input'), function (control) {
+                control.value = control.hasAttribute('data-linea-debe') || control.hasAttribute('data-linea-haber')
+                    ? '0'
+                    : '';
+            });
+            contenedor.appendChild(nueva);
+            nueva.querySelector('[data-linea-cuenta]').focus();
+        }
+
+        function quitarLineaBorrador(boton) {
+            var bloque = boton.closest('[data-accion-crear-borrador]');
+            var lineas = bloque && bloque.querySelectorAll('[data-borrador-linea]');
+            if (!lineas || lineas.length <= 2) {
+                var estado = bloque && bloque.querySelector('[data-accion-estado]');
+                if (estado) {
+                    estado.textContent = 'El borrador necesita al menos dos líneas.';
+                }
+                return;
+            }
+            boton.closest('[data-borrador-linea]').remove();
+        }
+
+        function crearBorrador(boton) {
+            var bloque = boton.closest('[data-accion-crear-borrador]');
+            var estado = bloque && bloque.querySelector('[data-accion-estado]');
+            var nodo = bloque && bloque.querySelector('[data-borrador-nodo]');
+            var fecha = bloque && bloque.querySelector('[data-borrador-fecha]');
+            var modelo = bloque && bloque.querySelector('[data-borrador-modelo]');
+            var filas = bloque && bloque.querySelectorAll('[data-borrador-linea]');
+            var lineas = [];
+            var totalDebe = 0;
+            var totalHaber = 0;
+            var errorEntrada = '';
+            if (!nodo || !Number.isInteger(Number(nodo.value)) || Number(nodo.value) <= 0 || !fecha.value || !modelo.value.trim()) {
+                errorEntrada = 'Completá nodo, fecha contable y modelo.';
+            }
+            Array.prototype.forEach.call(filas || [], function (fila) {
+                var cuenta = Number(fila.querySelector('[data-linea-cuenta]').value);
+                var debe = Number(fila.querySelector('[data-linea-debe]').value || 0);
+                var haber = Number(fila.querySelector('[data-linea-haber]').value || 0);
+                if (!Number.isInteger(cuenta) || cuenta <= 0 || debe < 0 || haber < 0 || (debe > 0) === (haber > 0)) {
+                    errorEntrada = 'Cada línea necesita una cuenta y un importe positivo sólo en debe o haber.';
+                }
+                totalDebe += debe;
+                totalHaber += haber;
+                lineas.push({
+                    cuenta_zetti_id: cuenta,
+                    debe: fila.querySelector('[data-linea-debe]').value || '0',
+                    haber: fila.querySelector('[data-linea-haber]').value || '0',
+                    observacion: fila.querySelector('[data-linea-observacion]').value.trim()
+                });
+            });
+            if (!errorEntrada && Math.abs(totalDebe - totalHaber) > 0.000001) {
+                errorEntrada = 'El total del debe debe coincidir con el total del haber.';
+            }
+            if (errorEntrada) {
+                if (estado) {
+                    estado.textContent = errorEntrada;
+                }
+                return;
+            }
+
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            Array.prototype.forEach.call(bloque.querySelectorAll('input, button'), function (control) {
+                control.disabled = true;
+            });
+            if (estado) {
+                estado.textContent = 'Creando borrador balanceado…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.crear-borrador', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo,
+                        nodo_zetti_id: Number(nodo.value),
+                        fecha_contable: fecha.value,
+                        modelo: modelo.value.trim(),
+                        lineas: lineas
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                boton.textContent = 'Borrador creado';
+                if (estado) {
+                    estado.textContent = 'Borrador #' + contenido.data.borrador_id +
+                        ' creado con ' + contenido.data.cantidad_lineas + ' líneas. Actualizando…';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 900);
+            }).catch(function (error) {
+                Array.prototype.forEach.call(bloque.querySelectorAll('input, button'), function (control) {
+                    control.disabled = false;
+                });
+                if (estado) {
+                    estado.textContent = error.message;
+                }
+            });
+        }
+
         raiz.addEventListener('click', function (evento) {
+            var agregarLinea = evento.target.closest('[data-agregar-linea]');
+            if (agregarLinea) {
+                agregarLineaBorrador(agregarLinea);
+                return;
+            }
+            var quitarLinea = evento.target.closest('[data-quitar-linea]');
+            if (quitarLinea) {
+                quitarLineaBorrador(quitarLinea);
+                return;
+            }
+            var accionCrearBorrador = evento.target.closest('[data-crear-borrador]');
+            if (accionCrearBorrador) {
+                crearBorrador(accionCrearBorrador);
+                return;
+            }
             var accionAsociarValor = evento.target.closest('[data-asociar-valor]');
             if (accionAsociarValor) {
                 asociarValor(accionAsociarValor);

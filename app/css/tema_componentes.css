@@ -138,6 +138,17 @@ body:has(.bancos-app),
     outline-offset: 1px;
 }
 
+.bandeja-borrador-linea {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+}
+
+.bandeja-borrador-controles [data-agregar-linea] {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
 .bandeja-estado-icono {
     border-color: var(--ui-borde);
     background: var(--ui-superficie-hundida);

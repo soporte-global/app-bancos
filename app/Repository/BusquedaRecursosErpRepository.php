@@ -16,6 +16,7 @@ final class BusquedaRecursosErpRepository
     private $estados;
     private $asociaciones;
     private $reservas;
+    private $reglasClasificacion;
     private $valoresErp;
     private $tiposValorErp;
     private $subtiposValorErp;
@@ -35,6 +36,7 @@ final class BusquedaRecursosErpRepository
         $this->estados = $esquema->tablaBancos('bancos_estado');
         $this->asociaciones = $esquema->tablaBancos('bancos_asociacion_movimiento');
         $this->reservas = $esquema->tablaBancos('bancos_reserva_recurso');
+        $this->reglasClasificacion = $esquema->tablaBancos('bancos_regla_clasificacion');
         $this->valoresErp = $esquema->tablaLecturaErp('valor');
         $this->tiposValorErp = $esquema->tablaLecturaErp('tipo_valor');
         $this->subtiposValorErp = $esquema->tablaLecturaErp('subtipo_valor');
@@ -51,7 +53,10 @@ final class BusquedaRecursosErpRepository
         $objetivo = $this->obtenerMovimiento($movimientoId, $cuentaBancariaId, $inicioPeriodo);
         $consulta = $this->pdo->prepare(
             "WITH parametros AS (
-                 SELECT CAST(:monto AS numeric) AS monto, CAST(:fecha AS date) AS fecha
+                 SELECT CAST(:monto AS numeric) AS monto, CAST(:fecha AS date) AS fecha,
+                        CAST(:configuracion_id AS bigint) AS configuracion_id,
+                        CAST(:codigo_extracto AS varchar) AS codigo_extracto,
+                        CAST(:sentido AS char(1)) AS sentido
              )
              SELECT v.id::text AS id, v.monto_principal, v.fecha_emision, v.codigo_externo,
                     v.comprobante::text AS comprobante, v.estado AS estado_id, ev.nombre AS estado,
@@ -65,6 +70,16 @@ final class BusquedaRecursosErpRepository
              WHERE v.entidad = :cuenta_bancaria_id
                AND v.estado NOT IN (7, 20, 36)
                AND abs(v.monto_principal) >= p.monto
+               AND (
+                   p.codigo_extracto IS NULL
+                   OR v.subtipo_valor IN (
+                       SELECT r.subtipo_valor_zetti_id
+                       FROM {$this->reglasClasificacion} r
+                       WHERE r.configuracion_id = p.configuracion_id
+                         AND lower(btrim(r.codigo_extracto)) = lower(btrim(p.codigo_extracto))
+                         AND r.sentido IN ('A', p.sentido)
+                   )
+               )
                AND NOT EXISTS (
                    SELECT 1 FROM {$this->reservas} r
                    WHERE r.valor_zetti_id = v.id AND r.activo IS TRUE
@@ -81,6 +96,9 @@ final class BusquedaRecursosErpRepository
         $consulta->bindValue(':cuenta_bancaria_id', (string) $cuentaBancariaId);
         $consulta->bindValue(':monto', $objetivo['monto']);
         $consulta->bindValue(':fecha', $objetivo['fecha_operacion']);
+        $consulta->bindValue(':configuracion_id', (string) $objetivo['configuracion_id']);
+        $consulta->bindValue(':codigo_extracto', $objetivo['codigo_extracto']);
+        $consulta->bindValue(':sentido', $objetivo['sentido']);
         $consulta->bindValue(':limite', (int) $limite, PDO::PARAM_INT);
         $consulta->execute();
         return [
@@ -263,6 +281,9 @@ final class BusquedaRecursosErpRepository
     {
         $consulta = $this->pdo->prepare(
             "SELECT m.id, m.fecha_operacion, i.cuenta_bancaria_zetti_id::text,
+                    i.configuracion_id::text, m.codigo_extracto,
+                    CASE WHEN m.credito > 0 THEN 'C' ELSE 'D' END AS sentido,
+                    m.subtipo_valor_zetti_id,
                     CASE WHEN m.credito > 0 THEN m.credito ELSE m.debito END AS monto,
                     COALESCE((
                         SELECT eh.codigo

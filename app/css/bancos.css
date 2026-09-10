@@ -807,6 +807,115 @@ body.bandeja-detalle-activo {
     resize: vertical;
 }
 
+.importacion-page {
+    display: grid;
+    gap: 18px;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.importacion-encabezado,
+.importacion-formulario,
+.importacion-formato,
+.importacion-resultado {
+    padding: clamp(16px, 2.5vw, 26px);
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.importacion-formulario {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.6fr) minmax(220px, 1.4fr) minmax(150px, 0.7fr) minmax(210px, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.importacion-formulario label {
+    display: grid;
+    gap: 6px;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.importacion-formulario input,
+.importacion-formulario select,
+.importacion-formulario button {
+    min-height: var(--alto-control);
+    padding: 0 10px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font: inherit;
+}
+
+.importacion-formulario button {
+    font-weight: 800;
+}
+
+.importacion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.importacion-confirmar,
+.importacion-descargar {
+    min-height: var(--alto-control);
+    padding: 0 14px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font: inherit;
+    font-weight: 800;
+}
+
+.importacion-formulario .bandeja-accion-estado {
+    grid-column: 1 / -1;
+}
+
+.importacion-metricas {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.importacion-metricas div {
+    padding: 10px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.importacion-metricas dt {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+}
+
+.importacion-metricas dd {
+    margin: 4px 0 0;
+    font-weight: 800;
+}
+
+@media (max-width: 860px) {
+    .importacion-formulario {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .importacion-formulario label:first-child,
+    .importacion-formulario .bandeja-accion-estado {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 560px) {
+    .importacion-formulario,
+    .importacion-metricas {
+        grid-template-columns: 1fr;
+    }
+
+    .importacion-formulario label:first-child,
+    .importacion-formulario .bandeja-accion-estado {
+        grid-column: 1;
+    }
+}
+
 .bandeja-borrador + .bandeja-borrador {
     margin-top: 8px;
 }

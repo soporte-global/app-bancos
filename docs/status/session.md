@@ -135,3 +135,27 @@ La decisión surge de los datos: los 13 mensajes productivos pertenecen a movimi
 El conjunto válido se cerró con la fuente de autoridad de Hub: sólo pueden elegirse cuentas activas con permiso general efectivo para APP BANCOS. Actualmente devuelve exactamente `mcaballero` y `hvega`; futuras altas aparecerán sin modificar código. `movimiento.asignar-responsable` conserva el estado vigente, inserta historial únicamente ante un cambio y separa responsable de operador mediante historial, observación técnica y auditoría.
 
 La migración `026` registró el permiso granular sin concederlo a usuarios nuevos y fue aplicada. La prueba integrada confirmó asignación, reasignación, idempotencia, rechazo de un usuario externo, conservación del estado, operador y catálogo exacto, y eliminó todos sus datos artificiales. Con esto queda completo el primer bloque colaborativo de bajo riesgo. El próximo incremento corresponde a importación/configuración o, antes de eso, a cerrar los prerrequisitos operativos de corte que siguen abiertos.
+
+## Previsualización de importación - 2026-09-10
+
+La etapa 6 comenzó con una pantalla independiente de importaciones y `POST importacion.previsualizar`. El parser acepta CSV/TSV UTF-8 de hasta 5 MB y 10.000 filas, detecta tabulación, punto y coma o coma, normaliza tres formatos de fecha y formatos monetarios regionales, exige un único sentido por fila y devuelve hash SHA-256, totales, muestra y errores sin persistir.
+
+El relevamiento confirmó un máximo histórico de 5.892 movimientos por lote, 2.357 importaciones sin hash migrado y múltiples configuraciones activas en cada una de las 70 cuentas vinculadas. Por ello el límite deja margen, el hash rige sólo nuevos lotes y la selección de configuración será obligatoria al confirmar. La migración `027` registró destino/permiso y concedió la ruta solamente a `mcaballero` y `hvega`. La prueba cubre archivo válido, errores por fila, formatos regionales, cuenta configurada, hash y ausencia de DML. El siguiente incremento es persistir lote y movimientos en una transacción idempotente después de seleccionar configuración.
+
+## Confirmación de importación - 2026-09-10
+
+La pantalla ahora filtra las configuraciones activas por cuenta y exige una selección explícita antes de previsualizar. `POST importacion.confirmar` vuelve a parsear el archivo, valida nuevamente configuración/cuenta dentro de la transacción y crea el lote `ABIERTO` con todos sus movimientos, filas de origen, hash, versión y operador. Un advisory lock evita carreras y el índice existente rechaza el mismo hash para cuenta/período/versión aunque se use otra clave.
+
+La migración reversible `028` registró `importacion-confirmar` sin asignaciones nuevas y se aplicó dos veces para validar repetibilidad. La prueba integrada confirmó creación atómica, reintento idempotente, auditoría única, conflicto por hash, rechazo de configuración inválida y limpieza del sandbox. El siguiente incremento de la etapa 6 es definir cómo las reglas de clasificación impactan el alta y comenzar el mantenimiento de configuraciones.
+
+## Clasificación durante la importación - 2026-09-10
+
+La caracterización de 89.571 reglas detectó 16.562 grupos código/sentido que apuntan a varios subtipos. Se descartó por eso la asignación por primera coincidencia del legado. El clasificador nuevo normaliza código y sentido, informa resultados `UNIVOCA`, `MULTIPLE`, `SIN_REGLA` y `SIN_CODIGO`, y sólo persiste el subtipo en el primer caso. `validar_automaticamente` se informa pero no desambigua.
+
+La búsqueda asistida de valores ahora limita candidatos a los subtipos de la regla cuando existe código de extracto. La migración reversible `029` cargó 165 reglas reales de las configuraciones sombra en `global_temp` y fue verificada como repetible. Las pruebas cubren sentido, normalización, ambigüedad, persistencia unívoca, búsqueda restringida y limpieza. El siguiente incremento es el reporte descargable de errores o el primer mantenimiento seguro de configuraciones.
+
+## Reporte de errores de importación - 2026-09-10
+
+La previsualización inválida ahora habilita una descarga CSV con todos los errores por fila, aunque la lista visible continúe acotada a 100. El servidor vuelve a validar cuenta, configuración, período y archivo, genera el contenido en memoria con BOM UTF-8 y separador punto y coma, y responde como adjunto sin persistir datos ni requerir clave idempotente.
+
+El endpoint `importacion.reporte-errores` reutiliza el permiso de previsualización y mantiene el límite general de 5 MB y 10.000 movimientos. La prueba verifica el detalle completo, cabecera, codificación, nombre seguro, rechazo de archivos válidos y ausencia de DML. El siguiente incremento de la etapa 6 es el primer mantenimiento seguro de configuraciones.

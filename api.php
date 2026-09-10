@@ -8,9 +8,14 @@ use AppBancos\Application\EjecutorComandoIdempotente;
 use AppBancos\Application\AsociarValorMovimientoMensual;
 use AppBancos\Application\AsociarAsientoMovimientoMensual;
 use AppBancos\Application\CrearBorradorMovimientoMensual;
+use AppBancos\Application\ConfirmarImportacionExtracto;
+use AppBancos\Application\ClasificadorImportacionExtracto;
+use AppBancos\Application\GenerarReporteErroresImportacion;
 use AppBancos\Application\BuscarRecursosErpMovimientoMensual;
 use AppBancos\Application\GestionarMensajesMovimientoMensual;
 use AppBancos\Application\AsignarResponsableMovimientoMensual;
+use AppBancos\Application\ParserExtractoDelimitado;
+use AppBancos\Application\PrevisualizarImportacionExtracto;
 use AppBancos\Application\PrepararMovimientoMensual;
 use AppBancos\Application\RevertirPreparacionMovimientoMensual;
 use AppBancos\Infrastructure\EsquemaBancos;
@@ -20,6 +25,7 @@ use AppBancos\Repository\MovimientoMensualRepository;
 use AppBancos\Repository\BusquedaRecursosErpRepository;
 use AppBancos\Repository\MensajeriaMovimientoRepository;
 use AppBancos\Repository\AsignacionMovimientoRepository;
+use AppBancos\Repository\ImportacionExtractoRepository;
 use AppBancos\Security\AutorizadorAccion;
 use AppBancos\Security\ProteccionCsrf;
 use GlobalApps\Core\Acceso\PoliticaAcceso;
@@ -117,6 +123,105 @@ try {
         responderJson(200, [
             'data' => $resultado['resultados'],
             'meta' => array_diff_key($resultado, ['resultados' => true]),
+        ]);
+    }
+
+    if ($accion === 'importacion.previsualizar') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Previsualizar una importacion solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El flujo de importacion solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'multipart/form-data') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar multipart/form-data.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'importacion-previsualizar');
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorioImportacion = new ImportacionExtractoRepository($conexion, $esquema);
+        $resultado = (new PrevisualizarImportacionExtracto(
+            new ParserExtractoDelimitado(),
+            $repositorioImportacion,
+            new ClasificadorImportacionExtracto()
+        ))->ejecutar($_POST, isset($_FILES['archivo']) && is_array($_FILES['archivo']) ? $_FILES['archivo'] : []);
+        responderJson(200, ['data' => $resultado, 'meta' => ['persistida' => false]]);
+    }
+
+    if ($accion === 'importacion.reporte-errores') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Generar el reporte de errores solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El flujo de importacion solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'multipart/form-data') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar multipart/form-data.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'importacion-previsualizar');
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorioImportacion = new ImportacionExtractoRepository($conexion, $esquema);
+        $previsualizacion = new PrevisualizarImportacionExtracto(
+            new ParserExtractoDelimitado(),
+            $repositorioImportacion,
+            new ClasificadorImportacionExtracto()
+        );
+        $resultado = (new GenerarReporteErroresImportacion($previsualizacion))->ejecutar(
+            $_POST,
+            isset($_FILES['archivo']) && is_array($_FILES['archivo']) ? $_FILES['archivo'] : []
+        );
+        responderCsv($resultado['nombre_archivo'], $resultado['contenido']);
+    }
+
+    if ($accion === 'importacion.confirmar') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Confirmar una importacion solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El flujo de importacion solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'multipart/form-data') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar multipart/form-data.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'importacion-confirmar');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorioImportacion = new ImportacionExtractoRepository($conexion, $esquema);
+        $resultado = (new ConfirmarImportacionExtracto(
+            new ParserExtractoDelimitado(),
+            $repositorioImportacion,
+            new ClasificadorImportacionExtracto(),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar(
+            $_POST,
+            isset($_FILES['archivo']) && is_array($_FILES['archivo']) ? $_FILES['archivo'] : [],
+            $sesion->cuenta()->id(),
+            $claveIdempotencia
+        );
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
         ]);
     }
 
@@ -446,6 +551,17 @@ function responderJson($estado, array $contenido)
 {
     http_response_code((int) $estado);
     echo json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function responderCsv($nombreArchivo, $contenido)
+{
+    $nombreArchivo = preg_replace('/[^A-Za-z0-9._-]+/', '-', basename((string) $nombreArchivo));
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Content-Length: ' . strlen((string) $contenido));
+    http_response_code(200);
+    echo $contenido;
     exit;
 }
 

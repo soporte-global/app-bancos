@@ -1170,6 +1170,301 @@
         });
     }
 
+    function iniciarImportacion(raiz) {
+        var formulario = raiz.querySelector('[data-form-importacion]');
+        var cuenta = formulario && formulario.querySelector('[data-importacion-cuenta]');
+        var configuracion = formulario && formulario.querySelector('[data-importacion-configuracion]');
+        var periodo = formulario && formulario.querySelector('[data-importacion-periodo]');
+        var estado = formulario && formulario.querySelector('[data-importacion-estado]');
+        var resultado = raiz.querySelector('[data-importacion-resultado]');
+        var metricas = raiz.querySelector('[data-importacion-metricas]');
+        var errores = raiz.querySelector('[data-importacion-errores]');
+        var tabla = raiz.querySelector('[data-importacion-tabla]');
+        var confirmacion = raiz.querySelector('[data-importacion-confirmacion]');
+        var confirmar = raiz.querySelector('[data-confirmar-importacion]');
+        var descargarErrores = raiz.querySelector('[data-descargar-errores]');
+        var claveConfirmacion = '';
+        var totalErroresReporte = 0;
+        if (!formulario || !cuenta || !configuracion || !periodo || !estado || !resultado ||
+                !metricas || !errores || !tabla || !confirmacion || !confirmar || !descargarErrores) {
+            return;
+        }
+
+        function leerJson(respuesta) {
+            return respuesta.json().catch(function () {
+                throw new Error('El servidor devolvió una respuesta inválida.');
+            }).then(function (contenido) {
+                if (!respuesta.ok) {
+                    throw new Error(contenido.error && contenido.error.mensaje
+                        ? contenido.error.mensaje
+                        : 'No se pudo completar la solicitud.');
+                }
+                return contenido;
+            });
+        }
+
+        function agregarMetrica(nombre, valor) {
+            var contenedor = document.createElement('div');
+            var termino = document.createElement('dt');
+            var dato = document.createElement('dd');
+            termino.textContent = nombre;
+            dato.textContent = valor;
+            contenedor.appendChild(termino);
+            contenedor.appendChild(dato);
+            metricas.appendChild(contenedor);
+        }
+
+        function renderizar(datos) {
+            resultado.hidden = false;
+            metricas.textContent = '';
+            errores.textContent = '';
+            tabla.textContent = '';
+            agregarMetrica('Filas', datos.total_filas);
+            agregarMetrica('Válidas', datos.filas_validas);
+            agregarMetrica('Errores', datos.total_errores);
+            agregarMetrica('Hash SHA-256', datos.hash_sha256.slice(0, 16) + '…');
+            agregarMetrica('Crédito', datos.credito_total);
+            agregarMetrica('Débito', datos.debito_total);
+            agregarMetrica('Delimitador', datos.delimitador);
+            agregarMetrica('Configuraciones', datos.configuraciones_disponibles);
+            agregarMetrica('Clasificación unívoca', datos.clasificacion.univocas);
+            agregarMetrica('Clasificación múltiple', datos.clasificacion.multiples);
+            agregarMetrica('Sin regla o código', datos.clasificacion.sin_regla + datos.clasificacion.sin_codigo);
+            totalErroresReporte = Number(datos.total_errores) || 0;
+            descargarErrores.hidden = totalErroresReporte === 0;
+
+            if (datos.errores.length) {
+                var tituloErrores = document.createElement('h3');
+                var lista = document.createElement('ol');
+                tituloErrores.textContent = 'Errores encontrados';
+                datos.errores.forEach(function (error) {
+                    var item = document.createElement('li');
+                    item.textContent = 'Fila ' + error.fila + ': ' + error.mensaje;
+                    lista.appendChild(item);
+                });
+                errores.appendChild(tituloErrores);
+                errores.appendChild(lista);
+            }
+
+            if (datos.previsualizacion.length) {
+                var grilla = document.createElement('table');
+                grilla.className = 'bandeja-lineas';
+                var cabecera = document.createElement('thead');
+                var filaCabecera = document.createElement('tr');
+                ['Fila', 'Fecha', 'Referencia', 'Descripción', 'Crédito', 'Débito', 'Clasificación'].forEach(function (nombre) {
+                    var th = document.createElement('th');
+                    th.scope = 'col';
+                    th.textContent = nombre;
+                    filaCabecera.appendChild(th);
+                });
+                cabecera.appendChild(filaCabecera);
+                grilla.appendChild(cabecera);
+                var cuerpo = document.createElement('tbody');
+                datos.previsualizacion.forEach(function (fila) {
+                    var tr = document.createElement('tr');
+                    var clasificacionFila = fila.clasificacion;
+                    if (fila.clasificacion === 'UNIVOCA') {
+                        clasificacionFila = 'UNÍVOCA · subtipo ' + fila.subtipo_valor_zetti_id;
+                    } else if (fila.clasificacion === 'MULTIPLE') {
+                        clasificacionFila = 'MÚLTIPLE · ' + fila.subtipos_candidatos.join(', ');
+                    } else if (fila.clasificacion === 'SIN_REGLA') {
+                        clasificacionFila = 'SIN REGLA';
+                    } else if (fila.clasificacion === 'SIN_CODIGO') {
+                        clasificacionFila = 'SIN CÓDIGO';
+                    }
+                    [fila.numero_fila_origen, fila.fecha_operacion, fila.referencia || '', fila.descripcion,
+                        fila.credito, fila.debito, clasificacionFila].forEach(function (valor) {
+                        var td = document.createElement('td');
+                        td.textContent = valor;
+                        tr.appendChild(td);
+                    });
+                    cuerpo.appendChild(tr);
+                });
+                grilla.appendChild(cuerpo);
+                tabla.appendChild(grilla);
+            }
+
+            if (!datos.valido) {
+                confirmacion.textContent = 'Corregí los errores y analizá nuevamente. No se guardó ningún dato.';
+                confirmar.hidden = true;
+            } else {
+                confirmacion.textContent = 'Archivo válido. Confirmá para crear el lote y sus movimientos en estado ABIERTO.';
+                confirmar.hidden = false;
+            }
+        }
+
+        function nuevaClaveIdempotencia() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return 'importacion-' + window.crypto.randomUUID();
+            }
+            return 'importacion-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+        }
+
+        function actualizarConfiguraciones() {
+            var cuentaId = cuenta.value;
+            var opciones = configuracion.querySelectorAll('option[data-cuenta-id]');
+            configuracion.value = '';
+            Array.prototype.forEach.call(opciones, function (opcion) {
+                var disponible = cuentaId !== '' && opcion.getAttribute('data-cuenta-id') === cuentaId;
+                opcion.hidden = !disponible;
+                opcion.disabled = !disponible;
+            });
+            configuracion.disabled = cuentaId === '';
+        }
+
+        function invalidarPrevisualizacion() {
+            claveConfirmacion = '';
+            totalErroresReporte = 0;
+            confirmar.hidden = true;
+            descargarErrores.hidden = true;
+            resultado.hidden = true;
+        }
+
+        function nombreDescarga(respuesta) {
+            var disposicion = respuesta.headers.get('Content-Disposition') || '';
+            var coincidencia = disposicion.match(/filename="?([^";]+)"?/i);
+            return coincidencia ? coincidencia[1] : 'errores-importacion.csv';
+        }
+
+        function descargarReporteErrores() {
+            if (!formulario.reportValidity()) {
+                return;
+            }
+            var datosFormulario = new FormData(formulario);
+            datosFormulario.set('inicio_periodo', periodo.value + '-01');
+            descargarErrores.disabled = true;
+            estado.textContent = 'Generando el reporte completo de errores…';
+            fetch(window.contextoApp.app.ruta + '/api.php?accion=csrf', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerJson).then(function (csrf) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=importacion.reporte-errores', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'text/csv, application/json',
+                        'X-CSRF-Token': csrf.data.csrf_token
+                    },
+                    body: datosFormulario
+                });
+            }).then(function (respuesta) {
+                if (!respuesta.ok) {
+                    return leerJson(respuesta);
+                }
+                var nombre = nombreDescarga(respuesta);
+                return respuesta.blob().then(function (archivo) {
+                    var url = URL.createObjectURL(archivo);
+                    var enlace = document.createElement('a');
+                    enlace.href = url;
+                    enlace.download = nombre;
+                    document.body.appendChild(enlace);
+                    enlace.click();
+                    enlace.remove();
+                    URL.revokeObjectURL(url);
+                    estado.textContent = 'Reporte descargado con ' + totalErroresReporte + ' errores.';
+                });
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                descargarErrores.disabled = false;
+            });
+        }
+
+        function enviar(accion, esConfirmacion) {
+            if (!formulario.reportValidity()) {
+                return;
+            }
+            var datosFormulario = new FormData(formulario);
+            datosFormulario.set('inicio_periodo', periodo.value + '-01');
+            var controles = formulario.querySelectorAll('input, select, button');
+            Array.prototype.forEach.call(controles, function (control) { control.disabled = true; });
+            confirmar.disabled = true;
+            estado.textContent = esConfirmacion
+                ? 'Confirmando la importación…'
+                : 'Analizando el archivo completo…';
+            if (!esConfirmacion) {
+                claveConfirmacion = '';
+                confirmar.hidden = true;
+                descargarErrores.hidden = true;
+                resultado.hidden = true;
+            }
+            fetch(window.contextoApp.app.ruta + '/api.php?accion=csrf', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerJson).then(function (csrf) {
+                var cabeceras = {
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': csrf.data.csrf_token
+                };
+                if (esConfirmacion) {
+                    cabeceras['Idempotency-Key'] = claveConfirmacion;
+                }
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=' + accion, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: cabeceras,
+                    body: datosFormulario
+                });
+            }).then(leerJson).then(function (contenido) {
+                if (esConfirmacion) {
+                    confirmar.hidden = true;
+                    confirmacion.textContent = 'Importación #' + contenido.data.importacion_id +
+                        ' creada con ' + contenido.data.total_movimientos + ' movimientos en estado ABIERTO. ' +
+                        contenido.data.clasificacion.univocas + ' quedaron clasificados de forma unívoca.';
+                    estado.textContent = contenido.meta.repetida
+                        ? 'La solicitud ya estaba confirmada; se recuperó su resultado.'
+                        : 'Importación confirmada correctamente.';
+                } else {
+                    renderizar(contenido.data);
+                    claveConfirmacion = contenido.data.valido ? nuevaClaveIdempotencia() : '';
+                    estado.textContent = contenido.data.valido
+                        ? 'Archivo válido. Revisá el resumen antes de confirmar.'
+                        : 'El archivo contiene errores de validación.';
+                }
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                Array.prototype.forEach.call(controles, function (control) { control.disabled = false; });
+                actualizarConfiguracionesSinLimpiar();
+                confirmar.disabled = false;
+            });
+
+            function actualizarConfiguracionesSinLimpiar() {
+                var cuentaId = cuenta.value;
+                var seleccion = configuracion.value;
+                var opciones = configuracion.querySelectorAll('option[data-cuenta-id]');
+                Array.prototype.forEach.call(opciones, function (opcion) {
+                    var disponible = cuentaId !== '' && opcion.getAttribute('data-cuenta-id') === cuentaId;
+                    opcion.hidden = !disponible;
+                    opcion.disabled = !disponible;
+                });
+                configuracion.disabled = cuentaId === '';
+                configuracion.value = seleccion;
+            }
+        }
+
+        cuenta.addEventListener('change', function () {
+            actualizarConfiguraciones();
+            invalidarPrevisualizacion();
+        });
+        configuracion.addEventListener('change', invalidarPrevisualizacion);
+        periodo.addEventListener('change', invalidarPrevisualizacion);
+        formulario.querySelector('[name="archivo"]').addEventListener('change', invalidarPrevisualizacion);
+        formulario.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            enviar('importacion.previsualizar', false);
+        });
+        confirmar.addEventListener('click', function () {
+            if (claveConfirmacion === '') {
+                estado.textContent = 'Analizá nuevamente el archivo antes de confirmar.';
+                return;
+            }
+            enviar('importacion.confirmar', true);
+        });
+        descargarErrores.addEventListener('click', descargarReporteErrores);
+        actualizarConfiguraciones();
+    }
+
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
         Array.prototype.forEach.call(bandejas, function (bandeja) {
@@ -1177,6 +1472,7 @@
             iniciarPaginacion(bandeja);
             iniciarDetalle(bandeja);
         });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-importacion-page]'), iniciarImportacion);
     }
 
     if (document.readyState === 'loading') {

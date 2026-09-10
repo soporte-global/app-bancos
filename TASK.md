@@ -37,6 +37,12 @@ Mensajería operativa: `movimiento.agregar-mensaje` publica como `USUARIO` usand
 
 Asignación operativa: `movimiento.asignar-responsable` permite asignar y reasignar sin cambiar el estado, dejando historial e identidad del operador en auditoría. El destino debe tener acceso general efectivo a APP BANCOS; el selector contiene hoy sólo `mcaballero` y `hvega` y seguirá automáticamente las futuras altas en Hub. La migración `026` fue aplicada sin asignaciones granulares nuevas.
 
+Etapa 6, importación operativa en sandbox: `?pag=importaciones` exige cuenta, configuración y período, previsualiza archivos CSV/TSV UTF-8 y permite confirmarlos. `importacion.confirmar` vuelve a analizar los bytes, serializa la decisión por hash, rechaza duplicados por cuenta/período/versión y crea lote más movimientos `ABIERTO` en una transacción idempotente y auditada. Las migraciones `027` y `028` registraron destino y permisos; sólo `mcaballero` y `hvega` acceden por su nivel administrador, sin asignaciones granulares nuevas.
+
+Clasificación de importación: cada código se compara de forma exacta, normalizada y sensible al sentido contra las reglas de la configuración. Una única opción persiste `subtipo_valor_zetti_id`; cero o varias opciones quedan explícitamente sin subtipo y se informan en la previsualización. La búsqueda asistida de valores respeta los subtipos candidatos. La migración `029` cargó 165 reglas reales de los lotes sombra únicamente en `global_temp`.
+
+Reporte de errores de importación: cuando la previsualización detecta filas inválidas, la misma pantalla permite descargar un CSV UTF-8 con BOM, separado por punto y coma y con todos los pares fila/error. `importacion.reporte-errores` vuelve a validar archivo, cuenta, configuración y período, reutiliza el permiso de previsualización y no persiste datos.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

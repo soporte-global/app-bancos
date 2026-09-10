@@ -109,6 +109,61 @@ body:has(.bancos-app),
     background: var(--ui-info-fondo);
 }
 
+.importacion-encabezado,
+.importacion-formulario,
+.importacion-formato,
+.importacion-resultado,
+.importacion-metricas div {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
+.importacion-formulario input,
+.importacion-formulario select {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.importacion-formulario button {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+}
+
+.importacion-confirmar {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+}
+
+.importacion-confirmar:hover {
+    background: var(--ui-acento-hover);
+}
+
+.importacion-confirmar:disabled {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
+}
+
+.importacion-descargar {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
+.importacion-descargar:hover {
+    border-color: var(--ui-acento);
+    color: var(--ui-acento);
+}
+
+.importacion-descargar:disabled {
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
+}
+
 .bandeja-filtros > button,
 .bandeja-estado button,
 .bandeja-accion button {

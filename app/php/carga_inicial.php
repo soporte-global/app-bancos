@@ -4,6 +4,41 @@ if (!defined('RUTA')) {
     exit;
 }
 
+if (($pagina ?? '') === 'importaciones') {
+    try {
+        $proveedor = new GlobalApps\Core\Infrastructure\Persistence\PdoProvider([
+            'ftweb' => [
+                'dsn' => 'pgsql:host=' . HOST . ';port=' . PORT . ';dbname=' . DBASE,
+                'user' => USER,
+                'password' => PASS,
+                'options' => [PDO::ATTR_PERSISTENT => FTWEB_PERSISTENT],
+            ],
+        ]);
+        $conexion = $proveedor->ftweb();
+        $esquemas = AppBancos\Infrastructure\EsquemaBancos::desdeConfiguracion([
+            'bancos_debug' => BANCOS_DEBUG,
+        ]);
+        $repositorioImportacion = new AppBancos\Repository\ContextoImportacionRepository(
+            $conexion,
+            $esquemas
+        );
+        return (object) ['importaciones' => (object) [
+            'cuentas' => $repositorioImportacion->consultar(),
+            'configuraciones' => $repositorioImportacion->consultarConfiguraciones(),
+            'habilitada' => BANCOS_DEBUG,
+        ]];
+    } catch (Throwable $error) {
+        http_response_code(503);
+        error_log(get_class($error) . ': ' . $error->getMessage());
+        return (object) ['importaciones' => (object) [
+            'cuentas' => [],
+            'configuraciones' => [],
+            'habilitada' => BANCOS_DEBUG,
+            'error' => 'No se pudo cargar el contexto de importacion.',
+        ]];
+    }
+}
+
 if (($pagina ?? '') !== 'bandeja-mensual') {
     return (object) [];
 }

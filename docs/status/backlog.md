@@ -8,6 +8,8 @@
 - Provisionar un usuario de depuración con escritura exclusiva en `global_temp`; la auditoría de defaults de secuencias de `014` fue superada el 2026-09-07.
 - Validar el sistema visual RRHH sobre la instalación integrada con datos reales y archivar evidencia definitiva clara/oscura en `docs/ux/evidence/rrhh-style/`; el fixture y las pruebas automatizadas ya fueron validados.
 - Aplicar gradualmente las rutas operativas restantes de importación, configuración y conciliación definidas en `docs/ux/navigation-and-ui.md`; el contexto, los filtros y el detalle de la bandeja ya están implementados.
+- Completar la etapa de importación con mantenimiento de configuraciones; la confirmación, clasificación conservadora y el reporte descargable de todos los errores ya están operativos en sandbox.
+- Definir si el formato productivo inicial debe incluir XLSX además del contrato CSV/TSV; no aceptar planillas binarias sin fixtures reales de cada banco.
 - Implementar todos los repositorios BANCOS a través de `EsquemaBancos`; queda prohibido calificar tablas operativas o ERP directamente con `global_prod` o `public`.
 - Definir y ejecutar el corte controlado: respaldo recuperable, ventana de convivencia, lecturas en sombra y regla de un único escritor para las tablas canónicas.
 - Detallar las validaciones futuras para `PARA_CERRAR`, el permiso especial de cierre en Hub y la secuencia contable definitiva de fusión/generación de asiento.

@@ -4,6 +4,60 @@ if (!defined('RUTA')) {
     exit;
 }
 
+if (($pagina ?? '') === 'configuraciones') {
+    $datosConfiguracion = (object) [
+        'habilitada' => BANCOS_DEBUG,
+        'configuraciones' => [],
+        'subtipos' => [],
+        'seleccionada' => null,
+        'error' => null,
+    ];
+    if (!BANCOS_DEBUG) {
+        return (object) ['configuraciones' => $datosConfiguracion];
+    }
+    try {
+        $proveedor = new GlobalApps\Core\Infrastructure\Persistence\PdoProvider([
+            'ftweb' => [
+                'dsn' => 'pgsql:host=' . HOST . ';port=' . PORT . ';dbname=' . DBASE,
+                'user' => USER,
+                'password' => PASS,
+                'options' => [PDO::ATTR_PERSISTENT => FTWEB_PERSISTENT],
+            ],
+        ]);
+        $conexion = $proveedor->ftweb();
+        $esquemas = AppBancos\Infrastructure\EsquemaBancos::desdeConfiguracion([
+            'bancos_debug' => BANCOS_DEBUG,
+        ]);
+        $repositorio = new AppBancos\Repository\ConfiguracionClasificacionRepository(
+            $conexion,
+            $esquemas
+        );
+        $datosConfiguracion->configuraciones = $repositorio->listarConfiguraciones();
+        $datosConfiguracion->subtipos = $repositorio->listarSubtipos();
+        $configuracionId = trim((string) ($_GET['configuracion_id'] ?? ''));
+        if ($configuracionId === '' && count($datosConfiguracion->configuraciones) > 0) {
+            $configuracionId = $datosConfiguracion->configuraciones[0]['id'];
+        }
+        if ($configuracionId !== '') {
+            if (!preg_match('/^[0-9]{1,20}$/', $configuracionId)) {
+                throw new InvalidArgumentException('configuracion_id es invalido.');
+            }
+            $datosConfiguracion->seleccionada = $repositorio->consultar($configuracionId);
+        }
+    } catch (InvalidArgumentException $error) {
+        http_response_code(400);
+        $datosConfiguracion->error = $error->getMessage();
+    } catch (AppBancos\Application\RecursoNoDisponibleException $error) {
+        http_response_code(404);
+        $datosConfiguracion->error = $error->getMessage();
+    } catch (Throwable $error) {
+        http_response_code(503);
+        error_log(get_class($error) . ': ' . $error->getMessage());
+        $datosConfiguracion->error = 'No se pudo cargar el mantenimiento de configuraciones.';
+    }
+    return (object) ['configuraciones' => $datosConfiguracion];
+}
+
 if (($pagina ?? '') === 'importaciones') {
     try {
         $proveedor = new GlobalApps\Core\Infrastructure\Persistence\PdoProvider([

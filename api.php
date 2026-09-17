@@ -14,6 +14,9 @@ use AppBancos\Application\GenerarReporteErroresImportacion;
 use AppBancos\Application\BuscarRecursosErpMovimientoMensual;
 use AppBancos\Application\GestionarMensajesMovimientoMensual;
 use AppBancos\Application\AsignarResponsableMovimientoMensual;
+use AppBancos\Application\ActualizarValidacionAutomaticaRegla;
+use AppBancos\Application\GuardarReglaClasificacion;
+use AppBancos\Application\RetirarReglaClasificacion;
 use AppBancos\Application\ParserExtractoDelimitado;
 use AppBancos\Application\PrevisualizarImportacionExtracto;
 use AppBancos\Application\PrepararMovimientoMensual;
@@ -25,6 +28,7 @@ use AppBancos\Repository\MovimientoMensualRepository;
 use AppBancos\Repository\BusquedaRecursosErpRepository;
 use AppBancos\Repository\MensajeriaMovimientoRepository;
 use AppBancos\Repository\AsignacionMovimientoRepository;
+use AppBancos\Repository\ConfiguracionClasificacionRepository;
 use AppBancos\Repository\ImportacionExtractoRepository;
 use AppBancos\Security\AutorizadorAccion;
 use AppBancos\Security\ProteccionCsrf;
@@ -216,6 +220,93 @@ try {
         ))->ejecutar(
             $_POST,
             isset($_FILES['archivo']) && is_array($_FILES['archivo']) ? $_FILES['archivo'] : [],
+            $sesion->cuenta()->id(),
+            $claveIdempotencia
+        );
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
+    }
+
+    if ($accion === 'configuracion.actualizar-validacion-automatica') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Actualizar una regla solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El mantenimiento de configuraciones solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir(
+            $sesion,
+            'configuracion-actualizar-validacion-automatica'
+        );
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new ActualizarValidacionAutomaticaRegla(
+            new ConfiguracionClasificacionRepository($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
+    }
+
+    if (in_array($accion, ['configuracion.guardar-regla', 'configuracion.retirar-regla'], true)) {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Administrar reglas solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El mantenimiento de configuraciones solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'configuracion-administrar-reglas');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorio = new ConfiguracionClasificacionRepository($conexion, $esquema);
+        $ejecutor = new EjecutorComandoIdempotente(
+            $conexion,
+            new IdempotenciaRepository($conexion, $esquema),
+            new AuditoriaRepository($conexion, $esquema)
+        );
+        if ($accion === 'configuracion.guardar-regla') {
+            $casoDeUso = new GuardarReglaClasificacion($repositorio, $ejecutor);
+        } else {
+            $casoDeUso = new RetirarReglaClasificacion($repositorio, $ejecutor);
+        }
+        $resultado = $casoDeUso->ejecutar(
+            $entrada,
             $sesion->cuenta()->id(),
             $claveIdempotencia
         );

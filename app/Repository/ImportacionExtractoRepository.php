@@ -85,6 +85,7 @@ final class ImportacionExtractoRepository
             "SELECT subtipo_valor_zetti_id, sentido, codigo_extracto, validar_automaticamente
              FROM {$this->reglasClasificacion}
              WHERE configuracion_id = :configuracion_id
+               AND activo IS TRUE
              ORDER BY id"
         );
         $consulta->execute([':configuracion_id' => (string) $configuracionId]);

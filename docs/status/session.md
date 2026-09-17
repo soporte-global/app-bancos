@@ -159,3 +159,15 @@ La búsqueda asistida de valores ahora limita candidatos a los subtipos de la re
 La previsualización inválida ahora habilita una descarga CSV con todos los errores por fila, aunque la lista visible continúe acotada a 100. El servidor vuelve a validar cuenta, configuración, período y archivo, genera el contenido en memoria con BOM UTF-8 y separador punto y coma, y responde como adjunto sin persistir datos ni requerir clave idempotente.
 
 El endpoint `importacion.reporte-errores` reutiliza el permiso de previsualización y mantiene el límite general de 5 MB y 10.000 movimientos. La prueba verifica el detalle completo, cabecera, codificación, nombre seguro, rechazo de archivos válidos y ausencia de DML. El siguiente incremento de la etapa 6 es el primer mantenimiento seguro de configuraciones.
+
+## Validación automática de reglas - 2026-09-11
+
+Se implementó `?pag=configuraciones` para consultar configuraciones activas y todas sus reglas. El alcance inicial se restringe a alternar `validar_automaticamente`: no permite altas, bajas ni cambios de código, sentido o subtipo, porque esas operaciones todavía no cuentan con una política de versionado o baja lógica.
+
+`configuracion.actualizar-validacion-automatica` exige JSON, CSRF, idempotencia, sandbox y permiso específico; bloquea la regla dentro de la configuración indicada y audita valor anterior, valor solicitado y operador. La caracterización confirmó 89.571 reglas productivas, sólo 3.908 automáticas y un máximo de 55 reglas por configuración. La migración reversible `030` se aplicó dos veces, asignó la navegación sólo a `mcaballero` y `hvega` y dejó el permiso granular sin asignaciones. El próximo incremento debe definir alta/versionado o baja lógica antes de ampliar las mutaciones de reglas.
+
+## Versionado y baja lógica de reglas - 2026-09-17
+
+Se definió una política no destructiva: `activo` determina participación operativa, `version` crece por reemplazo y `reemplaza_regla_id` conserva la cadena. Editar desactiva la fila vigente y crea otra; retirar sólo desactiva. La unicidad pasa a considerar exclusivamente reglas activas y un bloqueo de configuración serializa las mutaciones concurrentes.
+
+La pantalla permite crear, editar y retirar con motivo obligatorio, y las APIs usan sesión, permiso, CSRF, idempotencia y auditoría. Importación y búsqueda asistida filtran versiones inactivas. Las migraciones `031` y `032` se aplicaron repetidamente contra el sandbox; `031` contempla además el índice heredado con nombre autogenerado de `global_temp`. La regresión completa pasó con 28 pruebas PHP y la prueba JavaScript, incluidas las integraciones de versionado y validación automática. Las pruebas limpiaron sus filas operativas artificiales.

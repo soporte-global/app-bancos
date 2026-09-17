@@ -76,6 +76,7 @@ final class BusquedaRecursosErpRepository
                        SELECT r.subtipo_valor_zetti_id
                        FROM {$this->reglasClasificacion} r
                        WHERE r.configuracion_id = p.configuracion_id
+                         AND r.activo IS TRUE
                          AND lower(btrim(r.codigo_extracto)) = lower(btrim(p.codigo_extracto))
                          AND r.sentido IN ('A', p.sentido)
                    )

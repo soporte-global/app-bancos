@@ -1465,6 +1465,240 @@
         actualizarConfiguraciones();
     }
 
+    function iniciarConfiguracion(raiz) {
+        var detalle = raiz.querySelector('[data-configuracion-id]');
+        var estado = raiz.querySelector('[data-configuracion-estado]');
+        var totalAutomaticas = raiz.querySelector('[data-total-automaticas]');
+        var totalReglas = raiz.querySelector('[data-total-reglas]');
+        var editor = raiz.querySelector('[data-editor-regla]');
+        var guardar = editor && editor.querySelector('[data-guardar-regla]');
+        var cancelar = editor && editor.querySelector('[data-cancelar-regla]');
+        if (!detalle || !estado || !totalAutomaticas || !totalReglas || !editor || !guardar || !cancelar) {
+            return;
+        }
+
+        function leerJson(respuesta) {
+            return respuesta.json().catch(function () {
+                throw new Error('El servidor devolvió una respuesta inválida.');
+            }).then(function (contenido) {
+                if (!respuesta.ok) {
+                    throw new Error(contenido.error && contenido.error.mensaje
+                        ? contenido.error.mensaje
+                        : 'No se pudo completar la solicitud.');
+                }
+                return contenido;
+            });
+        }
+
+        function claveIdempotencia() {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return 'configuracion-' + window.crypto.randomUUID();
+            }
+            return 'configuracion-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+        }
+
+        function enviarComando(accion, cuerpo) {
+            return fetch(window.contextoApp.app.ruta + '/api.php?accion=csrf', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerJson).then(function (csrf) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=' + accion, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrf.data.csrf_token,
+                        'Idempotency-Key': claveIdempotencia()
+                    },
+                    body: JSON.stringify(cuerpo)
+                });
+            }).then(leerJson);
+        }
+
+        function prepararEditor(fila, modo) {
+            editor.reset();
+            editor.dataset.modo = modo;
+            editor.elements.regla_id.value = fila ? fila.getAttribute('data-regla-id') : '';
+            editor.elements.subtipo_valor_zetti_id.value = fila ? fila.getAttribute('data-subtipo-id') : '';
+            editor.elements.sentido.value = fila ? fila.getAttribute('data-sentido') : 'C';
+            editor.elements.codigo_extracto.value = fila ? fila.getAttribute('data-codigo') : '';
+            editor.elements.validar_automaticamente.checked = fila
+                ? fila.getAttribute('data-validar-automaticamente') === '1'
+                : false;
+            var retirar = modo === 'retirar';
+            ['subtipo_valor_zetti_id', 'sentido', 'codigo_extracto', 'validar_automaticamente'].forEach(function (nombre) {
+                editor.elements[nombre].disabled = retirar;
+            });
+            guardar.textContent = retirar ? 'Confirmar retiro' : (fila ? 'Guardar nueva versión' : 'Crear regla');
+            editor.elements.motivo.value = '';
+            editor.elements.motivo.focus();
+        }
+
+        function buscarFila(reglaId) {
+            return detalle.querySelector('[data-regla-id="' + reglaId + '"]');
+        }
+
+        function botonRegla(texto, clase, atributo) {
+            var boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = clase;
+            boton.setAttribute(atributo, '');
+            boton.textContent = texto;
+            return boton;
+        }
+
+        function aplicarReglaGuardada(datos) {
+            var fila = datos.regla_id_anterior ? buscarFila(datos.regla_id_anterior) : null;
+            var eraAutomatica = fila ? fila.getAttribute('data-validar-automaticamente') === '1' : false;
+            if (!fila) {
+                fila = document.createElement('tr');
+                ['codigo', 'sentido', 'subtipo', 'version', 'estado', 'acciones'].forEach(function (campo) {
+                    var celda = document.createElement('td');
+                    celda.setAttribute('data-' + campo + '-regla', '');
+                    fila.appendChild(celda);
+                });
+                var acciones = fila.querySelector('[data-acciones-regla]');
+                acciones.className = 'configuracion-acciones-regla';
+                acciones.appendChild(botonRegla('Editar', 'configuracion-secundario', 'data-editar-regla'));
+                acciones.appendChild(botonRegla('', 'configuracion-alternar', 'data-alternar-validacion'));
+                acciones.appendChild(botonRegla('Retirar', 'configuracion-peligro', 'data-retirar-regla'));
+                detalle.querySelector('.configuracion-reglas tbody').appendChild(fila);
+                totalReglas.textContent = String((Number(totalReglas.textContent) || 0) + 1);
+            }
+            var automatica = datos.validar_automaticamente === true;
+            fila.setAttribute('data-regla-id', datos.regla_id);
+            fila.setAttribute('data-subtipo-id', datos.subtipo_valor_zetti_id);
+            fila.setAttribute('data-sentido', datos.sentido);
+            fila.setAttribute('data-codigo', datos.codigo_extracto || '');
+            fila.setAttribute('data-validar-automaticamente', automatica ? '1' : '0');
+            fila.querySelector('[data-codigo-regla]').textContent = datos.codigo_extracto || 'Sin código';
+            fila.querySelector('[data-sentido-regla]').textContent = datos.sentido;
+            fila.querySelector('[data-subtipo-regla]').textContent = editor.elements.subtipo_valor_zetti_id.selectedOptions[0].textContent;
+            fila.querySelector('[data-version-regla]').textContent = datos.version;
+            fila.querySelector('[data-estado-regla]').textContent = automatica ? 'Habilitada' : 'Deshabilitada';
+            fila.querySelector('[data-alternar-validacion]').textContent = automatica ? 'Deshabilitar' : 'Habilitar';
+            if (eraAutomatica !== automatica) {
+                var total = Number(totalAutomaticas.textContent) || 0;
+                totalAutomaticas.textContent = String(Math.max(0, total + (automatica ? 1 : -1)));
+            }
+        }
+
+        function aplicarRetiro(datos) {
+            var fila = buscarFila(datos.regla_id);
+            if (!fila) {
+                return;
+            }
+            if (fila.getAttribute('data-validar-automaticamente') === '1') {
+                totalAutomaticas.textContent = String(Math.max(0, (Number(totalAutomaticas.textContent) || 0) - 1));
+            }
+            totalReglas.textContent = String(Math.max(0, (Number(totalReglas.textContent) || 0) - 1));
+            fila.remove();
+        }
+
+        raiz.addEventListener('click', function (evento) {
+            var editar = evento.target.closest('[data-editar-regla]');
+            var retirar = evento.target.closest('[data-retirar-regla]');
+            var boton = evento.target.closest('[data-alternar-validacion]');
+            var objetivo = editar || retirar || boton;
+            if (!objetivo || !raiz.contains(objetivo)) {
+                return;
+            }
+            var fila = objetivo.closest('[data-regla-id]');
+            if (!fila) {
+                return;
+            }
+            if (editar) {
+                prepararEditor(fila, 'guardar');
+                return;
+            }
+            if (retirar) {
+                prepararEditor(fila, 'retirar');
+                return;
+            }
+            var anterior = fila.getAttribute('data-validar-automaticamente') === '1';
+            var solicitado = !anterior;
+            boton.disabled = true;
+            estado.textContent = solicitado
+                ? 'Habilitando la validación automática…'
+                : 'Deshabilitando la validación automática…';
+            enviarComando('configuracion.actualizar-validacion-automatica', {
+                configuracion_id: detalle.getAttribute('data-configuracion-id'),
+                regla_id: fila.getAttribute('data-regla-id'),
+                validar_automaticamente: solicitado
+            }).then(function (contenido) {
+                var actual = contenido.data.validar_automaticamente === true;
+                var etiqueta = fila.querySelector('[data-estado-regla]');
+                fila.setAttribute('data-regla-id', contenido.data.regla_id);
+                fila.setAttribute('data-validar-automaticamente', actual ? '1' : '0');
+                fila.querySelector('[data-version-regla]').textContent = contenido.data.version;
+                etiqueta.textContent = actual ? 'Habilitada' : 'Deshabilitada';
+                boton.textContent = actual ? 'Deshabilitar' : 'Habilitar';
+                if (contenido.data.cambio) {
+                    var total = Number(totalAutomaticas.textContent) || 0;
+                    totalAutomaticas.textContent = String(Math.max(0, total + (actual ? 1 : -1)));
+                }
+                estado.textContent = contenido.meta.repetida
+                    ? 'El cambio ya estaba registrado; se recuperó su resultado.'
+                    : 'Regla actualizada correctamente.';
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                boton.disabled = false;
+            });
+        });
+
+        cancelar.addEventListener('click', function () {
+            prepararEditor(null, 'guardar');
+        });
+
+        editor.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            if (!editor.reportValidity()) {
+                return;
+            }
+            var modo = editor.dataset.modo || 'guardar';
+            var cuerpo = {
+                configuracion_id: detalle.getAttribute('data-configuracion-id'),
+                regla_id: editor.elements.regla_id.value || null,
+                motivo: editor.elements.motivo.value
+            };
+            var accion;
+            if (modo === 'retirar') {
+                accion = 'configuracion.retirar-regla';
+                estado.textContent = 'Retirando la regla…';
+            } else {
+                accion = 'configuracion.guardar-regla';
+                cuerpo.subtipo_valor_zetti_id = editor.elements.subtipo_valor_zetti_id.value;
+                cuerpo.sentido = editor.elements.sentido.value;
+                cuerpo.codigo_extracto = editor.elements.codigo_extracto.value;
+                cuerpo.validar_automaticamente = editor.elements.validar_automaticamente.checked;
+                estado.textContent = cuerpo.regla_id ? 'Creando una nueva versión…' : 'Creando la regla…';
+            }
+            guardar.disabled = true;
+            cancelar.disabled = true;
+            enviarComando(accion, cuerpo).then(function (contenido) {
+                if (modo === 'retirar') {
+                    aplicarRetiro(contenido.data);
+                    estado.textContent = 'Regla retirada correctamente.';
+                } else {
+                    aplicarReglaGuardada(contenido.data);
+                    estado.textContent = contenido.data.cambio
+                        ? 'Regla guardada correctamente.'
+                        : 'La regla no tenía cambios estructurales.';
+                }
+                prepararEditor(null, 'guardar');
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                guardar.disabled = false;
+                cancelar.disabled = false;
+            });
+        });
+
+        prepararEditor(null, 'guardar');
+    }
+
     function iniciar() {
         var bandejas = document.querySelectorAll('[data-bandeja]');
         Array.prototype.forEach.call(bandejas, function (bandeja) {
@@ -1473,6 +1707,7 @@
             iniciarDetalle(bandeja);
         });
         Array.prototype.forEach.call(document.querySelectorAll('[data-importacion-page]'), iniciarImportacion);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-configuracion-page]'), iniciarConfiguracion);
     }
 
     if (document.readyState === 'loading') {

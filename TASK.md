@@ -43,6 +43,10 @@ Clasificación de importación: cada código se compara de forma exacta, normali
 
 Reporte de errores de importación: cuando la previsualización detecta filas inválidas, la misma pantalla permite descargar un CSV UTF-8 con BOM, separado por punto y coma y con todos los pares fila/error. `importacion.reporte-errores` vuelve a validar archivo, cuenta, configuración y período, reutiliza el permiso de previsualización y no persiste datos.
 
+Primer mantenimiento seguro de configuraciones: `?pag=configuraciones` lista las reglas existentes y permite modificar únicamente `validar_automaticamente`. `configuracion.actualizar-validacion-automatica` bloquea la regla dentro de su configuración activa, toma el operador de la sesión y registra el valor anterior mediante idempotencia y auditoría. No crea, elimina ni cambia código, sentido o subtipo. La migración `030` expone el destino sólo a `mcaballero` y `hvega` y no asigna el permiso granular a usuarios adicionales.
+
+Versionado de reglas habilitado en sandbox: las migraciones `031` y `032`, los casos de uso y la interfaz agregan alta, reemplazo versionado y baja lógica. Cada edición desactiva la versión anterior y crea otra enlazada mediante `reemplaza_regla_id`; sólo las activas participan de importación y búsqueda. Ambas migraciones se aplicaron repetidamente el 2026-09-17, sin asignaciones granulares nuevas, y la batería completa de 28 pruebas PHP más la prueba JavaScript pasó sin fallos.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.

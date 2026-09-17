@@ -164,6 +164,73 @@ body:has(.bancos-app),
     color: var(--ui-texto-suave);
 }
 
+.configuracion-encabezado,
+.configuracion-selector,
+.configuracion-detalle {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
+.configuracion-selector select {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.configuracion-selector button,
+.configuracion-alternar {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+}
+
+.configuracion-selector button:hover,
+.configuracion-alternar:hover {
+    background: var(--ui-acento-hover);
+}
+
+.configuracion-alternar:disabled {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
+}
+
+.configuracion-editor {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+}
+
+.configuracion-editor input,
+.configuracion-editor select {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.configuracion-editor [data-guardar-regla] {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+    font-weight: 800;
+}
+
+.configuracion-secundario {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
+.configuracion-peligro {
+    border-color: var(--ui-error);
+    background: var(--ui-error-fondo);
+    color: var(--ui-error-texto);
+}
+
+.configuracion-reglas tr[data-validar-automaticamente="1"] .configuracion-estado-regla {
+    color: var(--ui-exito-texto);
+}
+
 .bandeja-filtros > button,
 .bandeja-estado button,
 .bandeja-accion button {

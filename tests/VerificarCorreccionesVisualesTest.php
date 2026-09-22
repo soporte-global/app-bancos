@@ -32,6 +32,13 @@ $comprobar(strpos($css, 'overscroll-behavior: contain') !== false, 'El panel no 
 $comprobar(strpos($vista, 'data-controles-bandeja') === false, 'El formulario debe permanecer en su landmark original.');
 $comprobar(strpos($javascript, 'footer.appendChild(controles)') === false, 'El formulario no debe moverse al footer.');
 $comprobar(strpos($css, '.bancos-app') !== false, 'Los estilos propios deben quedar encapsulados.');
+$comprobar(preg_match('/\.bancos-app header\s*\{([^}]*)\}/s', $css, $encabezadosInternos) === 1, 'Los encabezados internos deben quedar aislados del header fijo compartido.');
+$comprobar(strpos($encabezadosInternos[1], 'position: static') !== false && strpos($encabezadosInternos[1], 'box-shadow: none') !== false, 'Los encabezados internos deben permanecer en el flujo de la pagina y sin la sombra del shell.');
+$comprobar(strpos($css, '.bancos-app header::before') !== false, 'Los encabezados internos no deben heredar la franja decorativa del shell.');
+$comprobar(strpos($css, '.importacion-formulario > *') !== false && strpos($css, 'min-width: 0') !== false, 'Los formularios operativos no deben forzar desborde horizontal.');
+$comprobar(strpos($css, '.configuracion-selector > *') !== false, 'El selector de configuracion debe poder contraerse en pantallas angostas.');
+$comprobar(strpos(file_get_contents(__DIR__ . '/../app/html/importaciones.php'), '<header class="importacion-encabezado">') !== false, 'La importacion debe conservar un encabezado semantico visible.');
+$comprobar(strpos(file_get_contents(__DIR__ . '/../app/html/configuraciones.php'), '<header class="configuracion-encabezado">') !== false, 'La configuracion debe conservar un encabezado semantico visible.');
 $comprobar(strpos($header, '.dropdown-menu .selector_tema') !== false, 'El selector de tema debe ocupar una fila propia dentro del menú.');
 $comprobar(strpos($header, 'justify-content: space-between') !== false, 'El texto y el switch deben quedar alineados dentro de la fila.');
 $comprobar($configuracion['nombre'] === 'APP BANCOS', 'La identidad visible de la aplicación debe ser APP BANCOS.');

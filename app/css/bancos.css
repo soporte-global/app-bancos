@@ -26,6 +26,32 @@ body.bandeja-detalle-activo {
     box-sizing: border-box;
 }
 
+/*
+ * El shell compartido estiliza cualquier <header> como la barra superior fija.
+ * Las vistas de Bancos usan encabezados semánticos dentro del contenido, por lo
+ * que deben recuperar el flujo normal antes de aplicar su composición propia.
+ */
+.bancos-app header {
+    position: static;
+    z-index: auto;
+    display: block;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border-left: 0;
+    box-shadow: none;
+    font-weight: inherit;
+}
+
+.configuracion-detalle > header,
+.configuracion-cuentas > header {
+    background: transparent;
+}
+
+.bancos-app header::before {
+    display: none;
+}
+
 .bancos-app {
     --alto-control: 38px;
     --radio-control: 8px;
@@ -846,6 +872,8 @@ body.bandeja-detalle-activo {
 .importacion-page {
     display: grid;
     gap: 18px;
+    width: 100%;
+    min-width: 0;
     max-width: 1180px;
     margin: 0 auto;
 }
@@ -853,8 +881,21 @@ body.bandeja-detalle-activo {
 .configuracion-page {
     display: grid;
     gap: 18px;
+    width: 100%;
+    min-width: 0;
     max-width: 1180px;
     margin: 0 auto;
+}
+
+.importacion-formulario > *,
+.configuracion-selector > *,
+.configuracion-detalle,
+.configuracion-detalle > header > *,
+.configuracion-cuentas,
+.configuracion-cuentas > header > *,
+.configuracion-vinculo-editor > *,
+.configuracion-editor > * {
+    min-width: 0;
 }
 
 .configuracion-encabezado,
@@ -1047,6 +1088,7 @@ body.bandeja-detalle-activo {
 .importacion-formulario input,
 .importacion-formulario select,
 .importacion-formulario button {
+    max-width: 100%;
     min-height: var(--alto-control);
     padding: 0 10px;
     border: 1px solid;
@@ -1126,6 +1168,19 @@ body.bandeja-detalle-activo {
     .configuracion-editor,
     .configuracion-vinculo-editor {
         grid-template-columns: 1fr;
+    }
+
+    .importacion-formulario input,
+    .importacion-formulario select,
+    .importacion-formulario button,
+    .configuracion-selector select,
+    .configuracion-selector button,
+    .configuracion-vinculo-editor input,
+    .configuracion-vinculo-editor select,
+    .configuracion-vinculo-editor button,
+    .configuracion-editor input,
+    .configuracion-editor select {
+        width: 100%;
     }
 
     .configuracion-detalle > header {

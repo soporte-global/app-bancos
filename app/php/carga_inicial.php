@@ -28,6 +28,7 @@ if (($pagina ?? '') === 'configuraciones') {
             ],
         ]);
         $conexion = $proveedor->ftweb();
+        AppBancos\Security\ProteccionDespliegueSandbox::verificar($conexion, BANCOS_MODO_OPERATIVO, CONEXION);
         $esquemas = AppBancos\Infrastructure\EsquemaBancos::desdeConfiguracion([
             'bancos_debug' => BANCOS_DEBUG,
         ]);
@@ -79,6 +80,7 @@ if (($pagina ?? '') === 'importaciones') {
             ],
         ]);
         $conexion = $proveedor->ftweb();
+        AppBancos\Security\ProteccionDespliegueSandbox::verificar($conexion, BANCOS_MODO_OPERATIVO, CONEXION);
         $esquemas = AppBancos\Infrastructure\EsquemaBancos::desdeConfiguracion([
             'bancos_debug' => BANCOS_DEBUG,
         ]);
@@ -129,6 +131,7 @@ try {
         ],
     ]);
     $conexion = $pdo->ftweb();
+    AppBancos\Security\ProteccionDespliegueSandbox::verificar($conexion, BANCOS_MODO_OPERATIVO, CONEXION);
     $esquemas = AppBancos\Infrastructure\EsquemaBancos::desdeConfiguracion([
         'bancos_debug' => BANCOS_DEBUG,
     ]);

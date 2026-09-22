@@ -26,8 +26,13 @@ return [
     'ftweb_user' => 'postgres',
     'ftweb_password' => '',
     'ftweb_persistent' => true,
-    // En true, BANCOS escribe en global_temp; las consultas ERP siguen en public.
-    // Nunca habilitarlo en producción.
+    // produccion escribe BANCOS en global_prod y ERP en public; sandbox dirige
+    // todas esas escrituras a global_temp y conserva las lecturas ERP en public.
+    // null mantiene compatibilidad temporal con bancos_debug.
+    'bancos_modo_operativo' => null,
+    // Confirmación adicional obligatoria para publicar sandbox con entorno prod.
+    'bancos_sandbox_permitir_en_prod' => false,
+    // Alias histórico; usar bancos_modo_operativo en instalaciones nuevas.
     'bancos_debug' => false,
     // Se recomienda declararlo sólo en config.local.php para firmar cursores HTTP.
     'bandeja_cursor_secret' => '',

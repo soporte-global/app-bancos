@@ -1,5 +1,7 @@
 # Sesión de descubrimiento - 2026-08-25
 
+Actualización 2026-09-22: se aplicó `043_bancos_rol_debug_restringido.sql`. El rol de capacidad `app_bancos_debug_runtime` quedó sin login ni atributos administrativos, con lectura en `public/global_prod` y DML sin `TRUNCATE` únicamente en `global_temp`; la prueba integrada audita todas las tablas y confirma el rechazo `42501` bajo `SET ROLE` al intentar actualizar una tabla productiva. No se creó ni almacenó una contraseña: DBA debe provisionar el login, concederle el rol y reemplazar `postgres` en la configuración local. La base aún hereda `CREATE ON SCHEMA public` desde `PUBLIC`; revocarlo es una decisión global pendiente por posible impacto en otras aplicaciones.
+
 Se incorporó BANCOS_MENSUAL y se corrigió el alcance de BANCOS a conciliación de cheques. SGUA fue descartada como integración futura de identidad/permisos: se adopta `nueva_app` como referencia y hQuery como futura librería de funciones comunes.
 
 En esta sesión también se copió la estructura base de `nueva_app` hacia `app-bancos` manteniendo intacto el material preexistente. Se agregaron todos los componentes de bootstrap, carpetas compartidas y dependencias en modo incremental (sin sobrescritura), de modo que la base está lista para configurar permisos de Hub y comenzar desarrollo funcional.
@@ -247,3 +249,23 @@ El mismo escenario cubre ahora el circuito funcional completo. Después de conci
 La bandeja mensual proyecta ahora `bancos_conciliacion_cheque` por lote para los movimientos visibles. El drawer agrega una sección de trazabilidad con estado, fecha, operador Hub, valor origen, operación, valor resultante, asiento, modalidad y evidencia. No se agregó un endpoint ni una consulta desde el navegador. La integración del comando lee luego el movimiento por `BandejaMensualRepository` y confirma que la proyección contiene exactamente los IDs recién creados; el fixture visual cubre el render completo.
 
 La consulta principal de bandeja deriva `conciliacion_codigo`: prioriza un registro `CONCILIADO`, identifica como `PENDIENTE` una asociación activa a los subtipos `13`, `14`, `10070` o `10071` cuyo valor ERP no está en estado `7`, y clasifica el resto como `NO_REQUIERE`. La tabla muestra una etiqueta y el formulario permite filtrar los tres valores. `ConsultarBandejaMensual`, el repositorio, JavaScript, paginación y firma de cursor comparten el mismo contrato. Las pruebas cubren las tres transiciones observables y el rechazo de valores inventados.
+
+## Conciliación post-migración - 2026-09-22
+
+Se agregó un informe CLI reproducible y una prueba integrada de paridad. La metodología separa `PARIDAD_SNAPSHOT`, `DERIVA_POSTERIOR` y `PENDIENTE_CORTE`, evitando interpretar la actividad posterior del legado como corrupción del lote original. Los 16 controles del snapshot aprobaron movimientos, importes, relaciones, borradores, mensajes, ejecución y excepciones.
+
+El resultado inicial fue `REQUIERE_ACTUALIZACION`. La medición encontró 45 períodos y 18.069 filas de movimiento posteriores, 6.725 asociaciones/reservas de asiento adicionales y 23 borradores, junto con deriva de configuración. El catch-up posterior y `045` resolvieron esos pendientes; el dictamen actualizado en `docs/migration/evidence/conciliacion-post-migracion-2026-09-22.md` está `APROBADO`. El corte productivo permanece condicionado al congelamiento y a la verificación de un respaldo restaurable.
+
+## Catch-up incremental - 2026-09-22
+
+Se implementó `app/cli/migrar_legacy_incremental.php` con previsualización predeterminada, confirmación explícita, clave idempotente, advisory lock y tres fases reanudables. `044` agrega identidad de lote sin mezclar el catch-up con el snapshot original. La simulación actual está `LISTO` y releva 3 cuentas resolubles automáticamente, 60 configuraciones, 45 períodos, 18.069 movimientos, 6.727 asociaciones/reservas de asiento y 23 borradores.
+
+La prueba contra datos reales encontró una corrección posterior del legacy: un asiento y su reserva fueron reemplazados. Se definió como regla canónica conservar inactivo el vínculo migrado anterior y crear el vigente, sólo cuando el vínculo anterior pertenece a la migración; una asociación manual produce bloqueo. La ejecución completa y el reintento finalizaron correctamente dentro de una transacción externa que se revirtió. No se confirmaron datos productivos.
+
+El mismo día se confirmó `catchup-2026-09-22-01`, lote `CATCHUP-370ADAA9731E3DA812764A85`. Procesó 3 cuentas, 60 configuraciones, 45 períodos, 18.069 filas de movimiento, 6.727 asociaciones/reservas de asiento y 23 borradores. Durante la validación aparecieron otras 21 asociaciones/reservas, incorporadas por `catchup-2026-09-22-02`, lote `CATCHUP-4C98F6200AA65FCBF8464A78`. La reanudación de la segunda clave fue idempotente después de una interrupción del cliente.
+
+`045_bancos_resolver_cuentas_legacy.sql` corrigió la clasificación del informe: `GENERAL` es alcance global, `MERCADO PAGO` es multicuenta, `191168194623` conserva únicamente períodos omitidos y `0191-168-011973/6` corresponde literalmente a `BCO CREDICOOP DOLAR` (`103500000000524090`). Se vincularon sus 20 configuraciones y el rollback retiró exactamente esos vínculos antes de la reaplicación. La conciliación final aprobó los 32 controles y no dejó delta incremental.
+
+Se formalizó el despliegue publicado con `bancos_modo_operativo=sandbox`: confirmación adicional para `entorno=prod`, rechazo de usuarios administradores, verificación de `app_bancos_debug_runtime` por conexión y aviso permanente. `046` creó la bitácora de sincronización y el baseline `sandbox-baseline-2026-09-22-01` copió 3.634.359 filas después de respaldar el estado anterior. El rango alto de secuencias evita colisiones con nuevos IDs canónicos.
+
+Legacy generó luego 50 asociaciones/reservas y 2 borradores. `catchup-2026-09-22-03` agotó ese delta. La sincronización conservadora copió 147 filas y reportó cuatro conflictos sin sobrescribirlos; tras comprobar que eran reemplazos del propio catch-up, una segunda ejecución aceptó explícitamente el origen y dejó cero faltantes/conflictos. La conciliación volvió a `APROBADO` y la regresión completa pasó con 45 pruebas PHP más JavaScript.

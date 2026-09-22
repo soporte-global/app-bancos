@@ -5,37 +5,54 @@ use InvalidArgumentException;
 
 /**
  * Centraliza la elección de esquemas de BANCOS. Las lecturas ERP siempre se
- * hacen en public; en debug, sólo las mutaciones ERP se redirigen a global_temp.
+ * hacen en public; en sandbox, sólo las mutaciones ERP se redirigen a global_temp.
  */
 final class EsquemaBancos
 {
     private $operativo;
     private $lecturaErp;
     private $escrituraErp;
-    private $debug;
+    private $modo;
 
-    private function __construct($operativo, $lecturaErp, $escrituraErp, $debug)
+    private function __construct($operativo, $lecturaErp, $escrituraErp, $modo)
     {
         $this->operativo = $operativo;
         $this->lecturaErp = $lecturaErp;
         $this->escrituraErp = $escrituraErp;
-        $this->debug = $debug;
+        $this->modo = $modo;
     }
 
     public static function desdeConfiguracion(array $configuracion)
     {
-        $debug = (bool) ($configuracion['bancos_debug'] ?? false);
+        $modo = strtolower(trim((string) ($configuracion['bancos_modo_operativo'] ?? '')));
+        if ($modo === '') {
+            $modo = !empty($configuracion['bancos_debug']) ? 'sandbox' : 'produccion';
+        }
+        if (!in_array($modo, ['sandbox', 'produccion'], true)) {
+            throw new InvalidArgumentException('Modo operativo BANCOS inválido.');
+        }
+        $sandbox = $modo === 'sandbox';
         return new self(
-            $debug ? 'global_temp' : 'global_prod',
+            $sandbox ? 'global_temp' : 'global_prod',
             'public',
-            $debug ? 'global_temp' : 'public',
-            $debug
+            $sandbox ? 'global_temp' : 'public',
+            $modo
         );
+    }
+
+    public function esSandbox()
+    {
+        return $this->modo === 'sandbox';
     }
 
     public function esDebug()
     {
-        return $this->debug;
+        return $this->esSandbox();
+    }
+
+    public function modo()
+    {
+        return $this->modo;
     }
 
     public function tablaBancos($tabla)

@@ -1,3 +1,15 @@
+.bancos-modo-sandbox {
+    position: relative;
+    z-index: 1001;
+    width: 100%;
+    padding: 8px 16px;
+    border-bottom: 1px solid;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    text-align: center;
+}
+
 .afterheader.bandeja-page {
     height: auto;
     min-height: 100%;

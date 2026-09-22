@@ -2,10 +2,15 @@
 // copiar como config.local.php y declarar solamente los valores que cambian en esta instalacion
 return [
     'entorno' => 'tunel',
+    // Login administrado por DBA y miembro de app_bancos_debug_runtime (migracion 043).
+    'ftweb_user' => 'app_bancos_debug_login',
     'ftweb_password' => '',
     'ftweb_persistent' => true,
-    // true aísla escrituras BANCOS/ERP en global_temp; las lecturas ERP siguen en public.
-    'bancos_debug' => true,
+    // Sandbox publicado: datos operativos y escrituras ERP van a global_temp;
+    // autenticación, permisos y lecturas ERP continúan usando datos reales.
+    'bancos_modo_operativo' => 'sandbox',
+    // Cambiar a true sólo en el servidor publicado y con el login restringido.
+    'bancos_sandbox_permitir_en_prod' => false,
     // Firma el cursor paginado; usar un secreto aleatorio propio de esta instalación.
     'bandeja_cursor_secret' => '',
     'rrhh_password' => '',

@@ -1,3 +1,9 @@
+.bancos-modo-sandbox {
+    border-color: var(--ui-advertencia);
+    background: var(--ui-advertencia-fondo);
+    color: var(--ui-advertencia-texto);
+}
+
 .afterheader.bandeja-page,
 html:has(.bancos-app),
 body:has(.bancos-app),

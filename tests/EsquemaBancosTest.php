@@ -16,6 +16,8 @@ function comprobarEsquema($condicion, $mensaje)
 
 $debug = EsquemaBancos::desdeConfiguracion(['bancos_debug' => true]);
 comprobarEsquema($debug->esDebug(), 'El perfil debug no quedó habilitado.');
+comprobarEsquema($debug->esSandbox(), 'El alias debug no resolvió el sandbox.');
+comprobarEsquema($debug->modo() === 'sandbox', 'El alias debug perdió el modo operativo.');
 comprobarEsquema($debug->tablaBancos('bancos_movimiento_extracto') === 'global_temp.bancos_movimiento_extracto', 'Debug no usa global_temp para BANCOS.');
 comprobarEsquema($debug->tablaLecturaErp('valor') === 'public.valor', 'Debug debe leer el ERP desde public.');
 comprobarEsquema($debug->tablaEscrituraErp('valor') === 'global_temp.valor', 'Debug no redirige las escrituras ERP a global_temp.');
@@ -27,6 +29,16 @@ comprobarEsquema($produccion->tablaBancos('bancos_movimiento_extracto') === 'glo
 comprobarEsquema($produccion->tablaLecturaErp('valor') === 'public.valor', 'Producción no lee el ERP desde public.');
 comprobarEsquema($produccion->tablaEscrituraErp('valor') === 'public.valor', 'Producción no escribe el ERP en public.');
 comprobarEsquema($produccion->secuenciaEscrituraErp('movimiento_sq') === 'public.movimiento_sq', 'Producción no resuelve las secuencias ERP en public.');
+
+$sandbox = EsquemaBancos::desdeConfiguracion(['bancos_modo_operativo' => 'sandbox']);
+comprobarEsquema($sandbox->esSandbox(), 'El modo sandbox explícito no quedó habilitado.');
+comprobarEsquema($sandbox->tablaBancos('bancos_movimiento_extracto') === 'global_temp.bancos_movimiento_extracto', 'Sandbox no usa global_temp.');
+
+try {
+    EsquemaBancos::desdeConfiguracion(['bancos_modo_operativo' => 'otro']);
+    throw new RuntimeException('Se aceptó un modo operativo inválido.');
+} catch (InvalidArgumentException $error) {
+}
 
 try {
     $debug->tablaBancos('valor');

@@ -17,8 +17,7 @@ VALUES
     ('ABIERTO', 'Fixture de depuración'),
     ('PARA_CERRAR', 'Fixture de depuración'),
     ('CERRADO', 'Fixture de depuración')
-ON CONFLICT (codigo) DO UPDATE
-SET descripcion = EXCLUDED.descripcion;
+ON CONFLICT (codigo) DO NOTHING;
 
 INSERT INTO global_temp.bancos_configuracion
     (alcance, banco_zetti_id, moneda, activo, observacion)

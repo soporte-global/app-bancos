@@ -141,17 +141,37 @@ define('DBASE', $app_config['ftweb_database']);
 define('USER', $app_config['ftweb_user']);
 define('PASS', $app_config['ftweb_password']);
 define('FTWEB_PERSISTENT', (bool) ($app_config['ftweb_persistent'] ?? true));
-define('BANCOS_DEBUG', (bool) ($app_config['bancos_debug'] ?? false));
-define('BANCOS_ESQUEMA_OPERATIVO', BANCOS_DEBUG ? 'global_temp' : 'global_prod');
+$bancos_modo_operativo = strtolower(trim((string) ($app_config['bancos_modo_operativo'] ?? '')));
+if ($bancos_modo_operativo === '') {
+    $bancos_modo_operativo = !empty($app_config['bancos_debug']) ? 'sandbox' : 'produccion';
+}
+if (!in_array($bancos_modo_operativo, ['sandbox', 'produccion'], true)) {
+    throw new InvalidArgumentException('Modo operativo BANCOS inválido: ' . $bancos_modo_operativo);
+}
+define('BANCOS_MODO_OPERATIVO', $bancos_modo_operativo);
+define('BANCOS_SANDBOX', BANCOS_MODO_OPERATIVO === 'sandbox');
+// Alias de transición para los casos de uso que todavía expresan la capacidad
+// de escritura segura como "debug".
+define('BANCOS_DEBUG', BANCOS_SANDBOX);
+define('BANCOS_ESQUEMA_OPERATIVO', BANCOS_SANDBOX ? 'global_temp' : 'global_prod');
 define('BANCOS_ESQUEMA_LECTURA_ERP', 'public');
-define('BANCOS_ESQUEMA_ESCRITURA_ERP', BANCOS_DEBUG ? 'global_temp' : 'public');
+define('BANCOS_ESQUEMA_ESCRITURA_ERP', BANCOS_SANDBOX ? 'global_temp' : 'public');
 $bandeja_cursor_secret = (string) ($app_config['bandeja_cursor_secret'] ?? '');
 if ($bandeja_cursor_secret === '') {
     $bandeja_cursor_secret = hash('sha256', 'bancos-bandeja|' . PASS . '|' . SESSION_NAME);
 }
 define('BANCOS_BANDEJA_CURSOR_SECRET', $bandeja_cursor_secret);
-if (BANCOS_DEBUG && CONEXION === 'prod') {
-    throw new RuntimeException('bancos_debug no puede habilitarse en el entorno prod.');
+if (BANCOS_SANDBOX && CONEXION === 'prod') {
+    if (empty($app_config['bancos_sandbox_permitir_en_prod'])) {
+        throw new RuntimeException(
+            'El sandbox publicado exige bancos_sandbox_permitir_en_prod=true.'
+        );
+    }
+    if (in_array(strtolower(trim((string) USER)), ['postgres', 'root'], true)) {
+        throw new RuntimeException(
+            'El sandbox publicado no puede conectarse con un usuario administrador.'
+        );
+    }
 }
 // --
 define('HOST2', $app_config['rrhh_host'] ?? $defaults['rrhh_host']);

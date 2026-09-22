@@ -49,7 +49,7 @@ Versionado de reglas habilitado en sandbox: las migraciones `031` y `032`, los c
 
 Vínculos cuenta/configuración habilitados en sandbox: `?pag=configuraciones` permite vincular, desvincular y reactivar cuentas con motivo. `033` agrega vigencia y procedencia, siembra los cuatro pares sombra que antes se inferían de lotes y convierte el vínculo explícito activo en requisito para importar; `034` registra el permiso granular sin usuarios nuevos. Las importaciones históricas no se modifican.
 
-Regresión vigente: 38 pruebas PHP más la prueba JavaScript pasan sin fallos.
+Regresión vigente: 41 pruebas PHP más la prueba JavaScript pasan sin fallos.
 
 Mapeos contables habilitados en sandbox: la pantalla de configuraciones permite alta, reemplazo versionado y retiro por subtipo. `035` formaliza una única cuenta activa por configuración/subtipo y carga 165 casos sombra; `036` registra el permiso granular sin usuarios adicionales. Cuenta y subtipo se validan mediante lecturas ERP.
 
@@ -71,12 +71,22 @@ El detalle de la bandeja incorpora la trazabilidad de cada conciliación de cheq
 
 La bandeja deriva además un indicador de conciliación por movimiento y permite filtrarlo: `CONCILIADO` cuando existe trazabilidad, `PENDIENTE` cuando hay un cheque activo no liquidado sin registro y `NO_REQUIERE` para los demás casos. El filtro queda incluido en la firma del cursor y se conserva en la paginación.
 
+Aislamiento de DML debug preparado: `043` creó `app_bancos_debug_runtime` como rol sin login ni atributos administrativos, con lectura en `public/global_prod` y `SELECT/INSERT/UPDATE/DELETE` únicamente en `global_temp`. La prueba integrada audita todas las tablas y confirma mediante `SET ROLE` que el DML productivo recibe `42501`. Falta que DBA cree el login secreto, le conceda el rol y resuelva el permiso histórico global `CREATE ON SCHEMA public FROM PUBLIC`, que no puede negarse sólo a esta aplicación.
+
 Diseño UX/UI documentado: `docs/ux/navigation-and-ui.md` releva las estructuras de BANCOS y BANCOS_MENSUAL y propone navegación por rutas/tareas, contexto persistente de cuenta-período, detalle progresivo y acciones separadas por permiso/estado.
 
 Sistema visual de RRHH implementado: la bandeja usa paleta derivada, tema claro/oscuro centralizado por cookie, CSS separado entre estructura/apariencia/modos, paneles contiguos, densidad compacta, tabla responsive y drawer accesible. Se retiraron el tema local de `localStorage` y el movimiento del formulario al footer. El contrato y la validación están en `docs/ux/rrhh-style/`.
 
 Próximo paso de interfaz: validar el sistema sobre la instalación integrada con datos reales y archivar capturas definitivas en `docs/ux/evidence/rrhh-style/`, sin habilitar escrituras.
 
-La migración `014_bancos_preparar_debug_global_temp.sql` se ejecutó el 2026-09-04 en el ambiente de depuración: se verificó la presencia de 49 tablas `bancos_*`, las cinco dependencias ERP que faltaban y, el 2026-09-07, que no hay defaults de secuencias que apunten a `public` o `global_prod`. Falta configurar un usuario de base de datos sin permisos de escritura sobre esos esquemas. Activar `bancos_debug` sólo en `app/config.local.php`; desactivarlo es el cambio controlado que dirige los repositorios al esquema productivo después de validar el corte.
+La migración `014_bancos_preparar_debug_global_temp.sql` se ejecutó el 2026-09-04 en el ambiente de depuración: se verificó la presencia de 49 tablas `bancos_*`, las cinco dependencias ERP que faltaban y, el 2026-09-07, que no hay defaults de secuencias que apunten a `public` o `global_prod`. `043` ya limita el DML del rol de capacidad al sandbox; falta provisionar el login DBA y retirar `postgres` de la configuración local. Activar `bancos_debug` sólo en `app/config.local.php`; desactivarlo es el cambio controlado que dirige los repositorios al esquema productivo después de validar el corte.
 
 Antes de habilitar cierres productivos: acordar la secuencia contable de fusión/generación, incorporar la conciliación de cheques pendiente, resolver la identidad ERP del operador y diseñar compensación del comando definitivo. La liquidación de valores sólo está probada sobre `global_temp`. El permiso ya quedó registrado, la contención de fila fue probada con dos conexiones y el preflight fue medido: el contexto resolvió en 0,391 ms y las asociaciones tipadas en 0,822 ms sobre volumen productivo usando índices parciales. El detalle operativo está en `docs/migration-strategy.md`.
+
+Conciliación post-migración automatizada: `app/cli/conciliacion_post_migracion.php` compara la traza persistida con el destino y distingue deriva posterior. Los dos catch-up confirmados agotaron el delta observado y `045` formalizó los cuatro tratamientos especiales de cuenta. Los 32 controles están aprobados. La evidencia está en `docs/migration/evidence/conciliacion-post-migracion-2026-09-22.md`. Restan la ventana de congelamiento, el único escritor y la prueba de restauración.
+
+Catch-up idempotente confirmado: `catchup-2026-09-22-01` generó el lote `CATCHUP-370ADAA9731E3DA812764A85` y agotó 3 cuentas, 60 configuraciones, 45 períodos, 18.069 movimientos, 6.727 asociaciones/reservas de asiento y 23 borradores pendientes. `catchup-2026-09-22-02` absorbió otras 21 asociaciones/reservas surgidas durante la validación. `045` formalizó las cuatro decisiones históricas y la conciliación quedó `APROBADO`; permanecen la verificación del respaldo y la ventana final.
+
+Sandbox publicado preparado: el modo operativo ya puede usar `global_temp` sobre `entorno=prod` con doble confirmación, rol PostgreSQL restringido y aviso permanente. `046` agregó sincronización incremental idempotente. El baseline `sandbox-baseline-2026-09-22-01` copió 3.634.359 filas, reservó IDs altos para pruebas y dejó cero faltantes/conflictos; el estado previo está en `bancos_sandbox_backup_20260922_152347_c3d686c0`.
+
+Convivencia comprobada: `catchup-2026-09-22-03` absorbió 50 asociaciones/reservas y 2 borradores generados por legacy durante la regresión. `047` formaliza la salida `REQUIERE_DECISION`; la sincronización copió primero 147 filas sin tocar cuatro conflictos y luego, tras revisión explícita, aceptó los dos reemplazos de asociación/reserva. Resultado final: conciliación `APROBADO`, sandbox con cero faltantes/conflictos y regresión de 45 pruebas PHP más JavaScript.

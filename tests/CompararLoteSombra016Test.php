@@ -62,8 +62,7 @@ WITH produccion AS (
            m.fecha_operacion, m.referencia, m.descripcion, m.codigo_extracto,
            m.credito, m.debito, m.moneda, m.subtipo_valor_zetti_id
     FROM global_temp.bancos_movimiento_extracto m
-    JOIN global_temp.bancos_importacion_extracto i ON i.id = m.importacion_id
-    WHERE i.observacion = 'SOMBRA-016|IMPORTACION|35333'
+    WHERE m.importacion_id = 35333
 )
 SELECT 'FALTA_EN_SANDBOX' AS diferencia, p.* FROM produccion p
 EXCEPT
@@ -117,8 +116,7 @@ WITH produccion AS (
            a.monto_asociado, a.activo, a.observacion, a.compartido
     FROM global_temp.bancos_asociacion_movimiento a
     JOIN global_temp.bancos_movimiento_extracto m ON m.id = a.movimiento_id
-    JOIN global_temp.bancos_importacion_extracto i ON i.id = m.importacion_id
-    WHERE i.observacion = 'SOMBRA-016|IMPORTACION|35333'
+    WHERE m.importacion_id = 35333
       AND a.borrador_asiento_id IS NULL
 )
 SELECT 'FALTA_EN_SANDBOX' AS diferencia, p.* FROM produccion p

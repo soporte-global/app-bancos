@@ -88,6 +88,11 @@ try {
         ],
     ]);
     $conexion = $proveedor->ftweb();
+    AppBancos\Security\ProteccionDespliegueSandbox::verificar(
+        $conexion,
+        BANCOS_MODO_OPERATIVO,
+        CONEXION
+    );
     $cache = new SesionCache(FolderName, AUTH_CACHE_TTL);
     $sesion = $cache->obtener();
     if ($sesion === null || $sesion->cuenta()->id() !== $cuentaId) {

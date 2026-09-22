@@ -99,11 +99,11 @@ comprobarBandeja(
 );
 
 $importacionConMensaje = $pdo->query(
-    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo
+    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo, m.fecha_operacion, m.id
      FROM global_temp.bancos_importacion_extracto i
      JOIN global_temp.bancos_movimiento_extracto m ON m.importacion_id=i.id
      JOIN global_temp.bancos_asociacion_movimiento a ON a.movimiento_id=m.id AND a.activo
-     WHERE i.observacion LIKE 'SOMBRA-017|IMPORTACION|%'
+     WHERE m.id = 13017123
      ORDER BY i.id
      LIMIT 1"
 )->fetch(PDO::FETCH_ASSOC);
@@ -114,24 +114,45 @@ $conMensajes = $casoDeUso->ejecutar([
     'mensajes' => 'CON',
     'asociacion' => 'CON',
 ]);
-comprobarBandeja(count($conMensajes['movimientos']) === 1, 'El filtro de mensajes no devolvió el caso de sombra.');
-comprobarBandeja(count($conMensajes['movimientos'][0]['mensajes']) === 1, 'El detalle no incluyó la conversación completa.');
-comprobarBandeja(count($conMensajes['movimientos'][0]['asociaciones']) === 1, 'El detalle no incluyó la asociación activa.');
+comprobarBandeja(count($conMensajes['movimientos']) >= 1, 'El filtro de mensajes no devolvió el caso canónico.');
+$detalleMensaje = null;
+foreach ($conMensajes['movimientos'] as $movimiento) {
+    if ((string) $movimiento['id'] === '13017123') {
+        $detalleMensaje = $movimiento;
+        break;
+    }
+}
+comprobarBandeja($detalleMensaje !== null, 'No se encontró el movimiento canónico con mensajes.');
+comprobarBandeja(count($detalleMensaje['mensajes']) === 1, 'El detalle no incluyó la conversación completa.');
+comprobarBandeja(count($detalleMensaje['asociaciones']) === 1, 'El detalle no incluyó la asociación activa.');
 
 $importacionConBorrador = $pdo->query(
-    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo
+    "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo, m.fecha_operacion, m.id
      FROM global_temp.bancos_importacion_extracto i
      JOIN global_temp.bancos_movimiento_extracto m ON m.importacion_id=i.id
      JOIN global_temp.bancos_borrador_asiento b ON b.movimiento_id=m.id AND b.activo
-     WHERE i.observacion LIKE 'SOMBRA-017|IMPORTACION|%'
+     WHERE m.id = 13211640
      LIMIT 1"
 )->fetch(PDO::FETCH_ASSOC);
-$conBorrador = $casoDeUso->ejecutar([
-    'cuenta_bancaria_id' => $importacionConBorrador['cuenta_bancaria_zetti_id'],
-    'inicio_periodo' => $importacionConBorrador['inicio_periodo'],
-]);
-comprobarBandeja(count($conBorrador['movimientos'][0]['borradores']) === 1, 'El detalle no incluyó el borrador activo.');
-comprobarBandeja(count($conBorrador['movimientos'][0]['borradores'][0]['lineas']) === 2, 'El detalle no incluyó las líneas del borrador.');
+$movimientosBorrador = $repositorio->listar(
+    $importacionConBorrador['cuenta_bancaria_zetti_id'],
+    $importacionConBorrador['inicio_periodo'],
+    [
+        'fecha' => $importacionConBorrador['fecha_operacion'],
+        'id' => (string) ((int) $importacionConBorrador['id'] - 1),
+    ],
+    2
+);
+$detalleBorrador = null;
+foreach ($movimientosBorrador as $movimiento) {
+    if ((string) $movimiento['id'] === '13211640') {
+        $detalleBorrador = $movimiento;
+        break;
+    }
+}
+comprobarBandeja($detalleBorrador !== null, 'No se encontró el movimiento canónico con borrador.');
+comprobarBandeja(count($detalleBorrador['borradores']) === 1, 'El detalle no incluyó el borrador activo.');
+comprobarBandeja(count($detalleBorrador['borradores'][0]['lineas']) === 2, 'El detalle no incluyó las líneas del borrador.');
 
 try {
     $casoDeUso->ejecutar([

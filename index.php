@@ -24,6 +24,11 @@ GlobalApps\Core\Diagnostics\RequestProfiler::terminar('funciones');
 ?>
     <body class="color_variable">
     <style id="css_dinamico"></style>
+        <?php if (BANCOS_SANDBOX): ?>
+            <aside class="bancos-modo-sandbox" role="status" aria-label="Modo operativo">
+                MODO DE PRUEBA · los cambios se guardan únicamente en global_temp
+            </aside>
+        <?php endif; ?>
         <?php 
             // chequea si el usuario está logueado: si se le envió info por POST o si hay un SESSION o COOKIE
             // chequea si están disponibles todos los datos necesarios para abrir la aplicación o si falta algo

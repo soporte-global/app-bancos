@@ -16,13 +16,13 @@ $cursor = $cursores->codificar(
     '2026-07-01',
     2,
     6,
-    ['estado' => 'ABIERTO', 'mensajes' => 'SIN']
+    ['estado' => 'ABIERTO', 'mensajes' => 'SIN', 'conciliacion' => 'PENDIENTE']
 );
 $datos = $cursores->decodificar(
     $cursor,
     103500000000515822,
     '2026-07-01',
-    ['estado' => 'ABIERTO', 'mensajes' => 'SIN']
+    ['estado' => 'ABIERTO', 'mensajes' => 'SIN', 'conciliacion' => 'PENDIENTE']
 );
 
 $comprobar($datos['fecha'] === '2026-07-08', 'El cursor no conservó la fecha.');
@@ -35,7 +35,7 @@ try {
         $cursor,
         103500000000515822,
         '2026-07-01',
-        ['estado' => 'CERRADO', 'mensajes' => 'SIN']
+        ['estado' => 'CERRADO', 'mensajes' => 'SIN', 'conciliacion' => 'PENDIENTE']
     );
     throw new RuntimeException('Se aceptó un cursor para filtros distintos.');
 } catch (InvalidArgumentException $esperada) {

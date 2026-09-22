@@ -100,6 +100,8 @@ La respuesta informa `resultado`, `listo_para_conciliar`, `requiere_conciliacion
 
 `POST api.php?accion=cheque.conciliar` recibe el mismo contexto y exige sandbox, administración o `cheque-conciliar`, JSON, CSRF e `Idempotency-Key`. Bloquea el movimiento `PARA_CERRAR`, repite el preflight y serializa por cheque. En una única transacción crea operación `101/1/101`, relaciones de origen y resultado, valor bancario `124/79/4`, concepto `376`, asiento y dos líneas balanceadas; cambia a `7` sólo la copia del cheque y registra `bancos_conciliacion_cheque`. Los usuarios ERP y el número de asiento quedan nulos; la identidad Hub permanece en auditoría. El movimiento continúa `PARA_CERRAR`, y el preflight de cierre reconoce `SIN_CAMBIOS_YA_CONCILIADO`. Producción sigue rechazada con `503`.
 
+El cliente puede ejecutar a continuación `POST api.php?accion=movimiento.cerrar` con una clave idempotente distinta. Para un cheque ya conciliado, el cierre responde con alcance `SIN_EFECTO_ERP`, agrega únicamente el estado operativo `CERRADO` y conserva sin cambios todos los objetos contables creados por la conciliación.
+
 ## Previsualización de importación
 
 `POST api.php?accion=importacion.previsualizar` usa `multipart/form-data` y recibe `archivo`, `cuenta_bancaria_id`, `configuracion_id` e `inicio_periodo`. Requiere `importacion-previsualizar` o nivel administrador, sesión, CSRF y sandbox; no requiere idempotencia porque no persiste datos. La cuenta debe existir en ERP y la configuración elegida debe estar activa y vinculada mediante `bancos_configuracion_cuenta` o una importación previa.

@@ -4,15 +4,19 @@ require_once dirname(__DIR__) . '/src/config.php';
 require_once RUTA . '/src/autoload.php';
 
 use AppBancos\Application\ConciliarCheque;
+use AppBancos\Application\CerrarMovimientoMensual;
 use AppBancos\Application\EjecutorComandoIdempotente;
 use AppBancos\Application\RecursoNoDisponibleException;
 use AppBancos\Infrastructure\EsquemaBancos;
 use AppBancos\Repository\AuditoriaRepository;
+use AppBancos\Repository\BorradorAsientoErpGateway;
+use AppBancos\Repository\BandejaMensualRepository;
 use AppBancos\Repository\CierreMovimientoRepository;
 use AppBancos\Repository\ConciliacionChequeErpGateway;
 use AppBancos\Repository\IdempotenciaRepository;
 use AppBancos\Repository\PreflightCierreMovimientoRepository;
 use AppBancos\Repository\PreflightConciliacionChequeRepository;
+use AppBancos\Repository\ValorErpGateway;
 
 function comprobarConciliacionCheque($condicion, $mensaje)
 {
@@ -27,6 +31,21 @@ function casoConciliacionCheque(PDO $pdo, EsquemaBancos $esquema)
         new CierreMovimientoRepository($pdo, $esquema),
         new PreflightConciliacionChequeRepository($pdo, $esquema),
         new ConciliacionChequeErpGateway($pdo, $esquema),
+        new EjecutorComandoIdempotente(
+            $pdo,
+            new IdempotenciaRepository($pdo, $esquema),
+            new AuditoriaRepository($pdo, $esquema)
+        )
+    );
+}
+
+function casoCierreCheque(PDO $pdo, EsquemaBancos $esquema)
+{
+    return new CerrarMovimientoMensual(
+        new CierreMovimientoRepository($pdo, $esquema),
+        new PreflightCierreMovimientoRepository($pdo, $esquema),
+        new ValorErpGateway($pdo, $esquema),
+        new BorradorAsientoErpGateway($pdo, $esquema),
         new EjecutorComandoIdempotente(
             $pdo,
             new IdempotenciaRepository($pdo, $esquema),
@@ -78,6 +97,7 @@ $claveRollback = 'test-conciliar-rollback-' . $marca;
 $claveMisma = 'test-conciliar-misma-' . $marca;
 $claveContencion = 'test-conciliar-contencion-' . $marca;
 $claveCompetidor = 'test-conciliar-competidor-' . $marca;
+$claveCierre = 'test-cerrar-cheque-' . $marca;
 $funcionRollback = 'bancos_test_fallar_conciliacion_' . $marca;
 $triggerRollback = 'bancos_test_fallar_conciliacion_' . $marca;
 $configuracionId = null;
@@ -184,6 +204,17 @@ try {
         'cuenta_bancaria_id' => $cuentaBancaria['id'],
         'inicio_periodo' => $base['inicio_periodo'],
     ];
+    $movimientosPendientes = (new BandejaMensualRepository($pdo, $esquema, $usuarioId))->listar(
+        $cuentaBancaria['id'],
+        $base['inicio_periodo'],
+        null,
+        100,
+        ['conciliacion' => 'PENDIENTE']
+    );
+    comprobarConciliacionCheque(
+        in_array($movimientoId, array_map('intval', array_column($movimientosPendientes, 'id')), true),
+        'La bandeja no clasifico el cheque pendiente antes de conciliar.'
+    );
 
     $pdo->exec(
         "CREATE FUNCTION global_temp.{$funcionRollback}() RETURNS trigger AS \$\$
@@ -409,6 +440,114 @@ try {
         in_array('SIN_CAMBIOS_YA_CONCILIADO', array_column($cierre['efectos_previstos'], 'accion'), true),
         'El cierre no conserva evidencia de la conciliacion.'
     );
+    $movimientosDetalle = (new BandejaMensualRepository($pdo, $esquema, $usuarioId))->listar(
+        $cuentaBancaria['id'],
+        $base['inicio_periodo'],
+        null,
+        100
+    );
+    $detalleConciliado = null;
+    foreach ($movimientosDetalle as $movimientoDetalle) {
+        if ((int) $movimientoDetalle['id'] === $movimientoId) {
+            $detalleConciliado = $movimientoDetalle;
+            break;
+        }
+    }
+    comprobarConciliacionCheque(
+        $detalleConciliado !== null && $detalleConciliado['conciliacion_codigo'] === 'CONCILIADO'
+        && count($detalleConciliado['conciliaciones_cheque']) === 1,
+        'La bandeja no expuso la conciliacion del movimiento.'
+    );
+    $movimientosConciliados = (new BandejaMensualRepository($pdo, $esquema, $usuarioId))->listar(
+        $cuentaBancaria['id'],
+        $base['inicio_periodo'],
+        null,
+        100,
+        ['conciliacion' => 'CONCILIADO']
+    );
+    comprobarConciliacionCheque(
+        in_array($movimientoId, array_map('intval', array_column($movimientosConciliados, 'id')), true),
+        'El filtro CONCILIADO no encontro la conciliacion creada.'
+    );
+    $trazabilidad = $detalleConciliado['conciliaciones_cheque'][0];
+    comprobarConciliacionCheque(
+        $trazabilidad['operador'] === 'hvega'
+        && $trazabilidad['valor_origen_zetti_id'] === $cheque['id']
+        && $trazabilidad['operacion_zetti_id'] === $resultado['operacion_zetti_id']
+        && $trazabilidad['valor_resultante_zetti_id'] === $resultado['valor_resultante_zetti_id']
+        && $trazabilidad['asiento_zetti_id'] === $resultado['asiento_zetti_id']
+        && $trazabilidad['conciliado_en'] !== '',
+        'La trazabilidad visible de la conciliacion esta incompleta.'
+    );
+
+    $consulta = $pdo->prepare(
+        "SELECT
+            (SELECT count(*) FROM global_temp.operacion WHERE id=:operacion),
+            (SELECT count(*) FROM global_temp.operacion_valor WHERE operacion=:operacion),
+            (SELECT count(*) FROM global_temp.valor WHERE id IN (:origen,:resultante)),
+            (SELECT count(*) FROM global_temp.valor_concepto WHERE valor=:resultante),
+            (SELECT count(*) FROM global_temp.asiento WHERE id=:asiento),
+            (SELECT count(*) FROM global_temp.movimiento WHERE asiento=:asiento),
+            (SELECT count(*) FROM global_temp.bancos_conciliacion_cheque WHERE movimiento_id=:movimiento)"
+    );
+    $parametrosEfectos = [
+        ':operacion' => $resultado['operacion_zetti_id'],
+        ':origen' => $cheque['id'],
+        ':resultante' => $resultado['valor_resultante_zetti_id'],
+        ':asiento' => $resultado['asiento_zetti_id'],
+        ':movimiento' => $movimientoId,
+    ];
+    $consulta->execute($parametrosEfectos);
+    $efectosAntesCierre = array_map('intval', $consulta->fetch(PDO::FETCH_NUM));
+    comprobarConciliacionCheque(
+        $efectosAntesCierre === [1, 2, 2, 1, 1, 2, 1],
+        'La conciliacion no dejo el conjunto de efectos esperado antes del cierre.'
+    );
+
+    $casoCierre = casoCierreCheque($pdo, $esquema);
+    $cierreEjecutado = $casoCierre->ejecutar($entrada, $usuarioId, $claveCierre);
+    $cierreRepetido = $casoCierre->ejecutar($entrada, $usuarioId, $claveCierre);
+    comprobarConciliacionCheque(
+        !$cierreEjecutado['repetida'] && $cierreRepetido['repetida'],
+        'El cierre posterior del cheque no fue idempotente.'
+    );
+    comprobarConciliacionCheque(
+        $cierreEjecutado['respuesta']['estado'] === 'CERRADO'
+        && $cierreEjecutado['respuesta']['alcance'] === 'SIN_EFECTO_ERP'
+        && $cierreEjecutado['respuesta']['efectos_erp'] === 0
+        && $cierreEjecutado['respuesta']['efectos_aplicados'] === [],
+        'El cierre posterior intento repetir efectos ERP de la conciliacion.'
+    );
+    comprobarConciliacionCheque(
+        in_array(
+            'SIN_CAMBIOS_YA_CONCILIADO',
+            array_column($cierreEjecutado['respuesta']['preflight']['efectos_previstos'], 'accion'),
+            true
+        ),
+        'El cierre ejecutado no conservo la conciliacion como evidencia sin cambios.'
+    );
+    $consulta->execute($parametrosEfectos);
+    $efectosDespuesCierre = array_map('intval', $consulta->fetch(PDO::FETCH_NUM));
+    comprobarConciliacionCheque(
+        $efectosDespuesCierre === $efectosAntesCierre,
+        'El cierre duplico o elimino efectos contables de la conciliacion.'
+    );
+    $consulta = $pdo->prepare(
+        "SELECT e.codigo, count(*) OVER () cantidad
+         FROM global_temp.bancos_historial_asignacion h
+         JOIN global_temp.bancos_estado e ON e.id=h.estado_id
+         WHERE h.movimiento_id=:movimiento AND h.observacion=:observacion"
+    );
+    $consulta->execute([
+        ':movimiento' => $movimientoId,
+        ':observacion' => 'API|CERRAR|SIN_EFECTO_ERP|' . $claveCierre,
+    ]);
+    $estadoCierre = $consulta->fetch(PDO::FETCH_ASSOC);
+    comprobarConciliacionCheque(
+        $estadoCierre !== false && $estadoCierre['codigo'] === 'CERRADO'
+        && (int) $estadoCierre['cantidad'] === 1,
+        'El circuito no registro exactamente un cierre operativo.'
+    );
 } finally {
     if (isset($pdoIdempotencia) && $pdoIdempotencia->inTransaction()) {
         $pdoIdempotencia->rollBack();
@@ -426,23 +565,25 @@ try {
         $pdo->prepare(
             "DELETE FROM global_temp.bancos_evento_auditoria WHERE solicitud_id IN (
                 SELECT id FROM global_temp.bancos_solicitud_idempotente
-                WHERE clave IN (:exito,:rollback,:misma,:contencion,:competidor))"
+                WHERE clave IN (:exito,:rollback,:misma,:contencion,:competidor,:cierre))"
         )->execute([
             ':exito' => $clave,
             ':rollback' => $claveRollback,
             ':misma' => $claveMisma,
             ':contencion' => $claveContencion,
             ':competidor' => $claveCompetidor,
+            ':cierre' => $claveCierre,
         ]);
         $pdo->prepare(
             'DELETE FROM global_temp.bancos_solicitud_idempotente
-             WHERE clave IN (:exito,:rollback,:misma,:contencion,:competidor)'
+             WHERE clave IN (:exito,:rollback,:misma,:contencion,:competidor,:cierre)'
         )->execute([
             ':exito' => $clave,
             ':rollback' => $claveRollback,
             ':misma' => $claveMisma,
             ':contencion' => $claveContencion,
             ':competidor' => $claveCompetidor,
+            ':cierre' => $claveCierre,
         ]);
         $pdo->prepare('DELETE FROM global_temp.bancos_conciliacion_cheque WHERE movimiento_id=:id')
             ->execute([':id' => $movimientoId]);

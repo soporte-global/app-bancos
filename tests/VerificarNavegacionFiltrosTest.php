@@ -14,11 +14,14 @@ $comprobar(strpos($vista, 'data-pagina-anterior') !== false, 'Falta el control A
 $comprobar(strpos($vista, 'data-pagina-siguiente') !== false, 'Falta el control Siguiente para resultados con cursor.');
 $comprobar(strpos($vista, 'data-posicion-pagina') !== false, 'Falta la posición amigable de página.');
 $comprobar(strpos($vista, 'data-limpiar-filtro=') !== false, 'Falta la opción de limpiar los filtros soportados.');
+$comprobar(strpos($vista, 'name="conciliacion"') !== false, 'Falta el filtro de conciliación.');
+$comprobar(strpos($vista, 'Cheque pendiente') !== false && strpos($vista, 'Cheque conciliado') !== false && strpos($vista, 'No requiere conciliación') !== false, 'Faltan opciones del filtro de conciliación.');
 $comprobar(strpos($javascript, 'sessionStorage') !== false, 'Falta persistencia local de la navegación anterior.');
 $comprobar(strpos($javascript, "parametros.has('cursor')") !== false, 'La paginación no reconoce el cursor actual.');
 $comprobar(strpos($javascript, "inicio.searchParams.delete('cursor')") !== false, 'Anterior debe tener un regreso seguro aunque falte historial local.');
 $comprobar(strpos($javascript, 'paginaAnteriorDesdeReferrer(parametros) || paginaInicialActual()') !== false, 'Anterior debe recuperar referrer o primera página.');
 $comprobar(strpos($javascript, "etiqueta: 'Límite: '") !== false, 'Falta la actualización local del badge de límite.');
+$comprobar(strpos($javascript, "{ nombre: 'conciliacion', prefijo: 'Conciliación: ' }") !== false, 'El filtro de conciliación no actualiza su indicador local.');
 $comprobar(strpos($css, '.bandeja-paginacion-controles') !== false, 'Falta el layout de los controles de paginación.');
 $comprobar(strpos($javascript, 'atob(') === false, 'La UI no debe decodificar el cursor opaco.');
 $comprobar(strpos($vista, '$resultado->pagina_actual') !== false, 'La posición debe provenir del cursor validado por el servidor.');

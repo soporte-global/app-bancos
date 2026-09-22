@@ -129,6 +129,7 @@ final class CursorBandejaMensual
             'responsable_id' => isset($filtros['responsable_id']) ? (int) $filtros['responsable_id'] : null,
             'asociacion' => $filtros['asociacion'] ?? null,
             'mensajes' => $filtros['mensajes'] ?? null,
+            'conciliacion' => $filtros['conciliacion'] ?? null,
         ];
         return hash('sha256', json_encode($normalizados));
     }

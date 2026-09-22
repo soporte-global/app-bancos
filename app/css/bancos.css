@@ -438,6 +438,12 @@ body.bandeja-detalle-activo {
     white-space: nowrap;
 }
 
+.conciliacion-etiqueta {
+    display: flex;
+    width: fit-content;
+    margin-top: 4px;
+}
+
 .bandeja-ver-detalle {
     min-height: 32px;
     padding: 5px 8px;
@@ -788,12 +794,42 @@ body.bandeja-detalle-activo {
 }
 
 .bandeja-detalle-lista li,
-.bandeja-borrador {
+.bandeja-borrador,
+.bandeja-conciliacion {
     padding: 9px;
     border: 1px solid;
     border-radius: var(--radio-control);
     font-size: 0.7rem;
     line-height: 1.45;
+}
+
+.bandeja-conciliacion + .bandeja-conciliacion {
+    margin-top: 8px;
+}
+
+.bandeja-conciliacion dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 9px 0 0;
+}
+
+.bandeja-conciliacion dt {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bandeja-conciliacion dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+}
+
+.bandeja-conciliacion small {
+    display: block;
+    margin-top: 8px;
 }
 
 .bandeja-detalle-lista span,

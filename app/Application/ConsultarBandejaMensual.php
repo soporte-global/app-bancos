@@ -94,7 +94,20 @@ final class ConsultarBandejaMensual
             'responsable_id' => $responsable === null ? null : (int) $responsable,
             'asociacion' => $this->presencia($entrada['asociacion'] ?? '', 'asociacion'),
             'mensajes' => $this->presencia($entrada['mensajes'] ?? '', 'mensajes'),
+            'conciliacion' => $this->conciliacion($entrada['conciliacion'] ?? ''),
         ];
+    }
+
+    private function conciliacion($valor)
+    {
+        $valor = strtoupper(trim((string) $valor));
+        if ($valor === '') {
+            return null;
+        }
+        if (!in_array($valor, ['PENDIENTE', 'CONCILIADO', 'NO_REQUIERE'], true)) {
+            throw new InvalidArgumentException('conciliacion no es válida.');
+        }
+        return $valor;
     }
 
     private function presencia($valor, $nombre)

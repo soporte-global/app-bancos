@@ -72,7 +72,8 @@
                 { nombre: 'estado', prefijo: 'Estado: ' },
                 { nombre: 'responsable_id', prefijo: 'Responsable: ' },
                 { nombre: 'asociacion', prefijo: '' },
-                { nombre: 'mensajes', prefijo: '' }
+                { nombre: 'mensajes', prefijo: '' },
+                { nombre: 'conciliacion', prefijo: 'Conciliación: ' }
             ];
             if (limite.value !== '' && limite.value !== '50') {
                 activos.push({ nombre: 'limite', etiqueta: 'Límite: ' + limite.value });
@@ -113,7 +114,7 @@
             actualizarContexto();
         });
         periodo.addEventListener('input', actualizarContexto);
-        Array.prototype.forEach.call(formulario.querySelectorAll('[name="estado"], [name="responsable_id"], [name="asociacion"], [name="mensajes"]'), function (control) {
+        Array.prototype.forEach.call(formulario.querySelectorAll('[name="estado"], [name="responsable_id"], [name="asociacion"], [name="mensajes"], [name="conciliacion"]'), function (control) {
             control.addEventListener('input', actualizarFiltros);
         });
         limite.addEventListener('input', actualizarFiltros);
@@ -186,7 +187,7 @@
             }
 
             var parametrosReferencia = referencia.searchParams;
-            var mismoContexto = ['pag', 'cuenta_bancaria_id', 'inicio_periodo', 'estado', 'responsable_id', 'asociacion', 'mensajes', 'limite'].every(function (nombre) {
+            var mismoContexto = ['pag', 'cuenta_bancaria_id', 'inicio_periodo', 'estado', 'responsable_id', 'asociacion', 'mensajes', 'conciliacion', 'limite'].every(function (nombre) {
                 return parametrosReferencia.get(nombre) === parametrosActuales.get(nombre);
             });
             return mismoContexto ? rutaRelativa(referencia) : null;

@@ -43,6 +43,8 @@ comprobarBandeja(isset($primeraPagina[0]['asociaciones']), 'La bandeja no expuso
 comprobarBandeja(isset($primeraPagina[0]['mensajes']), 'La bandeja no expuso el detalle de mensajes.');
 comprobarBandeja(isset($primeraPagina[0]['historial']), 'La bandeja no expuso el historial.');
 comprobarBandeja(isset($primeraPagina[0]['borradores']), 'La bandeja no expuso los borradores.');
+comprobarBandeja(isset($primeraPagina[0]['conciliaciones_cheque']), 'La bandeja no expuso la trazabilidad de cheques.');
+comprobarBandeja($primeraPagina[0]['conciliacion_codigo'] === 'NO_REQUIERE', 'La bandeja clasificó como cheque un movimiento sin valor asociado.');
 
 $contexto = (new ContextoBandejaMensualRepository(
     $pdo,
@@ -84,6 +86,17 @@ $respuestaSiguiente = $casoDeUso->ejecutar([
 comprobarBandeja($respuestaSiguiente['movimientos'][0]['referencia'] === 'DBG-003', 'El cursor firmado no continuó la bandeja.');
 comprobarBandeja($respuestaSiguiente['pagina_actual'] === 2, 'El cursor no conservó el número de página.');
 comprobarBandeja($respuestaSiguiente['inicio_actual'] === 3, 'El cursor no conservó el inicio del rango.');
+
+$sinConciliacion = $casoDeUso->ejecutar([
+    'cuenta_bancaria_id' => $cuentaFixture,
+    'inicio_periodo' => '2026-09-01',
+    'conciliacion' => 'NO_REQUIERE',
+]);
+comprobarBandeja(count($sinConciliacion['movimientos']) === 5, 'El filtro NO_REQUIERE no devolvió el fixture completo.');
+comprobarBandeja(
+    count(array_unique(array_column($sinConciliacion['movimientos'], 'conciliacion_codigo'))) === 1,
+    'El filtro de conciliación devolvió estados distintos del solicitado.'
+);
 
 $importacionConMensaje = $pdo->query(
     "SELECT i.cuenta_bancaria_zetti_id, i.inicio_periodo
@@ -127,6 +140,16 @@ try {
         'estado' => 'INVENTADO',
     ]);
     throw new RuntimeException('Se aceptó un filtro de estado fuera del contrato.');
+} catch (InvalidArgumentException $esperada) {
+}
+
+try {
+    $casoDeUso->ejecutar([
+        'cuenta_bancaria_id' => $cuentaFixture,
+        'inicio_periodo' => '2026-09-01',
+        'conciliacion' => 'INVENTADA',
+    ]);
+    throw new RuntimeException('Se aceptó un filtro de conciliación fuera del contrato.');
 } catch (InvalidArgumentException $esperada) {
 }
 

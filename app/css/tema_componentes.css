@@ -93,6 +93,7 @@ body:has(.bancos-app),
 
 .bandeja-detalle-lista li,
 .bandeja-borrador,
+.bandeja-conciliacion,
 .bandeja-lineas th,
 .bandeja-lineas td {
     border-color: var(--ui-borde);
@@ -100,6 +101,7 @@ body:has(.bancos-app),
 
 .bandeja-detalle-lista li,
 .bandeja-borrador,
+.bandeja-conciliacion,
 .bandeja-lineas th {
     background: var(--ui-superficie-hundida);
 }
@@ -392,6 +394,24 @@ body:has(.bancos-app),
     border-color: var(--ui-exito);
     background: var(--ui-exito-fondo);
     color: var(--ui-exito-texto);
+}
+
+.conciliacion-etiqueta--pendiente {
+    border-color: var(--ui-advertencia);
+    background: var(--ui-advertencia-fondo);
+    color: var(--ui-advertencia-texto);
+}
+
+.conciliacion-etiqueta--conciliado {
+    border-color: var(--ui-exito);
+    background: var(--ui-exito-fondo);
+    color: var(--ui-exito-texto);
+}
+
+.conciliacion-etiqueta--no-requiere {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto-suave);
 }
 
 .bandeja-ver-detalle,

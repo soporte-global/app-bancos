@@ -11,6 +11,7 @@ $movimientoBase = [
     'credito' => '125.430,50',
     'debito' => '0,00',
     'estado_codigo' => 'ABIERTO',
+    'conciliacion_codigo' => 'NO_REQUIERE',
     'valor_zetti_id' => null,
     'asiento_zetti_id' => null,
     'borrador_asiento_id' => null,
@@ -24,6 +25,7 @@ $movimientoBase = [
     'asociaciones' => [],
     'mensajes' => [],
     'borradores' => [],
+    'conciliaciones_cheque' => [],
     'historial' => [],
 ];
 
@@ -34,6 +36,7 @@ $movimientoConSeguimiento['descripcion'] = 'Débito de servicio bancario mensual
 $movimientoConSeguimiento['credito'] = '0,00';
 $movimientoConSeguimiento['debito'] = '18.250,00';
 $movimientoConSeguimiento['estado_codigo'] = 'PARA_CERRAR';
+$movimientoConSeguimiento['conciliacion_codigo'] = 'CONCILIADO';
 $movimientoConSeguimiento['asiento_zetti_id'] = 48219;
 $movimientoConSeguimiento['borrador_id'] = 731;
 $movimientoConSeguimiento['borrador_fecha_contable'] = '2026-07-15';
@@ -73,6 +76,20 @@ $movimientoConSeguimiento['borradores'] = [[
         'haber' => '0,00',
     ]],
 ]];
+$movimientoConSeguimiento['conciliaciones_cheque'] = [[
+    'id' => 91,
+    'estado_codigo' => 'CERRADO',
+    'operador_hub_id' => 159,
+    'operador' => 'hvega',
+    'valor_origen_zetti_id' => '700001',
+    'operacion_zetti_id' => '800001',
+    'valor_resultante_zetti_id' => '700002',
+    'asiento_zetti_id' => '900001',
+    'motivo' => null,
+    'forzada' => false,
+    'evidencia_origen' => 'PREFLIGHT|CONFIGURACION:4|MONTO_EXACTO',
+    'conciliado_en' => '2026-07-15 10:20:00-03',
+]];
 $movimientoConSeguimiento['historial'] = [[
     'estado_codigo' => 'PARA_CERRAR',
     'usuario' => 'hvega',
@@ -109,6 +126,7 @@ $bandejaFixture = (object) [
             'responsable_id' => null,
             'asociacion' => null,
             'mensajes' => null,
+            'conciliacion' => null,
         ],
     ],
 ];

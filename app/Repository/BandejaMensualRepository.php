@@ -52,6 +52,8 @@ final class BandejaMensualRepository
         $estado = $this->esquemas->tablaBancos('bancos_estado');
         $borrador = $this->esquemas->tablaBancos('bancos_borrador_asiento');
         $lineaBorrador = $this->esquemas->tablaBancos('bancos_linea_borrador_asiento');
+        $conciliacionCheque = $this->esquemas->tablaBancos('bancos_conciliacion_cheque');
+        $valorErp = $this->esquemas->tablaLecturaErp('valor');
 
         $condiciones = [];
         if ($tieneCursor) {
@@ -78,6 +80,9 @@ final class BandejaMensualRepository
                 . ' mensaje_filtro WHERE mensaje_filtro.movimiento_id = m.id)';
             $condiciones[] = $filtros['mensajes'] === 'CON' ? $existe : 'NOT ' . $existe;
         }
+        if ($filtros['conciliacion'] !== null) {
+            $condiciones[] = 'estado_conciliacion.codigo = :filtro_conciliacion';
+        }
         $whereAdicional = $condiciones ? 'AND ' . implode("\n                  AND ", $condiciones) : '';
 
         $sql = sprintf(
@@ -91,7 +96,8 @@ final class BandejaMensualRepository
                        m.codigo_extracto, m.credito, m.debito, m.moneda,
                        m.subtipo_valor_zetti_id,
                        h.estado_id, h.usuario_hub_id,
-                       COALESCE(estado_historial.codigo, estado_importacion.codigo) AS estado_codigo
+                       COALESCE(estado_historial.codigo, estado_importacion.codigo) AS estado_codigo,
+                       estado_conciliacion.codigo AS conciliacion_codigo
                 FROM %2$s AS m
                 JOIN lote AS l ON l.id = m.importacion_id
                 LEFT JOIN LATERAL (
@@ -103,6 +109,24 @@ final class BandejaMensualRepository
                 ) AS h ON true
                 LEFT JOIN %7$s AS estado_historial ON estado_historial.id = h.estado_id
                 LEFT JOIN %7$s AS estado_importacion ON estado_importacion.id = l.estado_id
+                LEFT JOIN LATERAL (
+                    SELECT CASE
+                        WHEN EXISTS (
+                            SELECT 1 FROM %10$s AS cq
+                            WHERE cq.movimiento_id = m.id
+                        ) THEN \'CONCILIADO\'
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM %4$s AS ac
+                            JOIN %11$s AS ve ON ve.id = ac.valor_zetti_id
+                            WHERE ac.movimiento_id = m.id
+                              AND ac.activo
+                              AND ve.subtipo_valor IN (13, 14, 10070, 10071)
+                              AND ve.estado <> 7
+                        ) THEN \'PENDIENTE\'
+                        ELSE \'NO_REQUIERE\'
+                    END AS codigo
+                ) AS estado_conciliacion ON true
                 WHERE 1 = 1
                   %6$s
                 ORDER BY m.fecha_operacion NULLS LAST, m.id
@@ -155,7 +179,9 @@ final class BandejaMensualRepository
             $whereAdicional,
             $estado,
             $borrador,
-            $lineaBorrador
+            $lineaBorrador,
+            $conciliacionCheque,
+            $valorErp
         );
 
         $consulta = $this->pdo->prepare($sql);
@@ -172,6 +198,9 @@ final class BandejaMensualRepository
         }
         if ($filtros['responsable_id'] !== null) {
             $consulta->bindValue(':filtro_responsable', $filtros['responsable_id'], PDO::PARAM_INT);
+        }
+        if ($filtros['conciliacion'] !== null) {
+            $consulta->bindValue(':filtro_conciliacion', $filtros['conciliacion']);
         }
         $consulta->bindValue(':limite', $detectarSiguiente ? $limite + 1 : $limite, PDO::PARAM_INT);
         $consulta->execute();
@@ -219,6 +248,7 @@ final class BandejaMensualRepository
             $movimiento['mensajes_no_leidos'] = 0;
             $movimiento['historial'] = [];
             $movimiento['borradores'] = [];
+            $movimiento['conciliaciones_cheque'] = [];
         }
         unset($movimiento);
 
@@ -273,6 +303,25 @@ final class BandejaMensualRepository
         );
         foreach ($filas as $fila) {
             $movimientos[$indices[(int) $fila['movimiento_id']]]['historial'][] = $fila;
+        }
+
+        $conciliacionCheque = $this->esquemas->tablaBancos('bancos_conciliacion_cheque');
+        $filas = $this->consultarIds(
+            "SELECT c.movimiento_id, c.id, e.codigo AS estado_codigo,
+                    c.operador_hub_id, rl.usuario AS operador,
+                    c.valor_origen_zetti_id::text, c.operacion_zetti_id::text,
+                    c.valor_resultante_zetti_id::text, c.asiento_zetti_id::text,
+                    c.motivo, c.forzada, c.evidencia_origen, c.conciliado_en
+             FROM {$conciliacionCheque} AS c
+             JOIN {$estado} AS e ON e.id = c.estado_id
+             LEFT JOIN global_prod.rrhh_login AS rl ON rl.id = c.operador_hub_id
+             WHERE c.movimiento_id IN (%IDS%)
+             ORDER BY c.movimiento_id, c.conciliado_en, c.id",
+            $ids
+        );
+        foreach ($filas as $fila) {
+            $fila['forzada'] = in_array($fila['forzada'], [true, 1, '1', 't'], true);
+            $movimientos[$indices[(int) $fila['movimiento_id']]]['conciliaciones_cheque'][] = $fila;
         }
 
         $filas = $this->consultarIds(
@@ -344,6 +393,7 @@ final class BandejaMensualRepository
             'responsable_id' => $filtros['responsable_id'] ?? null,
             'asociacion' => $filtros['asociacion'] ?? null,
             'mensajes' => $filtros['mensajes'] ?? null,
+            'conciliacion' => $filtros['conciliacion'] ?? null,
         ];
         if ($normalizados['estado'] !== null
             && !in_array($normalizados['estado'], ['ABIERTO', 'PARA_CERRAR', 'CERRADO'], true)
@@ -362,6 +412,11 @@ final class BandejaMensualRepository
             ) {
                 throw new InvalidArgumentException('filtros.' . $nombre . ' no es válido.');
             }
+        }
+        if ($normalizados['conciliacion'] !== null
+            && !in_array($normalizados['conciliacion'], ['PENDIENTE', 'CONCILIADO', 'NO_REQUIERE'], true)
+        ) {
+            throw new InvalidArgumentException('filtros.conciliacion no es válido.');
         }
         return $normalizados;
     }

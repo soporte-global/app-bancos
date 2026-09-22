@@ -22,9 +22,13 @@ $comprobar(strpos($vista, 'data-asignar-responsable') !== false, 'Falta la asign
 $comprobar(strpos($vista, 'acceso efectivo a APP BANCOS') !== false, 'La interfaz no explica el alcance de responsables.');
 $comprobar(strpos($vista, '<h3>Borradores</h3>') !== false, 'Falta la sección Borradores.');
 $comprobar(strpos($vista, '<h3>Historial</h3>') !== false, 'Falta la sección Historial.');
+$comprobar(strpos($vista, '<h3>Trazabilidad de conciliación</h3>') !== false, 'Falta la trazabilidad de conciliación.');
+$comprobar(strpos($vista, 'data-conciliacion-estado=') !== false, 'Falta el indicador de conciliación en la fila.');
+$comprobar(strpos($vista, 'valor_resultante_zetti_id') !== false, 'La trazabilidad no muestra el valor resultante.');
 $comprobar(strpos($vista, 'Sin eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
 $comprobar(strpos($css, '.bandeja-resumen-texto') !== false && strpos($css, '-webkit-line-clamp: 2') !== false, 'La fila debe resumir el contenido extenso.');
 $comprobar(strpos($css, '.bandeja-detalle') !== false && strpos($css, 'right: 0') !== false, 'El detalle debe abrir como panel lateral.');
+$comprobar(strpos(file_get_contents(__DIR__ . '/../app/css/tema_componentes.css'), '.bandeja-conciliacion') !== false, 'La trazabilidad debe respetar el tema visual compartido.');
 $comprobar(substr_count($css, 'height: 100dvh') >= 2, 'El panel y su fondo deben cubrir el viewport aunque la tabla tenga pocas filas.');
 $comprobar(strpos($css, 'body:has(.bancos-app)') !== false && strpos($css, 'min-height: 100dvh') !== false, 'El shell filtrado debe conservar como mínimo la altura visible.');
 $comprobar(strpos($javascript, 'plantilla.content.cloneNode(true)') !== false, 'El panel debe usar contenido local sin otra consulta.');
@@ -47,6 +51,12 @@ $comprobar(substr_count($html, 'data-abrir-detalle') === 2, 'Cada movimiento deb
 $comprobar(strpos($html, 'Borrador #731 · COMISIONES') !== false, 'La fila debe mostrar un resumen compacto del borrador.');
 $comprobar(strpos($html, 'Pendiente de revisión documental por Tesorería.') !== false, 'El detalle debe conservar el cuerpo completo del mensaje.');
 $comprobar(strpos($html, '<th>Debe</th><th>Haber</th>') !== false && strpos($html, '<td>18.250,00</td>') !== false, 'El detalle debe conservar las líneas del borrador.');
+$comprobar(strpos($html, 'Conciliación #91') !== false, 'El detalle no muestra la conciliación registrada.');
+$comprobar(strpos($html, 'data-conciliacion-estado="CONCILIADO"') !== false, 'La fila no muestra el estado conciliado.');
+$comprobar(strpos($html, 'data-conciliacion-estado="NO_REQUIERE"') !== false, 'La fila no muestra que el movimiento no requiere conciliación.');
+$comprobar(strpos($html, 'Operación</dt><dd>#800001') !== false, 'El detalle no muestra la operación de conciliación.');
+$comprobar(strpos($html, 'Valor resultante</dt><dd>#700002') !== false, 'El detalle no muestra el valor resultante.');
+$comprobar(strpos($html, 'hvega') !== false && strpos($html, '2026-07-15 10:20:00-03') !== false, 'El detalle no muestra operador y fecha de conciliación.');
 
 $_GET = ['fixture_filas' => 1];
 ob_start();

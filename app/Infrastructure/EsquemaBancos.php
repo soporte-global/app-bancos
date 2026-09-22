@@ -57,6 +57,11 @@ final class EsquemaBancos
         return $this->escrituraErp . '.' . $this->validarTabla($tabla);
     }
 
+    public function secuenciaEscrituraErp($secuencia)
+    {
+        return $this->escrituraErp . '.' . $this->validarTabla($secuencia);
+    }
+
     private function validarTabla($tabla)
     {
         $tabla = (string) $tabla;

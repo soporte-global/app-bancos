@@ -8,6 +8,9 @@ use AppBancos\Application\EjecutorComandoIdempotente;
 use AppBancos\Application\AsociarValorMovimientoMensual;
 use AppBancos\Application\AsociarAsientoMovimientoMensual;
 use AppBancos\Application\CrearBorradorMovimientoMensual;
+use AppBancos\Application\CerrarMovimientoMensual;
+use AppBancos\Application\CerrarMovimientoMensualSinErp;
+use AppBancos\Application\ConciliarCheque;
 use AppBancos\Application\ConfirmarImportacionExtracto;
 use AppBancos\Application\ClasificadorImportacionExtracto;
 use AppBancos\Application\GenerarReporteErroresImportacion;
@@ -17,19 +20,35 @@ use AppBancos\Application\AsignarResponsableMovimientoMensual;
 use AppBancos\Application\ActualizarValidacionAutomaticaRegla;
 use AppBancos\Application\GuardarReglaClasificacion;
 use AppBancos\Application\RetirarReglaClasificacion;
+use AppBancos\Application\VincularCuentaConfiguracion;
+use AppBancos\Application\DesvincularCuentaConfiguracion;
+use AppBancos\Application\GuardarMapeoCuentaContable;
+use AppBancos\Application\RetirarMapeoCuentaContable;
+use AppBancos\Application\GuardarReglaAsignacion;
+use AppBancos\Application\RetirarReglaAsignacion;
 use AppBancos\Application\ParserExtractoDelimitado;
 use AppBancos\Application\PrevisualizarImportacionExtracto;
 use AppBancos\Application\PrepararMovimientoMensual;
+use AppBancos\Application\PrevalidarCierreMovimientoMensual;
+use AppBancos\Application\PrevalidarConciliacionCheque;
 use AppBancos\Application\RevertirPreparacionMovimientoMensual;
 use AppBancos\Infrastructure\EsquemaBancos;
 use AppBancos\Repository\AuditoriaRepository;
+use AppBancos\Repository\BorradorAsientoErpGateway;
 use AppBancos\Repository\IdempotenciaRepository;
 use AppBancos\Repository\MovimientoMensualRepository;
 use AppBancos\Repository\BusquedaRecursosErpRepository;
 use AppBancos\Repository\MensajeriaMovimientoRepository;
 use AppBancos\Repository\AsignacionMovimientoRepository;
 use AppBancos\Repository\ConfiguracionClasificacionRepository;
+use AppBancos\Repository\CierreMovimientoRepository;
+use AppBancos\Repository\ConciliacionChequeErpGateway;
 use AppBancos\Repository\ImportacionExtractoRepository;
+use AppBancos\Repository\MapeoCuentaContableRepository;
+use AppBancos\Repository\ReglaAsignacionRepository;
+use AppBancos\Repository\PreflightCierreMovimientoRepository;
+use AppBancos\Repository\PreflightConciliacionChequeRepository;
+use AppBancos\Repository\ValorErpGateway;
 use AppBancos\Security\AutorizadorAccion;
 use AppBancos\Security\ProteccionCsrf;
 use GlobalApps\Core\Acceso\PoliticaAcceso;
@@ -92,6 +111,154 @@ try {
     }
     if ($accion === 'csrf') {
         throw new ApiException(405, 'METODO_NO_PERMITIDO', 'La accion csrf solo acepta GET.');
+    }
+
+    if ($accion === 'movimiento.prevalidar-cierre') {
+        if ($metodo !== 'GET') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'El preflight de cierre solo acepta GET.');
+        }
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'movimiento-cerrar');
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new PrevalidarCierreMovimientoMensual(
+            new PreflightCierreMovimientoRepository($conexion, $esquema)
+        ))->ejecutar($_GET);
+        responderJson(200, [
+            'data' => $resultado,
+            'meta' => ['solo_lectura' => true],
+        ]);
+    }
+
+    if ($accion === 'cheque.prevalidar-conciliacion') {
+        if ($metodo !== 'GET') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'El preflight de conciliacion de cheque solo acepta GET.');
+        }
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'cheque-conciliar');
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new PrevalidarConciliacionCheque(
+            new PreflightConciliacionChequeRepository($conexion, $esquema)
+        ))->ejecutar($_GET);
+        responderJson(200, [
+            'data' => $resultado,
+            'meta' => ['solo_lectura' => true, 'persistida' => false],
+        ]);
+    }
+
+    if ($accion === 'cheque.conciliar') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Conciliar un cheque solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(503, 'ESCRITURA_NO_HABILITADA', 'La conciliacion solo esta habilitada en el sandbox.');
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $entrada = json_decode((string) file_get_contents('php://input'), true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'cheque-conciliar');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new ConciliarCheque(
+            new CierreMovimientoRepository($conexion, $esquema),
+            new PreflightConciliacionChequeRepository($conexion, $esquema),
+            new ConciliacionChequeErpGateway($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida'], 'sandbox' => true],
+        ]);
+    }
+
+    if ($accion === 'movimiento.cerrar-sin-erp') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Cerrar un movimiento solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El cierre de movimientos solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'movimiento-cerrar');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new CerrarMovimientoMensualSinErp(
+            new CierreMovimientoRepository($conexion, $esquema),
+            new PreflightCierreMovimientoRepository($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida'], 'efectos_erp' => 0],
+        ]);
+    }
+
+    if ($accion === 'movimiento.cerrar') {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Cerrar un movimiento solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El cierre de movimientos solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'movimiento-cerrar');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $resultado = (new CerrarMovimientoMensual(
+            new CierreMovimientoRepository($conexion, $esquema),
+            new PreflightCierreMovimientoRepository($conexion, $esquema),
+            new ValorErpGateway($conexion, $esquema),
+            new BorradorAsientoErpGateway($conexion, $esquema),
+            new EjecutorComandoIdempotente(
+                $conexion,
+                new IdempotenciaRepository($conexion, $esquema),
+                new AuditoriaRepository($conexion, $esquema)
+            )
+        ))->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => [
+                'repetida' => $resultado['repetida'],
+                'efectos_erp' => $resultado['respuesta']['efectos_erp'],
+            ],
+        ]);
     }
 
     if (in_array($accion, [
@@ -314,6 +481,92 @@ try {
             'data' => $resultado['respuesta'],
             'meta' => ['repetida' => $resultado['repetida']],
         ]);
+    }
+
+    if (in_array($accion, ['configuracion.vincular-cuenta', 'configuracion.desvincular-cuenta'], true)) {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Administrar cuentas de una configuracion solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(
+                503,
+                'ESCRITURA_NO_HABILITADA',
+                'El mantenimiento de configuraciones solo esta habilitado en el sandbox.'
+            );
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $cuerpo = file_get_contents('php://input');
+        $entrada = json_decode((string) $cuerpo, true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'configuracion-administrar-cuentas');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorio = new ConfiguracionClasificacionRepository($conexion, $esquema);
+        $ejecutor = new EjecutorComandoIdempotente(
+            $conexion,
+            new IdempotenciaRepository($conexion, $esquema),
+            new AuditoriaRepository($conexion, $esquema)
+        );
+        $casoDeUso = $accion === 'configuracion.vincular-cuenta'
+            ? new VincularCuentaConfiguracion($repositorio, $ejecutor)
+            : new DesvincularCuentaConfiguracion($repositorio, $ejecutor);
+        $resultado = $casoDeUso->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], [
+            'data' => $resultado['respuesta'],
+            'meta' => ['repetida' => $resultado['repetida']],
+        ]);
+    }
+
+    if (in_array($accion, ['configuracion.guardar-mapeo', 'configuracion.retirar-mapeo'], true)) {
+        if ($metodo !== 'POST') {
+            throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Administrar mapeos contables solo acepta POST.');
+        }
+        if (!BANCOS_DEBUG) {
+            throw new ApiException(503, 'ESCRITURA_NO_HABILITADA', 'El mantenimiento de configuraciones solo esta habilitado en el sandbox.');
+        }
+        $tipoContenido = strtolower(trim((string) ($_SERVER['CONTENT_TYPE'] ?? '')));
+        if (strpos($tipoContenido, 'application/json') !== 0) {
+            throw new ApiException(415, 'CONTENIDO_NO_ADMITIDO', 'La solicitud debe usar application/json.');
+        }
+        $entrada = json_decode((string) file_get_contents('php://input'), true);
+        if (!is_array($entrada) || json_last_error() !== JSON_ERROR_NONE) {
+            throw new ApiException(400, 'JSON_INVALIDO', 'El cuerpo JSON es invalido.');
+        }
+        (new ProteccionCsrf())->validar($_SESSION, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion, 'configuracion-administrar-mapeos');
+        $claveIdempotencia = trim((string) ($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? ''));
+        $esquema = EsquemaBancos::desdeConfiguracion(['bancos_debug' => BANCOS_DEBUG]);
+        $repositorio = new MapeoCuentaContableRepository($conexion, $esquema);
+        $ejecutor = new EjecutorComandoIdempotente($conexion, new IdempotenciaRepository($conexion, $esquema), new AuditoriaRepository($conexion, $esquema));
+        $casoDeUso = $accion === 'configuracion.guardar-mapeo'
+            ? new GuardarMapeoCuentaContable($repositorio, $ejecutor)
+            : new RetirarMapeoCuentaContable($repositorio, $ejecutor);
+        $resultado = $casoDeUso->ejecutar($entrada, $sesion->cuenta()->id(), $claveIdempotencia);
+        responderJson($resultado['codigo_http'], ['data' => $resultado['respuesta'], 'meta' => ['repetida' => $resultado['repetida']]]);
+    }
+
+    if (in_array($accion, ['configuracion.guardar-asignacion', 'configuracion.retirar-asignacion'], true)) {
+        if ($metodo !== 'POST') { throw new ApiException(405, 'METODO_NO_PERMITIDO', 'Administrar reglas de asignacion solo acepta POST.'); }
+        if (!BANCOS_DEBUG) { throw new ApiException(503, 'ESCRITURA_NO_HABILITADA', 'El mantenimiento de configuraciones solo esta habilitado en el sandbox.'); }
+        $tipoContenido=strtolower(trim((string)($_SERVER['CONTENT_TYPE']??'')));
+        if(strpos($tipoContenido,'application/json')!==0){throw new ApiException(415,'CONTENIDO_NO_ADMITIDO','La solicitud debe usar application/json.');}
+        $entrada=json_decode((string)file_get_contents('php://input'),true);
+        if(!is_array($entrada)||json_last_error()!==JSON_ERROR_NONE){throw new ApiException(400,'JSON_INVALIDO','El cuerpo JSON es invalido.');}
+        (new ProteccionCsrf())->validar($_SESSION,$_SERVER['HTTP_X_CSRF_TOKEN']??'');
+        (new AutorizadorAccion(ID_APLICACION))->exigir($sesion,'configuracion-administrar-asignaciones');
+        $claveIdempotencia=trim((string)($_SERVER['HTTP_IDEMPOTENCY_KEY']??''));
+        $esquema=EsquemaBancos::desdeConfiguracion(['bancos_debug'=>BANCOS_DEBUG]);
+        $repositorio=new ReglaAsignacionRepository($conexion,$esquema);
+        $ejecutor=new EjecutorComandoIdempotente($conexion,new IdempotenciaRepository($conexion,$esquema),new AuditoriaRepository($conexion,$esquema));
+        $casoDeUso=$accion==='configuracion.guardar-asignacion'?new GuardarReglaAsignacion($repositorio,$ejecutor):new RetirarReglaAsignacion($repositorio,$ejecutor);
+        $resultado=$casoDeUso->ejecutar($entrada,$sesion->cuenta()->id(),$claveIdempotencia);
+        responderJson($resultado['codigo_http'],['data'=>$resultado['respuesta'],'meta'=>['repetida'=>$resultado['repetida']]]);
     }
 
     if ($accion === 'movimiento.asignar-responsable') {

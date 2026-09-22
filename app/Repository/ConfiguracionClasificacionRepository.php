@@ -12,34 +12,34 @@ final class ConfiguracionClasificacionRepository
     private $pdo;
     private $configuraciones;
     private $vinculos;
-    private $importaciones;
     private $reglas;
     private $subtipos;
     private $entidades;
     private $nodos;
+    private $cuentasBancarias;
+    private $tiposCuentaBancaria;
 
     public function __construct(PDO $pdo, EsquemaBancos $esquema)
     {
         $this->pdo = $pdo;
         $this->configuraciones = $esquema->tablaBancos('bancos_configuracion');
         $this->vinculos = $esquema->tablaBancos('bancos_configuracion_cuenta');
-        $this->importaciones = $esquema->tablaBancos('bancos_importacion_extracto');
         $this->reglas = $esquema->tablaBancos('bancos_regla_clasificacion');
         $this->subtipos = $esquema->tablaLecturaErp('subtipo_valor');
         $this->entidades = $esquema->tablaLecturaErp('entidad');
         $this->nodos = $esquema->tablaLecturaErp('nodo');
+        $this->cuentasBancarias = $esquema->tablaLecturaErp('cuenta_bancaria');
+        $this->tiposCuentaBancaria = $esquema->tablaLecturaErp('tipo_cuenta_bancaria');
     }
 
     public function listarConfiguraciones()
     {
         $consulta = $this->pdo->query(
-            "WITH vinculos AS (
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->vinculos}
-                 UNION
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->importaciones}
-             ), cuentas AS (
+            "WITH cuentas AS (
                  SELECT configuracion_id, count(DISTINCT cuenta_bancaria_zetti_id) AS cantidad
-                 FROM vinculos GROUP BY configuracion_id
+                 FROM {$this->vinculos}
+                 WHERE activo IS TRUE
+                 GROUP BY configuracion_id
              ), reglas AS (
                  SELECT configuracion_id, count(*) AS cantidad,
                         count(*) FILTER (WHERE validar_automaticamente IS TRUE) AS automaticas
@@ -58,7 +58,6 @@ final class ConfiguracionClasificacionRepository
              LEFT JOIN {$this->entidades} banco ON banco.id = c.banco_zetti_id
              LEFT JOIN {$this->nodos} n ON n.id = c.nodo_zetti_id
              WHERE c.activo IS TRUE
-               AND COALESCE(cuentas.cantidad, 0) > 0
              ORDER BY c.id"
         );
         return array_map([$this, 'normalizarConfiguracion'], $consulta->fetchAll(PDO::FETCH_ASSOC));
@@ -101,6 +100,7 @@ final class ConfiguracionClasificacionRepository
         }, $consulta->fetchAll(PDO::FETCH_ASSOC));
 
         $configuracion['reglas'] = $reglas;
+        $configuracion['cuentas'] = $this->listarCuentasVinculadas($configuracionId);
         $configuracion['total_reglas'] = count($reglas);
         $configuracion['automaticas'] = count(array_filter($reglas, static function (array $regla) {
             return $regla['validar_automaticamente'];
@@ -116,6 +116,96 @@ final class ConfiguracionClasificacionRepository
              ORDER BY nombre, id"
         );
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarCuentasBancarias()
+    {
+        $consulta = $this->pdo->query($this->sqlCuentaBancaria() . " ORDER BY n.nombre, banco.nombre, e.nombre, e.id");
+        return array_map([$this, 'normalizarCuenta'], $consulta->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function vincularCuenta($configuracionId, $cuentaId, $operadorId)
+    {
+        $this->bloquearConfiguracion($configuracionId);
+        $cuenta = $this->consultarCuentaErp($cuentaId);
+        $consulta = $this->pdo->prepare(
+            "SELECT id, activo FROM {$this->vinculos}
+             WHERE configuracion_id = :configuracion_id
+               AND cuenta_bancaria_zetti_id = :cuenta_id
+             FOR UPDATE"
+        );
+        $consulta->execute([
+            ':configuracion_id' => (string) $configuracionId,
+            ':cuenta_id' => (string) $cuentaId,
+        ]);
+        $vinculo = $consulta->fetch(PDO::FETCH_ASSOC);
+        if ($vinculo !== false && (bool) $vinculo['activo']) {
+            return $this->respuestaCuenta($configuracionId, $cuenta, false, true);
+        }
+        if ($vinculo === false) {
+            $consulta = $this->pdo->prepare(
+                "INSERT INTO {$this->vinculos}
+                    (configuracion_id, cuenta_bancaria_zetti_id, activo, origen,
+                     usuario_creacion, usuario_modificacion)
+                 VALUES (:configuracion_id, :cuenta_id, true, 'MANUAL',
+                         :operador_id, :operador_id)"
+            );
+            $consulta->execute([
+                ':configuracion_id' => (string) $configuracionId,
+                ':cuenta_id' => (string) $cuentaId,
+                ':operador_id' => (int) $operadorId,
+            ]);
+        } else {
+            $consulta = $this->pdo->prepare(
+                "UPDATE {$this->vinculos}
+                 SET activo = true, origen = 'MANUAL', fecha_modificacion = current_timestamp,
+                     usuario_modificacion = :operador_id
+                 WHERE id = :vinculo_id"
+            );
+            $consulta->execute([
+                ':operador_id' => (int) $operadorId,
+                ':vinculo_id' => (string) $vinculo['id'],
+            ]);
+        }
+        if ($consulta->rowCount() !== 1) {
+            throw new RuntimeException('No se pudo vincular la cuenta bancaria.');
+        }
+        return $this->respuestaCuenta($configuracionId, $cuenta, true, true);
+    }
+
+    public function desvincularCuenta($configuracionId, $cuentaId, $operadorId)
+    {
+        $this->bloquearConfiguracion($configuracionId);
+        $cuenta = $this->consultarCuentaErp($cuentaId);
+        $consulta = $this->pdo->prepare(
+            "SELECT id FROM {$this->vinculos}
+             WHERE configuracion_id = :configuracion_id
+               AND cuenta_bancaria_zetti_id = :cuenta_id
+               AND activo IS TRUE
+             FOR UPDATE"
+        );
+        $consulta->execute([
+            ':configuracion_id' => (string) $configuracionId,
+            ':cuenta_id' => (string) $cuentaId,
+        ]);
+        $vinculoId = $consulta->fetchColumn();
+        if ($vinculoId === false) {
+            throw new RecursoNoDisponibleException('La cuenta no esta vinculada activamente a esta configuracion.');
+        }
+        $consulta = $this->pdo->prepare(
+            "UPDATE {$this->vinculos}
+             SET activo = false, fecha_modificacion = current_timestamp,
+                 usuario_modificacion = :operador_id
+             WHERE id = :vinculo_id AND activo IS TRUE"
+        );
+        $consulta->execute([
+            ':operador_id' => (int) $operadorId,
+            ':vinculo_id' => (string) $vinculoId,
+        ]);
+        if ($consulta->rowCount() !== 1) {
+            throw new RuntimeException('No se pudo desvincular la cuenta bancaria.');
+        }
+        return $this->respuestaCuenta($configuracionId, $cuenta, true, false);
     }
 
     public function actualizarValidacionAutomatica($configuracionId, $reglaId, $validarAutomaticamente, $operadorId)
@@ -193,6 +283,58 @@ final class ConfiguracionClasificacionRepository
         if ($consulta->fetchColumn() === false) {
             throw new RecursoNoDisponibleException('La configuracion no existe o no esta activa.');
         }
+    }
+
+    private function listarCuentasVinculadas($configuracionId)
+    {
+        $consulta = $this->pdo->prepare(
+            $this->sqlCuentaBancaria()
+            . " JOIN {$this->vinculos} cc ON cc.cuenta_bancaria_zetti_id = cb.id
+                AND cc.configuracion_id = :configuracion_id AND cc.activo IS TRUE
+                ORDER BY n.nombre, banco.nombre, e.nombre, e.id"
+        );
+        $consulta->execute([':configuracion_id' => (string) $configuracionId]);
+        return array_map([$this, 'normalizarCuenta'], $consulta->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    private function consultarCuentaErp($cuentaId)
+    {
+        $consulta = $this->pdo->prepare($this->sqlCuentaBancaria() . ' WHERE cb.id = :cuenta_id');
+        $consulta->execute([':cuenta_id' => (string) $cuentaId]);
+        $cuenta = $consulta->fetch(PDO::FETCH_ASSOC);
+        if ($cuenta === false) {
+            throw new RecursoNoDisponibleException('La cuenta bancaria no existe en ERP.');
+        }
+        return $this->normalizarCuenta($cuenta);
+    }
+
+    private function sqlCuentaBancaria()
+    {
+        return "SELECT cb.id::text, e.codigo, e.nombre AS cuenta,
+                       banco.nombre AS banco, tipo.nombre AS tipo, n.nombre AS nodo
+                FROM {$this->cuentasBancarias} cb
+                JOIN {$this->entidades} e ON e.id = cb.id
+                JOIN {$this->entidades} banco ON banco.id = cb.banco
+                JOIN {$this->tiposCuentaBancaria} tipo ON tipo.id = cb.tipo_cuenta_bancaria
+                JOIN {$this->nodos} n ON n.id = e.nodo_creacion";
+    }
+
+    private function normalizarCuenta(array $fila)
+    {
+        $fila['etiqueta'] = $fila['nodo'] . ' · ' . $fila['banco'] . ' · '
+            . $fila['tipo'] . ' · ' . $fila['cuenta'] . ' · ' . ($fila['codigo'] ?? 'Sin codigo');
+        return $fila;
+    }
+
+    private function respuestaCuenta($configuracionId, array $cuenta, $cambio, $activa)
+    {
+        return [
+            'configuracion_id' => (string) $configuracionId,
+            'cuenta_bancaria_id' => (string) $cuenta['id'],
+            'etiqueta' => $cuenta['etiqueta'],
+            'activa' => (bool) $activa,
+            'cambio' => (bool) $cambio,
+        ];
     }
 
     private function bloquearReglaActiva($configuracionId, $reglaId, $bloquearConfiguracion = true)

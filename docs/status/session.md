@@ -171,3 +171,73 @@ Se implementó `?pag=configuraciones` para consultar configuraciones activas y t
 Se definió una política no destructiva: `activo` determina participación operativa, `version` crece por reemplazo y `reemplaza_regla_id` conserva la cadena. Editar desactiva la fila vigente y crea otra; retirar sólo desactiva. La unicidad pasa a considerar exclusivamente reglas activas y un bloqueo de configuración serializa las mutaciones concurrentes.
 
 La pantalla permite crear, editar y retirar con motivo obligatorio, y las APIs usan sesión, permiso, CSRF, idempotencia y auditoría. Importación y búsqueda asistida filtran versiones inactivas. Las migraciones `031` y `032` se aplicaron repetidamente contra el sandbox; `031` contempla además el índice heredado con nombre autogenerado de `global_temp`. La regresión completa pasó con 28 pruebas PHP y la prueba JavaScript, incluidas las integraciones de versionado y validación automática. Las pruebas limpiaron sus filas operativas artificiales.
+
+## Vínculos entre cuentas y configuraciones - 2026-09-21
+
+Se eliminó la autorización implícita derivada de importaciones históricas: sólo `bancos_configuracion_cuenta.activo=true` habilita nuevas cargas. Producción ya tenía 1.651 vínculos y ningún par importado faltante; los cuatro pares faltantes del sandbox se sembraron como `IMPORTACION`. La interfaz permite vincular, desvincular y reactivar con motivo obligatorio, baja lógica, sesión, permiso, CSRF, idempotencia y auditoría.
+
+Las migraciones repetibles `033` y `034` agregaron vigencia/procedencia y el permiso `configuracion-administrar-cuentas` sin asignaciones directas. La prueba integrada confirmó alta, reintento, bloqueo de importación tras la baja, reactivación sin duplicado y limpieza del conjunto artificial.
+
+## Mapeos de cuentas contables - 2026-09-21
+
+La caracterización de 88.951 filas productivas confirmó una sola cuenta por configuración/subtipo y ningún uso efectivo de `regla_orden`. La migración `035` agregó vigencia y cadena de versiones, impuso esa unicidad sólo sobre filas activas y cargó 165 mapeos sombra. `036` registró `configuracion-administrar-mapeos` sin asignaciones directas.
+
+La pantalla permite crear, editar y retirar mapeos con motivo. Los comandos validan subtipo y cuenta en ERP de sólo lectura, bloquean la configuración y usan CSRF, idempotencia y auditoría. La prueba integrada confirmó las dos versiones, baja lógica, exclusión de retirados y limpieza.
+
+La regresión completa quedó en 30 pruebas PHP más JavaScript, sin fallos en ese corte.
+
+## Reglas de responsables automáticos - 2026-09-21
+
+Se detectó que `010` no cargó reglas porque `bancos_mes_raau.id_usuario` pertenece a `login_users`, no a Hub. Hay 9.320 reglas legacy: 5.674 traducibles a seis cuentas Hub activas, pero ninguna tiene acceso vigente a APP BANCOS; las demás apuntan a cuentas eliminadas, aliases sin correspondencia o `!default`. No se concedieron accesos ni se inventaron responsables.
+
+`037` agregó versión y unicidad activa por configuración/subtipo, y `038` registró `configuracion-administrar-asignaciones` sin asignaciones directas. La pantalla administra alta, reemplazo y retiro con motivo. La confirmación de importación revalida el acceso efectivo y asigna únicamente movimientos con clasificación unívoca, registrando su historial inicial `ABIERTO`.
+
+La regresión vigente quedó en 31 pruebas PHP más JavaScript, sin fallos.
+
+## Preflight de cierre - 2026-09-21
+
+La etapa 7 comenzó sin habilitar efectos ERP. El relevamiento del legado confirmó que el cierre masivo cambiaba estados después de liquidar valores no cheque, crear asientos desde borradores o no hacer nada para asientos existentes; los cheques pendientes abrían una conciliación separada. En producción, los 947.077 cierres migrados se distribuyen en 889.361 con asiento, 39.724 sin asociación, 17.991 con valor y uno con valor más asiento. Esa evidencia impide bloquear por defecto el caso sin asociación o la combinación valor/asiento.
+
+Se implementó el GET `movimiento.prevalidar-cierre`, protegido por `movimiento-cerrar`, con plan de efectos, advertencias y bloqueos. `039` registró el permiso sin usuarios generales. No existe endpoint de ejecución y no se escribe ERP. Las consultas tipadas usan los índices parciales existentes y fueron medidas con `EXPLAIN (ANALYZE, BUFFERS)`. La regresión vigente quedó en 32 pruebas PHP más JavaScript, sin fallos.
+
+## Cierre sin efectos ERP - 2026-09-21
+
+Se agregó `movimiento.cerrar-sin-erp`, disponible sólo en sandbox. Después de reclamar la clave idempotente bloquea el movimiento, repite el preflight y admite exclusivamente ausencia de asociaciones o un asiento ERP existente que no necesita cambios. Registra `CERRADO`, operador y auditoría en la misma transacción; valores y borradores continúan bloqueados. La interfaz exige preflight exitoso y confirmación explícita antes de mostrar y ejecutar el cierre.
+
+La integración comprobó un único cierre ante reintento, el caso con asiento, rollback completo ante un valor y contención con dos conexiones mediante `FOR UPDATE`/`lock_timeout`. Tras liberar el bloqueo, la misma clave pudo reintentarse porque el intento fallido no dejó solicitud parcial. La regresión vigente quedó en 33 pruebas PHP más JavaScript, sin fallos.
+
+## Cierre de valores no cheque en sandbox - 2026-09-21
+
+Se agregó `movimiento.cerrar` como contrato de la interfaz. Mantiene bloqueo, preflight, permiso, CSRF, idempotencia y auditoría, y admite además el efecto `VALOR/LIQUIDAR_ESTADO_7`. `ValorErpGateway` compara el valor productivo de sólo lectura con su copia `global_temp`, bloquea esta última y cambia exclusivamente su estado a `7` dentro de la misma transacción que registra `CERRADO`.
+
+Para que el circuito sea completo, `movimiento.asociar-valor` crea ahora esa copia sandbox dentro de su propia transacción cuando el valor seleccionado desde ERP aún no existe en `global_temp`. Si encuentra una copia con estado distinto, rechaza la asociación; si falla cualquier operación posterior, la inserción se revierte.
+
+La prueba integrada confirmó reintento sin duplicación, efecto y evidencia de auditoría, inmutabilidad de `public.valor` y rollback completo ante una copia sandbox desfasada. Cheques y borradores siguen bloqueados. La identidad Hub del operador permanece en auditoría; no se escribe `valor.usuario_modificacion` hasta acordar la identidad ERP. La regresión vigente quedó en 34 pruebas PHP más JavaScript, sin fallos.
+
+## Materialización de borradores en sandbox - 2026-09-21
+
+`movimiento.cerrar` admite ahora `BORRADOR_ASIENTO/CREAR_ASIENTO`. El gateway bloquea y revalida el borrador, crea la cabecera y sus movimientos en `global_temp`, enlaza el asiento, marca el borrador `CERRADO` y luego registra el cierre del movimiento dentro de la misma transacción idempotente. El flujo legacy de asiento manual no creaba `operacion`; se conserva esa regla. El modelo es el nombre del asiento, mientras número y usuarios ERP quedan nulos en lugar de heredar el usuario fijo `16529`.
+
+La FK sandbox a `public.asiento` impedía persistir el resultado aislado. `040` agrega unicidad sobre el ID de `global_temp.asiento` y redirige sólo esa FK. Se comprobó aplicación repetida, rollback protegido y reaplicación. La nueva integración verificó las dos líneas, balance, fecha, nodo, nombre, enlace, estados e idempotencia, y limpió todas las filas artificiales. La regresión vigente quedó en 35 pruebas PHP más JavaScript, sin fallos.
+
+## Atomicidad combinada y límite de fusión - 2026-09-21
+
+Se agregó cobertura integral para valor+borrador. El caso exitoso liquida la copia del valor, crea asiento/líneas, enlaza el borrador y cierra el movimiento con alcance `VALOR_Y_BORRADOR_ASIENTO`; repetir la clave no duplica efectos. El caso de compensación presenta un asiento ya materializado cuyas líneas no coinciden: el valor alcanza a actualizarse dentro de la transacción, el gateway del borrador rechaza el asiento y el rollback restaura el valor y elimina la idempotencia parcial.
+
+La fusión no se implementó por inferencia. La caracterización productiva encontró 5.169 borradores activos y 9.481 asientos compartidos, pero cero movimientos activos con asiento+borrador y cero con valor+borrador. El esquema actual no identifica la lista de asientos fuente a revertir. Hasta definir ese contrato, `DESTINO_CONTABLE_AMBIGUO` sigue bloqueando asiento+borrador. La regresión vigente quedó en 36 pruebas PHP más JavaScript, sin fallos.
+
+## Preflight de conciliación de cheques - 2026-09-21
+
+La etapa 8 empezó sin habilitar DML. El contraste de BANCOS y BANCOS_MENSUAL confirmó cuatro subtipos mensuales (`13`, `14`, `10070`, `10071`), exclusión de estados `20`/`36`, liquidación del origen a `7` y creación futura de operación, valor resultante, relaciones, concepto `376`, asiento y movimientos. No se heredó el usuario fijo `16529` ni la falta de transacción del legado.
+
+Se agregó `cheque.prevalidar-conciliacion`, protegido por el nuevo permiso `cheque-conciliar`. Valida contexto `PARA_CERRAR`, única asociación de valor, reserva, ausencia de destino contable ambiguo, estado y subtipo; informa diferencia, vínculos ERP y eventual conciliación ya registrada. La consulta siempre devuelve `ejecutable_ahora=false` y no escribe; el comando separado `cheque.conciliar` vuelve a validar todo dentro de su transacción antes de ejecutar. `041` fue aplicada repetidamente sin asignaciones directas. La integración cubre cheque pendiente, liquidado y excluido, e inmutabilidad operativa/ERP.
+
+El preflight fue ampliado para resolver las dos cuentas contables canónicas: base bancaria desde la configuración de la importación y valor desde el mapeo activo del subtipo. También informa nodo, moneda, diferencia absoluta/porcentual y la tolerancia histórica del 1% únicamente como evidencia. Las diferencias no exactas quedan bloqueadas porque el legado no define una cuenta segura para ellas. La caracterización productiva halló cuatro cheques activos pendientes; todos tienen ambas cuentas y monto exacto. La prueba integrada agrega resolución de cuentas y bloqueo de una diferencia artificial, manteniendo sólo lectura.
+
+## Conciliación transaccional en sandbox - 2026-09-21
+
+Se agregó `cheque.conciliar`, limitado por configuración a debug. Bloquea el movimiento, repite el preflight y serializa por cheque antes de materializar operación `101/1/101`, dos relaciones operación-valor, valor `124/79/4`, concepto `376`, asiento, dos movimientos balanceados, estado `7` de la copia y registro de conciliación. El movimiento permanece `PARA_CERRAR`; el preflight de cierre reconoce luego `SIN_CAMBIOS_YA_CONCILIADO`. Número y usuarios ERP no se inventan, y la cuenta Hub queda en auditoría.
+
+La alternativa inicial de retargetizar las FK sandbox fue descartada al comprobar que PostgreSQL requería bloquear las tablas `public` referenciadas. Las sesiones de migración propias se cancelaron inmediatamente. `042` usa en cambio un reemplazo seguro de la tabla sandbox vacía, conserva la definición anterior para rollback y crea FK sólo hacia `global_temp`. Aplicación repetida y rollback quedaron probados sin bloquear ERP. La integración valida efectos, balance, idempotencia, inmutabilidad de `public.valor`, continuidad hacia cierre y limpieza. La regresión vigente quedó en 38 pruebas PHP más JavaScript.
+
+La prueba de conciliación fue reforzada antes de considerar tráfico productivo. Un trigger limitado a la clave artificial de la prueba provoca una excepción en el último `INSERT`, después de los efectos contables; se verificó que no quedan operación, valor, asiento, conciliación, cambio de estado ni solicitud idempotente. Con conexiones independientes se comprobó además que una misma clave en proceso se serializa, que el bloqueo consultivo del cheque produce contención recuperable y que una segunda clave posterior no duplica la conciliación. Todos los recursos artificiales se eliminan al finalizar.

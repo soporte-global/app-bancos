@@ -14,8 +14,11 @@ $puedeCrearBorrador = $puedePreparar;
 $puedeAgregarMensaje = $puedePreparar;
 $puedeMarcarMensajesLeidos = $puedePreparar;
 $puedeAsignarResponsable = $puedePreparar;
+$puedeCerrar = $puedePreparar;
+$puedeConciliarCheque = $puedePreparar;
 if (!$puedePreparar || !$puedeRevertirPreparacion || !$puedeAsociarValor || !$puedeAsociarAsiento
     || !$puedeCrearBorrador || !$puedeAgregarMensaje || !$puedeMarcarMensajesLeidos || !$puedeAsignarResponsable
+    || !$puedeCerrar || !$puedeConciliarCheque
 ) {
     $permisosAcceso = $sesionActual['user']['permisos'] ?? [];
     foreach ($permisosAcceso as $permisoAcceso) {
@@ -43,6 +46,12 @@ if (!$puedePreparar || !$puedeRevertirPreparacion || !$puedeAsociarValor || !$pu
             }
             if (($permisoInterno['nombre_interno'] ?? null) === 'movimiento-asignar-responsable') {
                 $puedeAsignarResponsable = true;
+            }
+            if (($permisoInterno['nombre_interno'] ?? null) === 'movimiento-cerrar') {
+                $puedeCerrar = true;
+            }
+            if (($permisoInterno['nombre_interno'] ?? null) === 'cheque-conciliar') {
+                $puedeConciliarCheque = true;
             }
         }
     }
@@ -270,6 +279,8 @@ $describirAsociacion = static function (array $asociacion) {
                             <?php endif; ?>
                             <?php if ($escrituraHabilitada && $puedePreparar && $estadoCodigo === 'ABIERTO'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-preparar><h3>Preparación</h3><p>Marca el movimiento como listo para cierre. No crea ni modifica datos del ERP.</p><button type="button" data-preparar-movimiento data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Marcar para cerrar</button><p class="bandeja-accion-estado" role="status" aria-live="polite" data-accion-estado></p></section><?php endif; ?>
                             <?php if ($escrituraHabilitada && $puedeRevertirPreparacion && $estadoCodigo === 'PARA_CERRAR'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-revertir><h3>Revertir preparación</h3><p>Vuelve el movimiento a ABIERTO y desactiva sus asociaciones, reservas y borradores activos. El historial se conserva.</p><label>Motivo<textarea maxlength="200" minlength="3" required data-motivo-reversion placeholder="Indicá por qué debe volver a ABIERTO"></textarea></label><button type="button" data-revertir-preparacion data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Volver a abierto</button><p class="bandeja-accion-estado" role="status" aria-live="polite" data-accion-estado></p></section><?php endif; ?>
+                            <?php if ($puedeCerrar && $estadoCodigo === 'PARA_CERRAR'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-prevalidar-cierre><h3>Preflight de cierre</h3><p>Verifica asociaciones, reservas y recursos ERP sin modificar datos. En sandbox, el cierre admite casos sin efecto ERP, valores no cheque y borradores balanceados.</p><button type="button" data-prevalidar-cierre data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Validar cierre</button><button type="button" data-cerrar-movimiento data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>" hidden>Cerrar movimiento</button><div class="bandeja-preflight-resultado" role="status" aria-live="polite" data-preflight-resultado></div></section><?php endif; ?>
+                            <?php if ($puedeConciliarCheque && $estadoCodigo === 'PARA_CERRAR'): ?><section class="bandeja-detalle-seccion bandeja-accion" data-accion-prevalidar-cheque><h3>Conciliación de cheque</h3><p>Valida el cheque asociado y muestra los efectos previstos. La ejecución está limitada al sandbox.</p><button type="button" data-prevalidar-cheque data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>">Validar conciliación</button><button type="button" data-conciliar-cheque data-movimiento-id="<?php echo $escapar($movimiento['id']); ?>" data-cuenta-bancaria-id="<?php echo $escapar($cuenta); ?>" data-inicio-periodo="<?php echo $escapar($periodo); ?>" hidden>Conciliar cheque</button><div class="bandeja-preflight-resultado" role="status" aria-live="polite" data-preflight-cheque-resultado></div></section><?php endif; ?>
                             <section class="bandeja-detalle-seccion"><h3>Asociaciones</h3><?php if ($asociaciones): ?><ol class="bandeja-detalle-lista"><?php foreach ($asociaciones as $asociacion): ?><li><strong><?php echo $escapar($describirAsociacion($asociacion)); ?></strong><?php if ($asociacion['monto_asociado'] !== null): ?> · <?php echo $escapar($asociacion['monto_asociado']); ?><?php endif; ?><?php if ($asociacion['compartido'] === true || $asociacion['compartido'] === 't'): ?> · compartido<?php endif; ?><?php if ($asociacion['observacion']): ?><small><?php echo $escapar($asociacion['observacion']); ?></small><?php endif; ?></li><?php endforeach; ?></ol><?php else: ?><p class="sin-dato">Sin asociaciones registradas.</p><?php endif; ?></section>
                             <section class="bandeja-detalle-seccion bandeja-mensajeria" data-mensajeria-movimiento>
                                 <h3>Mensajes</h3><?php if ($mensajesNoLeidos > 0): ?><p><strong><?php echo $mensajesNoLeidos; ?> sin leer</strong></p><?php endif; ?>

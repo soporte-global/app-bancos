@@ -16,6 +16,8 @@ final class ImportacionExtractoRepository
     private $movimientos;
     private $estados;
     private $cuentasBancarias;
+    private $reglasAsignacion;
+    private $historialAsignacion;
 
     public function __construct(PDO $pdo, EsquemaBancos $esquema)
     {
@@ -27,19 +29,17 @@ final class ImportacionExtractoRepository
         $this->movimientos = $esquema->tablaBancos('bancos_movimiento_extracto');
         $this->estados = $esquema->tablaBancos('bancos_estado');
         $this->cuentasBancarias = $esquema->tablaLecturaErp('cuenta_bancaria');
+        $this->reglasAsignacion = $esquema->tablaBancos('bancos_regla_asignacion_usuario');
+        $this->historialAsignacion = $esquema->tablaBancos('bancos_historial_asignacion');
     }
 
     public function validarCuentaConfigurada($cuentaBancariaId)
     {
         $consulta = $this->pdo->prepare(
-            "WITH vinculos AS (
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->configuracionesCuenta}
-                 UNION
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->lotes}
-             )
-             SELECT count(DISTINCT c.id)
+            "SELECT count(DISTINCT c.id)
              FROM {$this->cuentasBancarias} cb
-             JOIN vinculos cc ON cc.cuenta_bancaria_zetti_id = cb.id
+             JOIN {$this->configuracionesCuenta} cc
+               ON cc.cuenta_bancaria_zetti_id = cb.id AND cc.activo IS TRUE
              JOIN {$this->configuraciones} c ON c.id = cc.configuracion_id AND c.activo IS TRUE
              WHERE cb.id = :cuenta_bancaria_id"
         );
@@ -56,16 +56,12 @@ final class ImportacionExtractoRepository
     public function validarConfiguracionCuenta($configuracionId, $cuentaBancariaId)
     {
         $consulta = $this->pdo->prepare(
-            "WITH vinculos AS (
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->configuracionesCuenta}
-                 UNION
-                 SELECT configuracion_id, cuenta_bancaria_zetti_id FROM {$this->lotes}
-             )
-             SELECT 1
-             FROM vinculos vc
+            "SELECT 1
+             FROM {$this->configuracionesCuenta} vc
              JOIN {$this->configuraciones} c ON c.id = vc.configuracion_id AND c.activo IS TRUE
              JOIN {$this->cuentasBancarias} cb ON cb.id = vc.cuenta_bancaria_zetti_id
              WHERE c.id = :configuracion_id
+               AND vc.activo IS TRUE
                AND cb.id = :cuenta_bancaria_id"
         );
         $consulta->execute([
@@ -181,8 +177,16 @@ final class ImportacionExtractoRepository
                 (:importacion_id, :id_periodo, :serial_seq, :numero_fila_origen,
                  :fecha_operacion, :referencia, :descripcion, :codigo_extracto,
                  :credito, :debito, :subtipo_valor_zetti_id,
-                 :usuario_id, :usuario_id)"
+                 :usuario_id, :usuario_id)
+             RETURNING id"
         );
+        $responsables = $this->obtenerResponsablesAutomaticos($configuracionId);
+        $asignar = $this->pdo->prepare(
+            "INSERT INTO {$this->historialAsignacion}
+                (movimiento_id, estado_id, usuario_hub_id, observacion)
+             VALUES (:movimiento_id, :estado_id, :responsable_id, :observacion)"
+        );
+        $asignados = 0;
         foreach ($filas as $indice => $fila) {
             $insertar->execute([
                 ':importacion_id' => (int) $lote['id'],
@@ -198,6 +202,19 @@ final class ImportacionExtractoRepository
                 ':subtipo_valor_zetti_id' => $fila['subtipo_valor_zetti_id'],
                 ':usuario_id' => (int) $usuarioId,
             ]);
+            $movimientoId = (string) $insertar->fetchColumn();
+            $subtipoId = $fila['subtipo_valor_zetti_id'] === null
+                ? null
+                : (string) $fila['subtipo_valor_zetti_id'];
+            if ($subtipoId !== null && isset($responsables[$subtipoId])) {
+                $asignar->execute([
+                    ':movimiento_id' => $movimientoId,
+                    ':estado_id' => (int) $estadoId,
+                    ':responsable_id' => (int) $responsables[$subtipoId],
+                    ':observacion' => 'API|ASIGNACION_AUTOMATICA|' . $claveIdempotencia,
+                ]);
+                $asignados++;
+            }
         }
 
         return [
@@ -207,10 +224,33 @@ final class ImportacionExtractoRepository
             'inicio_periodo' => $inicioPeriodo,
             'estado' => 'ABIERTO',
             'total_movimientos' => count($filas),
+            'asignados_automaticamente' => $asignados,
             'archivo' => $archivo,
             'hash_sha256' => $hash,
             'version_origen' => $version,
             'creada_en' => (string) $lote['fecha_creacion'],
         ];
+    }
+
+    private function obtenerResponsablesAutomaticos($configuracionId)
+    {
+        $consulta = $this->pdo->prepare(
+            "SELECT r.subtipo_valor_zetti_id::text, r.usuario::text
+             FROM {$this->reglasAsignacion} r
+             JOIN global_prod.rrhh_login l ON l.id=r.usuario
+               AND l.habilitado IS TRUE AND l.fecha_eliminacion IS NULL
+             WHERE r.configuracion_id=:configuracion_id AND r.activo IS TRUE
+               AND EXISTS (
+                   SELECT 1 FROM global_prod.hub_permisos_efectivos_usuario e
+                   JOIN global_prod.hub_permisos p ON p.id=e.permiso
+                   WHERE e.usuario=r.usuario AND p.aplicacion=:aplicacion_id
+                     AND p.tipo_permiso=1 AND p.ignorado IS NULL
+               )"
+        );
+        $consulta->execute([
+            ':configuracion_id' => (string) $configuracionId,
+            ':aplicacion_id' => ID_APLICACION,
+        ]);
+        return $consulta->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 }

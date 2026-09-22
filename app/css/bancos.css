@@ -865,6 +865,56 @@ body.bandeja-detalle-activo {
     margin-bottom: 0;
 }
 
+.configuracion-cuentas {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.configuracion-cuentas > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: end;
+}
+
+.configuracion-cuentas > header p,
+.configuracion-separador p,
+.configuracion-separador h2 {
+    margin-bottom: 0;
+}
+
+.configuracion-vinculo-editor {
+    display: grid;
+    grid-template-columns: minmax(280px, 1.6fr) minmax(240px, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.configuracion-vinculo-editor label {
+    display: grid;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.configuracion-vinculo-editor input,
+.configuracion-vinculo-editor select,
+.configuracion-vinculo-editor button {
+    min-height: var(--alto-control);
+    padding: 0 10px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font: inherit;
+}
+
+.configuracion-separador {
+    margin-top: 24px;
+}
+
 .configuracion-estado-regla {
     font-weight: 800;
 }
@@ -1023,6 +1073,10 @@ body.bandeja-detalle-activo {
         grid-template-columns: 1fr 1fr;
     }
 
+    .configuracion-vinculo-editor {
+        grid-template-columns: 1fr;
+    }
+
     .importacion-formulario label:first-child,
     .importacion-formulario .bandeja-accion-estado {
         grid-column: 1 / -1;
@@ -1033,11 +1087,17 @@ body.bandeja-detalle-activo {
     .importacion-formulario,
     .importacion-metricas,
     .configuracion-selector,
-    .configuracion-editor {
+    .configuracion-editor,
+    .configuracion-vinculo-editor {
         grid-template-columns: 1fr;
     }
 
     .configuracion-detalle > header {
+        display: grid;
+        align-items: start;
+    }
+
+    .configuracion-cuentas > header {
         display: grid;
         align-items: start;
     }
@@ -1244,4 +1304,16 @@ body.bandeja-detalle-activo {
     .bandeja-skeleton span {
         animation: none;
     }
+}
+.bandeja-preflight-resultado {
+    margin-top: .75rem;
+    line-height: 1.45;
+}
+
+.bandeja-preflight-resultado.es-correcto {
+    color: var(--ui-exito-texto);
+}
+
+.bandeja-preflight-resultado.es-bloqueado {
+    color: var(--ui-error);
 }

@@ -19,6 +19,8 @@ final class MovimientoMensualRepository
     private $reservas;
     private $borradores;
     private $valoresErp;
+    private $valoresEscrituraErp;
+    private $debug;
     private $lineasBorrador;
     private $nodosErp;
     private $cuentasErp;
@@ -36,6 +38,8 @@ final class MovimientoMensualRepository
         $this->reservas = $esquema->tablaBancos('bancos_reserva_recurso');
         $this->borradores = $esquema->tablaBancos('bancos_borrador_asiento');
         $this->valoresErp = $esquema->tablaLecturaErp('valor');
+        $this->valoresEscrituraErp = $esquema->tablaEscrituraErp('valor');
+        $this->debug = $esquema->esDebug();
         $this->lineasBorrador = $esquema->tablaBancos('bancos_linea_borrador_asiento');
         $this->nodosErp = $esquema->tablaLecturaErp('nodo');
         $this->cuentasErp = $esquema->tablaLecturaErp('cuenta');
@@ -250,6 +254,11 @@ final class MovimientoMensualRepository
             ? (string) $movimiento['credito']
             : (string) $movimiento['debito'];
 
+        // El clon de valor del sandbox no conserva una restriccion unica
+        // utilizable por ON CONFLICT. Este bloqueo serializa copia y reserva.
+        $consulta = $this->pdo->prepare('SELECT pg_advisory_xact_lock(CAST(:valor_id AS bigint))');
+        $consulta->execute([':valor_id' => (string) $valorId]);
+
         $consulta = $this->pdo->prepare(
             "SELECT id, monto_principal, estado,
                     abs(monto_principal) >= CAST(:monto AS numeric) AS monto_suficiente
@@ -272,6 +281,30 @@ final class MovimientoMensualRepository
             throw new RecursoNoDisponibleException(
                 'El monto disponible del valor ERP es menor que el movimiento.'
             );
+        }
+
+        if ($this->debug) {
+            $consulta = $this->pdo->prepare(
+                "INSERT INTO {$this->valoresEscrituraErp}
+                 SELECT origen.* FROM {$this->valoresErp} origen
+                 WHERE origen.id = :valor_id
+                   AND NOT EXISTS (
+                       SELECT 1 FROM {$this->valoresEscrituraErp} destino
+                       WHERE destino.id = origen.id
+                   )"
+            );
+            $consulta->execute([':valor_id' => (int) $valorId]);
+            $consulta = $this->pdo->prepare(
+                "SELECT estado FROM {$this->valoresEscrituraErp}
+                 WHERE id = :valor_id FOR UPDATE"
+            );
+            $consulta->execute([':valor_id' => (int) $valorId]);
+            $estadoEscritura = $consulta->fetchColumn();
+            if ($estadoEscritura === false || (int) $estadoEscritura !== (int) $valor['estado']) {
+                throw new RecursoNoDisponibleException(
+                    'La copia de escritura del valor no coincide con su estado ERP actual.'
+                );
+            }
         }
 
         $consulta = $this->pdo->prepare(

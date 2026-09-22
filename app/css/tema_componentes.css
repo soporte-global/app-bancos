@@ -201,6 +201,25 @@ body:has(.bancos-app),
     background: var(--ui-superficie-hundida);
 }
 
+.configuracion-cuentas {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+}
+
+.configuracion-vinculo-editor input,
+.configuracion-vinculo-editor select {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.configuracion-vinculo-editor button {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+    font-weight: 800;
+}
+
 .configuracion-editor input,
 .configuracion-editor select {
     border-color: var(--ui-borde);

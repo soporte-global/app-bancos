@@ -19,12 +19,14 @@ comprobarEsquema($debug->esDebug(), 'El perfil debug no quedó habilitado.');
 comprobarEsquema($debug->tablaBancos('bancos_movimiento_extracto') === 'global_temp.bancos_movimiento_extracto', 'Debug no usa global_temp para BANCOS.');
 comprobarEsquema($debug->tablaLecturaErp('valor') === 'public.valor', 'Debug debe leer el ERP desde public.');
 comprobarEsquema($debug->tablaEscrituraErp('valor') === 'global_temp.valor', 'Debug no redirige las escrituras ERP a global_temp.');
+comprobarEsquema($debug->secuenciaEscrituraErp('asiento_sq') === 'global_temp.asiento_sq', 'Debug no redirige las secuencias ERP a global_temp.');
 
 $produccion = EsquemaBancos::desdeConfiguracion(['bancos_debug' => false]);
 comprobarEsquema(!$produccion->esDebug(), 'El perfil de producción quedó en debug.');
 comprobarEsquema($produccion->tablaBancos('bancos_movimiento_extracto') === 'global_prod.bancos_movimiento_extracto', 'Producción no usa global_prod para BANCOS.');
 comprobarEsquema($produccion->tablaLecturaErp('valor') === 'public.valor', 'Producción no lee el ERP desde public.');
 comprobarEsquema($produccion->tablaEscrituraErp('valor') === 'public.valor', 'Producción no escribe el ERP en public.');
+comprobarEsquema($produccion->secuenciaEscrituraErp('movimiento_sq') === 'public.movimiento_sq', 'Producción no resuelve las secuencias ERP en public.');
 
 try {
     $debug->tablaBancos('valor');

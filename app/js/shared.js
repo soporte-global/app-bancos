@@ -363,6 +363,234 @@
             });
         }
 
+        function prevalidarCierre(boton) {
+            var bloque = boton.closest('[data-accion-prevalidar-cierre]');
+            var resultado = bloque && bloque.querySelector('[data-preflight-resultado]');
+            var cerrar = bloque && bloque.querySelector('[data-cerrar-movimiento]');
+            var parametros = new URLSearchParams({
+                accion: 'movimiento.prevalidar-cierre',
+                movimiento_id: boton.dataset.movimientoId,
+                cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                inicio_periodo: boton.dataset.inicioPeriodo
+            });
+            boton.disabled = true;
+            if (resultado) {
+                resultado.textContent = 'Validando condiciones de cierre…';
+                resultado.className = 'bandeja-preflight-resultado';
+            }
+            if (cerrar) {
+                cerrar.hidden = true;
+            }
+            fetch(window.contextoApp.app.ruta + '/api.php?' + parametros.toString(), {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerRespuesta).then(function (contenido) {
+                var datos = contenido.data;
+                var lineas = [datos.resultado === 'BLOQUEADO'
+                    ? 'Cierre bloqueado.'
+                    : (datos.resultado === 'LISTO' ? 'Preflight correcto.' : 'Preflight correcto con advertencias.')];
+                datos.bloqueos.concat(datos.advertencias).forEach(function (hallazgo) {
+                    lineas.push(hallazgo.mensaje);
+                });
+                if (datos.efectos_previstos.length > 0) {
+                    lineas.push('Efectos previstos: ' + datos.efectos_previstos.map(function (efecto) {
+                        return efecto.accion;
+                    }).join(', ') + '.');
+                }
+                resultado.textContent = lineas.join(' ');
+                resultado.classList.add(datos.listo ? 'es-correcto' : 'es-bloqueado');
+                if (cerrar) {
+                    cerrar.hidden = !datos.ejecutable_ahora;
+                }
+            }).catch(function (error) {
+                if (resultado) {
+                    resultado.textContent = error.message;
+                    resultado.classList.add('es-bloqueado');
+                }
+            }).then(function () {
+                boton.disabled = false;
+            });
+        }
+
+        function prevalidarConciliacionCheque(boton) {
+            var bloque = boton.closest('[data-accion-prevalidar-cheque]');
+            var resultado = bloque && bloque.querySelector('[data-preflight-cheque-resultado]');
+            var conciliar = bloque && bloque.querySelector('[data-conciliar-cheque]');
+            var parametros = new URLSearchParams({
+                accion: 'cheque.prevalidar-conciliacion',
+                movimiento_id: boton.dataset.movimientoId,
+                cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                inicio_periodo: boton.dataset.inicioPeriodo
+            });
+            boton.disabled = true;
+            if (resultado) {
+                resultado.textContent = 'Validando cheque asociado…';
+                resultado.className = 'bandeja-preflight-resultado';
+            }
+            if (conciliar) {
+                conciliar.hidden = true;
+            }
+            fetch(window.contextoApp.app.ruta + '/api.php?' + parametros.toString(), {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(leerRespuesta).then(function (contenido) {
+                var datos = contenido.data;
+                var titulos = {
+                    BLOQUEADO: 'Conciliación bloqueada.',
+                    YA_CONCILIADO: 'La conciliación ya está registrada.',
+                    NO_REQUIERE_CONCILIACION: 'El cheque no requiere conciliación.',
+                    LISTO_CON_ADVERTENCIAS: 'Cheque listo para conciliar.'
+                };
+                var lineas = [titulos[datos.resultado] || datos.resultado];
+                datos.bloqueos.concat(datos.advertencias).forEach(function (hallazgo) {
+                    lineas.push(hallazgo.mensaje);
+                });
+                if (datos.cheque) {
+                    lineas.push('Cheque #' + datos.cheque.valor_zetti_id
+                        + ', estado ERP ' + datos.cheque.estado_erp
+                        + ', diferencia ' + datos.cheque.diferencia + '.');
+                }
+                if (datos.contexto_contable && datos.contexto_contable.cuenta_banco
+                    && datos.contexto_contable.cuenta_valor) {
+                    lineas.push('Cuenta banco: ' + datos.contexto_contable.cuenta_banco.codigo
+                        + '. Cuenta cheque: ' + datos.contexto_contable.cuenta_valor.codigo + '.');
+                }
+                if (datos.politica_diferencia) {
+                    lineas.push('Tratamiento de diferencia: '
+                        + datos.politica_diferencia.tratamiento + '.');
+                }
+                if (datos.efectos_previstos.length > 0) {
+                    lineas.push('Efectos previstos: ' + datos.efectos_previstos.map(function (efecto) {
+                        return efecto.accion;
+                    }).join(', ') + '.');
+                }
+                resultado.textContent = lineas.join(' ');
+                resultado.classList.add(datos.resultado === 'BLOQUEADO' ? 'es-bloqueado' : 'es-correcto');
+                if (conciliar) {
+                    conciliar.hidden = !datos.listo_para_conciliar;
+                }
+            }).catch(function (error) {
+                if (resultado) {
+                    resultado.textContent = error.message;
+                    resultado.classList.add('es-bloqueado');
+                }
+            }).then(function () {
+                boton.disabled = false;
+            });
+        }
+
+        function conciliarCheque(boton) {
+            var bloque = boton.closest('[data-accion-prevalidar-cheque]');
+            var resultado = bloque && bloque.querySelector('[data-preflight-cheque-resultado]');
+            if (!window.confirm('Se crearán la operación, el valor y el asiento de conciliación en el sandbox. ¿Continuar?')) {
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            if (resultado) {
+                resultado.textContent = 'Conciliando cheque en sandbox…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=cheque.conciliar', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                boton.textContent = 'Cheque conciliado';
+                if (resultado) {
+                    resultado.textContent = 'Conciliación #' + contenido.data.conciliacion_id
+                        + ' creada en sandbox. El movimiento permanece PARA_CERRAR.';
+                    resultado.className = 'bandeja-preflight-resultado es-correcto';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 700);
+            }).catch(function (error) {
+                boton.disabled = false;
+                if (resultado) {
+                    resultado.textContent = error.message;
+                    resultado.classList.add('es-bloqueado');
+                }
+            });
+        }
+
+        function cerrarMovimiento(boton) {
+            var bloque = boton.closest('[data-accion-prevalidar-cierre]');
+            var resultado = bloque && bloque.querySelector('[data-preflight-resultado]');
+            if (!window.confirm('El movimiento quedará CERRADO y no podrá reabrirse. ¿Continuar?')) {
+                return;
+            }
+            var clave = boton.dataset.idempotencyKey || crearClaveIdempotencia();
+            boton.dataset.idempotencyKey = clave;
+            boton.disabled = true;
+            if (resultado) {
+                resultado.textContent = 'Cerrando movimiento…';
+            }
+            obtenerCsrf().then(function (token) {
+                return fetch(window.contextoApp.app.ruta + '/api.php?accion=movimiento.cerrar', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token,
+                        'Idempotency-Key': clave
+                    },
+                    body: JSON.stringify({
+                        movimiento_id: Number(boton.dataset.movimientoId),
+                        cuenta_bancaria_id: boton.dataset.cuentaBancariaId,
+                        inicio_periodo: boton.dataset.inicioPeriodo
+                    })
+                });
+            }).then(leerRespuesta).then(function (contenido) {
+                boton.textContent = 'Movimiento cerrado';
+                if (resultado) {
+                    var tipos = (contenido.data.efectos_aplicados || []).map(function (efecto) {
+                        return efecto.tipo;
+                    });
+                    if (tipos.indexOf('VALOR') !== -1 && tipos.indexOf('BORRADOR_ASIENTO') !== -1) {
+                        resultado.textContent = 'Movimiento CERRADO, valor liquidado y asiento creado en el sandbox. Actualizando la bandeja…';
+                    } else if (tipos.indexOf('BORRADOR_ASIENTO') !== -1) {
+                        resultado.textContent = 'Movimiento CERRADO y asiento creado en el sandbox. Actualizando la bandeja…';
+                    } else if (tipos.indexOf('VALOR') !== -1) {
+                        resultado.textContent = 'Movimiento CERRADO y valor ERP liquidado en el sandbox. Actualizando la bandeja…';
+                    } else {
+                        resultado.textContent = 'Movimiento CERRADO sin modificar el ERP. Actualizando la bandeja…';
+                    }
+                    resultado.className = 'bandeja-preflight-resultado es-correcto';
+                }
+                window.setTimeout(function () {
+                    if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
+                        formularioBandeja.requestSubmit();
+                    } else if (formularioBandeja) {
+                        formularioBandeja.submit();
+                    }
+                }, 700);
+            }).catch(function (error) {
+                boton.disabled = false;
+                if (resultado) {
+                    resultado.textContent = error.message;
+                    resultado.className = 'bandeja-preflight-resultado es-bloqueado';
+                }
+            });
+        }
+
         function revertirPreparacion(boton) {
             var bloque = boton.closest('[data-accion-revertir]');
             var motivoControl = bloque && bloque.querySelector('[data-motivo-reversion]');
@@ -1082,6 +1310,26 @@
                 revertirPreparacion(accionRevertir);
                 return;
             }
+            var accionPrevalidarCierre = evento.target.closest('[data-prevalidar-cierre]');
+            if (accionPrevalidarCierre) {
+                prevalidarCierre(accionPrevalidarCierre);
+                return;
+            }
+            var accionPrevalidarCheque = evento.target.closest('[data-prevalidar-cheque]');
+            if (accionPrevalidarCheque) {
+                prevalidarConciliacionCheque(accionPrevalidarCheque);
+                return;
+            }
+            var accionConciliarCheque = evento.target.closest('[data-conciliar-cheque]');
+            if (accionConciliarCheque) {
+                conciliarCheque(accionConciliarCheque);
+                return;
+            }
+            var accionCerrarMovimiento = evento.target.closest('[data-cerrar-movimiento]');
+            if (accionCerrarMovimiento) {
+                cerrarMovimiento(accionCerrarMovimiento);
+                return;
+            }
             var accionPreparar = evento.target.closest('[data-preparar-movimiento]');
             if (accionPreparar) {
                 prepararMovimiento(accionPreparar);
@@ -1410,7 +1658,8 @@
                     confirmar.hidden = true;
                     confirmacion.textContent = 'Importación #' + contenido.data.importacion_id +
                         ' creada con ' + contenido.data.total_movimientos + ' movimientos en estado ABIERTO. ' +
-                        contenido.data.clasificacion.univocas + ' quedaron clasificados de forma unívoca.';
+                        contenido.data.clasificacion.univocas + ' quedaron clasificados de forma unívoca y ' +
+                        contenido.data.asignados_automaticamente + ' recibieron responsable automático.';
                     estado.textContent = contenido.meta.repetida
                         ? 'La solicitud ya estaba confirmada; se recuperó su resultado.'
                         : 'Importación confirmada correctamente.';
@@ -1473,7 +1722,21 @@
         var editor = raiz.querySelector('[data-editor-regla]');
         var guardar = editor && editor.querySelector('[data-guardar-regla]');
         var cancelar = editor && editor.querySelector('[data-cancelar-regla]');
-        if (!detalle || !estado || !totalAutomaticas || !totalReglas || !editor || !guardar || !cancelar) {
+        var editorVinculo = raiz.querySelector('[data-editor-vinculo]');
+        var totalCuentas = raiz.querySelector('[data-total-cuentas]');
+        var guardarVinculo = editorVinculo && editorVinculo.querySelector('button[type="submit"]');
+        var editorMapeo = raiz.querySelector('[data-editor-mapeo]');
+        var totalMapeos = raiz.querySelector('[data-total-mapeos]');
+        var guardarMapeo = editorMapeo && editorMapeo.querySelector('[data-guardar-mapeo]');
+        var cancelarMapeo = editorMapeo && editorMapeo.querySelector('[data-cancelar-mapeo]');
+        var editorAsignacion = raiz.querySelector('[data-editor-asignacion]');
+        var totalAsignaciones = raiz.querySelector('[data-total-asignaciones]');
+        var guardarAsignacion = editorAsignacion && editorAsignacion.querySelector('[data-guardar-asignacion]');
+        var cancelarAsignacion = editorAsignacion && editorAsignacion.querySelector('[data-cancelar-asignacion]');
+        if (!detalle || !estado || !totalAutomaticas || !totalReglas || !editor || !guardar || !cancelar ||
+            !editorVinculo || !totalCuentas || !guardarVinculo || !editorMapeo || !totalMapeos ||
+            !guardarMapeo || !cancelarMapeo || !editorAsignacion || !totalAsignaciones ||
+            !guardarAsignacion || !cancelarAsignacion) {
             return;
         }
 
@@ -1596,7 +1859,170 @@
             fila.remove();
         }
 
+        function buscarVinculo(cuentaId) {
+            return detalle.querySelector('[data-cuenta-vinculada-id="' + cuentaId + '"]');
+        }
+
+        function aplicarVinculo(datos) {
+            var fila = buscarVinculo(datos.cuenta_bancaria_id);
+            if (datos.activa) {
+                if (!fila) {
+                    fila = document.createElement('tr');
+                    fila.setAttribute('data-cuenta-vinculada-id', datos.cuenta_bancaria_id);
+                    var etiqueta = document.createElement('td');
+                    etiqueta.setAttribute('data-etiqueta-cuenta', '');
+                    var acciones = document.createElement('td');
+                    acciones.className = 'configuracion-acciones-regla';
+                    acciones.appendChild(botonRegla('Desvincular', 'configuracion-peligro', 'data-desvincular-cuenta'));
+                    fila.appendChild(etiqueta);
+                    fila.appendChild(acciones);
+                    detalle.querySelector('.configuracion-vinculos tbody').appendChild(fila);
+                    totalCuentas.textContent = String((Number(totalCuentas.textContent) || 0) + 1);
+                }
+                fila.querySelector('[data-etiqueta-cuenta]').textContent = datos.etiqueta;
+            } else if (fila) {
+                fila.remove();
+                totalCuentas.textContent = String(Math.max(0, (Number(totalCuentas.textContent) || 0) - 1));
+            }
+        }
+
+        function limpiarEditorVinculo() {
+            editorVinculo.reset();
+            editorVinculo.dataset.modo = 'vincular';
+            guardarVinculo.textContent = 'Vincular cuenta';
+        }
+
+        function prepararEditorMapeo(fila, modo) {
+            editorMapeo.reset();
+            editorMapeo.dataset.modo = modo;
+            editorMapeo.elements.mapeo_id.value = fila ? fila.getAttribute('data-mapeo-id') : '';
+            editorMapeo.elements.subtipo_valor_zetti_id.value = fila ? fila.getAttribute('data-subtipo-mapeo-id') : '';
+            editorMapeo.elements.cuenta_zetti_id.value = fila ? fila.getAttribute('data-cuenta-mapeo-id') : '';
+            var retirar = modo === 'retirar';
+            editorMapeo.elements.subtipo_valor_zetti_id.disabled = retirar;
+            editorMapeo.elements.cuenta_zetti_id.disabled = retirar;
+            guardarMapeo.textContent = retirar ? 'Confirmar retiro' : (fila ? 'Guardar nueva versión' : 'Crear mapeo');
+            editorMapeo.elements.motivo.value = '';
+            editorMapeo.elements.motivo.focus();
+        }
+
+        function buscarMapeo(mapeoId) {
+            return detalle.querySelector('[data-mapeo-id="' + mapeoId + '"]');
+        }
+
+        function aplicarMapeo(datos) {
+            var fila = datos.mapeo_id_anterior ? buscarMapeo(datos.mapeo_id_anterior) : null;
+            if (!fila) {
+                fila = document.createElement('tr');
+                ['subtipo', 'cuenta', 'version', 'acciones'].forEach(function (campo) {
+                    var celda = document.createElement('td');
+                    celda.setAttribute('data-' + campo + '-mapeo', '');
+                    fila.appendChild(celda);
+                });
+                var acciones = fila.querySelector('[data-acciones-mapeo]');
+                acciones.className = 'configuracion-acciones-regla';
+                acciones.appendChild(botonRegla('Editar', 'configuracion-secundario', 'data-editar-mapeo'));
+                acciones.appendChild(botonRegla('Retirar', 'configuracion-peligro', 'data-retirar-mapeo'));
+                detalle.querySelector('.configuracion-mapeos-tabla tbody').appendChild(fila);
+                totalMapeos.textContent = String((Number(totalMapeos.textContent) || 0) + 1);
+            }
+            fila.setAttribute('data-mapeo-id', datos.mapeo_id);
+            fila.setAttribute('data-subtipo-mapeo-id', datos.subtipo_valor_zetti_id);
+            fila.setAttribute('data-cuenta-mapeo-id', datos.cuenta_zetti_id);
+            fila.querySelector('[data-subtipo-mapeo]').textContent = editorMapeo.elements.subtipo_valor_zetti_id.selectedOptions[0].textContent;
+            fila.querySelector('[data-cuenta-mapeo]').textContent = editorMapeo.elements.cuenta_zetti_id.selectedOptions[0].textContent;
+            fila.querySelector('[data-version-mapeo]').textContent = datos.version;
+        }
+
+        function aplicarRetiroMapeo(datos) {
+            var fila = buscarMapeo(datos.mapeo_id);
+            if (fila) {
+                fila.remove();
+                totalMapeos.textContent = String(Math.max(0, (Number(totalMapeos.textContent) || 0) - 1));
+            }
+        }
+
+        function prepararEditorAsignacion(fila, modo) {
+            editorAsignacion.reset();
+            editorAsignacion.dataset.modo = modo;
+            editorAsignacion.elements.regla_asignacion_id.value = fila ? fila.getAttribute('data-asignacion-id') : '';
+            editorAsignacion.elements.subtipo_valor_zetti_id.value = fila ? fila.getAttribute('data-subtipo-asignacion-id') : '';
+            editorAsignacion.elements.usuario_id.value = fila ? fila.getAttribute('data-usuario-asignacion-id') : '';
+            var retirar = modo === 'retirar';
+            editorAsignacion.elements.subtipo_valor_zetti_id.disabled = retirar;
+            editorAsignacion.elements.usuario_id.disabled = retirar;
+            guardarAsignacion.textContent = retirar ? 'Confirmar retiro' : (fila ? 'Guardar nueva versión' : 'Crear regla');
+            editorAsignacion.elements.motivo.value = '';
+            editorAsignacion.elements.motivo.focus();
+        }
+
+        function buscarAsignacion(id) {
+            return detalle.querySelector('[data-asignacion-id="' + id + '"]');
+        }
+
+        function aplicarAsignacion(datos) {
+            var fila = datos.regla_asignacion_id_anterior ? buscarAsignacion(datos.regla_asignacion_id_anterior) : null;
+            if (!fila) {
+                fila = document.createElement('tr');
+                ['subtipo', 'usuario', 'version', 'acciones'].forEach(function (campo) {
+                    var celda = document.createElement('td');
+                    celda.setAttribute('data-' + campo + '-asignacion', '');
+                    fila.appendChild(celda);
+                });
+                var acciones = fila.querySelector('[data-acciones-asignacion]');
+                acciones.className = 'configuracion-acciones-regla';
+                acciones.appendChild(botonRegla('Editar', 'configuracion-secundario', 'data-editar-asignacion'));
+                acciones.appendChild(botonRegla('Retirar', 'configuracion-peligro', 'data-retirar-asignacion'));
+                detalle.querySelector('.configuracion-asignaciones-tabla tbody').appendChild(fila);
+                totalAsignaciones.textContent = String((Number(totalAsignaciones.textContent) || 0) + 1);
+            }
+            fila.setAttribute('data-asignacion-id', datos.regla_asignacion_id);
+            fila.setAttribute('data-subtipo-asignacion-id', datos.subtipo_valor_zetti_id);
+            fila.setAttribute('data-usuario-asignacion-id', datos.usuario_id);
+            fila.querySelector('[data-subtipo-asignacion]').textContent = editorAsignacion.elements.subtipo_valor_zetti_id.selectedOptions[0].textContent;
+            fila.querySelector('[data-usuario-asignacion]').textContent = editorAsignacion.elements.usuario_id.selectedOptions[0].textContent;
+            fila.querySelector('[data-version-asignacion]').textContent = datos.version;
+        }
+
+        function aplicarRetiroAsignacion(datos) {
+            var fila = buscarAsignacion(datos.regla_asignacion_id);
+            if (fila) {
+                fila.remove();
+                totalAsignaciones.textContent = String(Math.max(0, (Number(totalAsignaciones.textContent) || 0) - 1));
+            }
+        }
+
         raiz.addEventListener('click', function (evento) {
+            var editarAsignacion = evento.target.closest('[data-editar-asignacion]');
+            var retirarAsignacion = evento.target.closest('[data-retirar-asignacion]');
+            if ((editarAsignacion || retirarAsignacion) && raiz.contains(editarAsignacion || retirarAsignacion)) {
+                var filaAsignacion = (editarAsignacion || retirarAsignacion).closest('[data-asignacion-id]');
+                if (filaAsignacion) {
+                    prepararEditorAsignacion(filaAsignacion, retirarAsignacion ? 'retirar' : 'guardar');
+                }
+                return;
+            }
+            var editarMapeo = evento.target.closest('[data-editar-mapeo]');
+            var retirarMapeo = evento.target.closest('[data-retirar-mapeo]');
+            if ((editarMapeo || retirarMapeo) && raiz.contains(editarMapeo || retirarMapeo)) {
+                var filaMapeo = (editarMapeo || retirarMapeo).closest('[data-mapeo-id]');
+                if (filaMapeo) {
+                    prepararEditorMapeo(filaMapeo, retirarMapeo ? 'retirar' : 'guardar');
+                }
+                return;
+            }
+            var desvincularCuenta = evento.target.closest('[data-desvincular-cuenta]');
+            if (desvincularCuenta && raiz.contains(desvincularCuenta)) {
+                var filaCuenta = desvincularCuenta.closest('[data-cuenta-vinculada-id]');
+                if (filaCuenta) {
+                    editorVinculo.dataset.modo = 'desvincular';
+                    editorVinculo.elements.cuenta_bancaria_id.value = filaCuenta.getAttribute('data-cuenta-vinculada-id');
+                    editorVinculo.elements.motivo.value = '';
+                    guardarVinculo.textContent = 'Confirmar desvinculación';
+                    editorVinculo.elements.motivo.focus();
+                }
+                return;
+            }
             var editar = evento.target.closest('[data-editar-regla]');
             var retirar = evento.target.closest('[data-retirar-regla]');
             var boton = evento.target.closest('[data-alternar-validacion]');
@@ -1652,6 +2078,111 @@
             prepararEditor(null, 'guardar');
         });
 
+        editorVinculo.elements.cuenta_bancaria_id.addEventListener('change', function () {
+            editorVinculo.dataset.modo = 'vincular';
+            guardarVinculo.textContent = 'Vincular cuenta';
+        });
+
+        editorVinculo.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            if (!editorVinculo.reportValidity()) {
+                return;
+            }
+            var modo = editorVinculo.dataset.modo || 'vincular';
+            var accion = modo === 'desvincular'
+                ? 'configuracion.desvincular-cuenta'
+                : 'configuracion.vincular-cuenta';
+            var cuerpo = {
+                configuracion_id: detalle.getAttribute('data-configuracion-id'),
+                cuenta_bancaria_id: editorVinculo.elements.cuenta_bancaria_id.value,
+                motivo: editorVinculo.elements.motivo.value
+            };
+            guardarVinculo.disabled = true;
+            estado.textContent = modo === 'desvincular'
+                ? 'Desvinculando la cuenta bancaria…'
+                : 'Vinculando la cuenta bancaria…';
+            enviarComando(accion, cuerpo).then(function (contenido) {
+                aplicarVinculo(contenido.data);
+                estado.textContent = contenido.meta.repetida
+                    ? 'La solicitud ya estaba registrada; se recuperó su resultado.'
+                    : (modo === 'desvincular' ? 'Cuenta desvinculada correctamente.' : 'Cuenta vinculada correctamente.');
+                limpiarEditorVinculo();
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                guardarVinculo.disabled = false;
+            });
+        });
+
+        cancelarMapeo.addEventListener('click', function () {
+            prepararEditorMapeo(null, 'guardar');
+        });
+
+        editorMapeo.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            if (!editorMapeo.reportValidity()) {
+                return;
+            }
+            var modo = editorMapeo.dataset.modo || 'guardar';
+            var cuerpo = {
+                configuracion_id: detalle.getAttribute('data-configuracion-id'),
+                mapeo_id: editorMapeo.elements.mapeo_id.value || null,
+                motivo: editorMapeo.elements.motivo.value
+            };
+            var accion = 'configuracion.guardar-mapeo';
+            if (modo === 'retirar') {
+                accion = 'configuracion.retirar-mapeo';
+                estado.textContent = 'Retirando el mapeo contable…';
+            } else {
+                cuerpo.subtipo_valor_zetti_id = editorMapeo.elements.subtipo_valor_zetti_id.value;
+                cuerpo.cuenta_zetti_id = editorMapeo.elements.cuenta_zetti_id.value;
+                estado.textContent = cuerpo.mapeo_id ? 'Creando una nueva versión del mapeo…' : 'Creando el mapeo contable…';
+            }
+            guardarMapeo.disabled = true;
+            cancelarMapeo.disabled = true;
+            enviarComando(accion, cuerpo).then(function (contenido) {
+                if (modo === 'retirar') {
+                    aplicarRetiroMapeo(contenido.data);
+                    estado.textContent = 'Mapeo contable retirado correctamente.';
+                } else {
+                    aplicarMapeo(contenido.data);
+                    estado.textContent = contenido.data.cambio ? 'Mapeo contable guardado correctamente.' : 'El mapeo no tenía cambios.';
+                }
+                prepararEditorMapeo(null, 'guardar');
+            }).catch(function (error) {
+                estado.textContent = error.message;
+            }).finally(function () {
+                guardarMapeo.disabled = false;
+                cancelarMapeo.disabled = false;
+            });
+        });
+
+        cancelarAsignacion.addEventListener('click', function () {
+            prepararEditorAsignacion(null, 'guardar');
+        });
+
+        editorAsignacion.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            if (!editorAsignacion.reportValidity()) { return; }
+            var modo = editorAsignacion.dataset.modo || 'guardar';
+            var cuerpo = { configuracion_id: detalle.getAttribute('data-configuracion-id'), regla_asignacion_id: editorAsignacion.elements.regla_asignacion_id.value || null, motivo: editorAsignacion.elements.motivo.value };
+            var accion = 'configuracion.guardar-asignacion';
+            if (modo === 'retirar') {
+                accion = 'configuracion.retirar-asignacion';
+                estado.textContent = 'Retirando la regla de responsable…';
+            } else {
+                cuerpo.subtipo_valor_zetti_id = editorAsignacion.elements.subtipo_valor_zetti_id.value;
+                cuerpo.usuario_id = editorAsignacion.elements.usuario_id.value;
+                estado.textContent = cuerpo.regla_asignacion_id ? 'Creando una nueva versión de la asignación…' : 'Creando la regla de responsable…';
+            }
+            guardarAsignacion.disabled = true; cancelarAsignacion.disabled = true;
+            enviarComando(accion, cuerpo).then(function (contenido) {
+                if (modo === 'retirar') { aplicarRetiroAsignacion(contenido.data); estado.textContent = 'Regla de responsable retirada correctamente.'; }
+                else { aplicarAsignacion(contenido.data); estado.textContent = contenido.data.cambio ? 'Regla de responsable guardada correctamente.' : 'La regla no tenía cambios.'; }
+                prepararEditorAsignacion(null, 'guardar');
+            }).catch(function (error) { estado.textContent = error.message; }).finally(function () { guardarAsignacion.disabled = false; cancelarAsignacion.disabled = false; });
+        });
+
         editor.addEventListener('submit', function (evento) {
             evento.preventDefault();
             if (!editor.reportValidity()) {
@@ -1697,6 +2228,9 @@
         });
 
         prepararEditor(null, 'guardar');
+        limpiarEditorVinculo();
+        prepararEditorMapeo(null, 'guardar');
+        prepararEditorAsignacion(null, 'guardar');
     }
 
     function iniciar() {

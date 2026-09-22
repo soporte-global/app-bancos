@@ -1,0 +1,25 @@
+BEGIN;
+ALTER TABLE global_prod.bancos_regla_asignacion_usuario ADD COLUMN IF NOT EXISTS version integer, ADD COLUMN IF NOT EXISTS reemplaza_regla_id bigint, ADD COLUMN IF NOT EXISTS origen varchar(20);
+ALTER TABLE global_temp.bancos_regla_asignacion_usuario ADD COLUMN IF NOT EXISTS version integer, ADD COLUMN IF NOT EXISTS reemplaza_regla_id bigint, ADD COLUMN IF NOT EXISTS origen varchar(20);
+UPDATE global_prod.bancos_regla_asignacion_usuario SET version=1 WHERE version IS NULL;
+UPDATE global_prod.bancos_regla_asignacion_usuario SET origen='MIGRACION' WHERE origen IS NULL;
+UPDATE global_temp.bancos_regla_asignacion_usuario SET version=1 WHERE version IS NULL;
+UPDATE global_temp.bancos_regla_asignacion_usuario SET origen='MIGRACION' WHERE origen IS NULL;
+ALTER TABLE global_prod.bancos_regla_asignacion_usuario ALTER COLUMN version SET DEFAULT 1, ALTER COLUMN version SET NOT NULL, ALTER COLUMN origen SET DEFAULT 'MANUAL', ALTER COLUMN origen SET NOT NULL;
+ALTER TABLE global_temp.bancos_regla_asignacion_usuario ALTER COLUMN version SET DEFAULT 1, ALTER COLUMN version SET NOT NULL, ALTER COLUMN origen SET DEFAULT 'MANUAL', ALTER COLUMN origen SET NOT NULL;
+DO $$ BEGIN
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_prod.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_version_check') THEN ALTER TABLE global_prod.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_version_check CHECK(version>0); END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_prod.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_origen_check') THEN ALTER TABLE global_prod.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_origen_check CHECK(origen IN('MIGRACION','MANUAL')); END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_prod.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_reemplaza_fk') THEN ALTER TABLE global_prod.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_reemplaza_fk FOREIGN KEY(reemplaza_regla_id) REFERENCES global_prod.bancos_regla_asignacion_usuario(id); END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_temp.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_version_check') THEN ALTER TABLE global_temp.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_version_check CHECK(version>0); END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_temp.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_origen_check') THEN ALTER TABLE global_temp.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_origen_check CHECK(origen IN('MIGRACION','MANUAL')); END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='global_temp.bancos_regla_asignacion_usuario'::regclass AND conname='bancos_regla_asignacion_usuario_reemplaza_fk') THEN ALTER TABLE global_temp.bancos_regla_asignacion_usuario ADD CONSTRAINT bancos_regla_asignacion_usuario_reemplaza_fk FOREIGN KEY(reemplaza_regla_id) REFERENCES global_temp.bancos_regla_asignacion_usuario(id); END IF;
+END $$;
+ALTER TABLE global_prod.bancos_regla_asignacion_usuario DROP CONSTRAINT IF EXISTS bancos_regla_asignacion_usuario_uk;
+ALTER TABLE global_temp.bancos_regla_asignacion_usuario DROP CONSTRAINT IF EXISTS bancos_regla_asignacion_usuar_configuracion_id_subtipo_valo_key;
+CREATE UNIQUE INDEX IF NOT EXISTS bancos_regla_asignacion_usuario_activa_uk ON global_prod.bancos_regla_asignacion_usuario(configuracion_id,subtipo_valor_zetti_id) WHERE activo IS TRUE;
+CREATE UNIQUE INDEX IF NOT EXISTS bancos_regla_asignacion_usuario_reemplaza_uk ON global_prod.bancos_regla_asignacion_usuario(reemplaza_regla_id) WHERE reemplaza_regla_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS bancos_regla_asignacion_usuario_activa_uk ON global_temp.bancos_regla_asignacion_usuario(configuracion_id,subtipo_valor_zetti_id) WHERE activo IS TRUE;
+CREATE UNIQUE INDEX IF NOT EXISTS bancos_regla_asignacion_usuario_reemplaza_uk ON global_temp.bancos_regla_asignacion_usuario(reemplaza_regla_id) WHERE reemplaza_regla_id IS NOT NULL;
+COMMENT ON TABLE global_prod.bancos_regla_asignacion_usuario IS 'Regla vigente y versionada de responsable automatico por configuracion/subtipo; no se migraron destinos legacy sin acceso efectivo.';
+COMMIT;

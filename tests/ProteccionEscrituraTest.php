@@ -55,6 +55,7 @@ $autorizador->exigir($general, 'movimiento-preparar');
 
 foreach ([
     [$general, 'movimiento-cerrar'],
+    [$general, 'cheque-conciliar'],
     [$sinAcceso, 'movimiento-preparar'],
 ] as $caso) {
     try {

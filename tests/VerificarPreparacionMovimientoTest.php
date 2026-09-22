@@ -29,6 +29,13 @@ foreach ([
     'data-crear-borrador',
     'movimiento-crear-borrador',
     'El borrador debe tener entre 2 y 200 líneas',
+    'data-prevalidar-cierre',
+    'movimiento-cerrar',
+    'el cierre admite casos sin efecto ERP, valores no cheque y borradores balanceados',
+    'data-cerrar-movimiento',
+    'data-prevalidar-cheque',
+    'cheque-conciliar',
+    'data-conciliar-cheque',
 ] as $fragmento) {
     if (strpos($vista, $fragmento) === false) {
         throw new RuntimeException('La vista no contiene el contrato de preparacion: ' . $fragmento);
@@ -55,7 +62,17 @@ foreach ([
     'data-seleccionar-cuenta',
     'movimiento.crear-borrador',
     'lineas: lineas',
+    'movimiento.prevalidar-cierre',
+    'datos.efectos_previstos',
+    'movimiento.cerrar',
+    'cerrarMovimiento',
     'formularioBandeja.requestSubmit()',
+    'cheque.prevalidar-conciliacion',
+    'prevalidarConciliacionCheque',
+    'datos.contexto_contable.cuenta_banco',
+    'datos.politica_diferencia.tratamiento',
+    'cheque.conciliar',
+    'conciliarCheque',
 ] as $fragmento) {
     if (strpos($javascript, $fragmento) === false) {
         throw new RuntimeException('El cliente no contiene el contrato de preparacion: ' . $fragmento);
@@ -72,6 +89,13 @@ foreach ([
     "'erp.buscar-nodos'",
     "'erp.buscar-cuentas'",
     "'movimiento-crear-borrador'",
+    "'movimiento.prevalidar-cierre'",
+    "'movimiento.cerrar-sin-erp'",
+    "'movimiento.cerrar'",
+    "'movimiento-cerrar'",
+    "'cheque.prevalidar-conciliacion'",
+    "'cheque-conciliar'",
+    "'cheque.conciliar'",
     "'application/json'",
 ] as $fragmento) {
     if (strpos($api, $fragmento) === false) {

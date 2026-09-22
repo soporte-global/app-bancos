@@ -9,6 +9,9 @@ if (($pagina ?? '') === 'configuraciones') {
         'habilitada' => BANCOS_DEBUG,
         'configuraciones' => [],
         'subtipos' => [],
+        'cuentas_bancarias' => [],
+        'cuentas_contables' => [],
+        'responsables' => [],
         'seleccionada' => null,
         'error' => null,
     ];
@@ -34,6 +37,7 @@ if (($pagina ?? '') === 'configuraciones') {
         );
         $datosConfiguracion->configuraciones = $repositorio->listarConfiguraciones();
         $datosConfiguracion->subtipos = $repositorio->listarSubtipos();
+        $datosConfiguracion->cuentas_bancarias = $repositorio->listarCuentasBancarias();
         $configuracionId = trim((string) ($_GET['configuracion_id'] ?? ''));
         if ($configuracionId === '' && count($datosConfiguracion->configuraciones) > 0) {
             $configuracionId = $datosConfiguracion->configuraciones[0]['id'];
@@ -43,6 +47,12 @@ if (($pagina ?? '') === 'configuraciones') {
                 throw new InvalidArgumentException('configuracion_id es invalido.');
             }
             $datosConfiguracion->seleccionada = $repositorio->consultar($configuracionId);
+            $repositorioMapeos = new AppBancos\Repository\MapeoCuentaContableRepository($conexion, $esquemas);
+            $datosConfiguracion->seleccionada['mapeos'] = $repositorioMapeos->listar($configuracionId);
+            $datosConfiguracion->cuentas_contables = $repositorioMapeos->listarCuentas();
+            $repositorioAsignaciones = new AppBancos\Repository\ReglaAsignacionRepository($conexion, $esquemas);
+            $datosConfiguracion->seleccionada['asignaciones'] = $repositorioAsignaciones->listar($configuracionId);
+            $datosConfiguracion->responsables = $repositorioAsignaciones->listarResponsablesElegibles();
         }
     } catch (InvalidArgumentException $error) {
         http_response_code(400);

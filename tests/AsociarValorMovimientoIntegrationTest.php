@@ -48,6 +48,7 @@ $valorId = (int) $pdo->query(
            SELECT 1 FROM global_temp.bancos_asociacion_movimiento a
            WHERE a.valor_zetti_id = v.id AND a.activo
        )
+       AND NOT EXISTS (SELECT 1 FROM global_temp.valor t WHERE t.id = v.id)
      ORDER BY v.id LIMIT 1"
 )->fetchColumn();
 comprobarAsociacionValor(
@@ -104,6 +105,9 @@ try {
     comprobarAsociacionValor($primera['repetida'] === false && $reintento['repetida'] === true, 'La asociacion no fue idempotente.');
     comprobarAsociacionValor($primera['codigo_http'] === 201, 'La primera asociacion no devolvio HTTP 201.');
     comprobarAsociacionValor($primera['respuesta']['monto_asociado'] === '10.00000', 'El importe no se derivo del movimiento.');
+    $copia = $pdo->prepare('SELECT count(*) FROM global_temp.valor WHERE id=:valor_id');
+    $copia->execute([':valor_id' => $valorId]);
+    comprobarAsociacionValor((int) $copia->fetchColumn() === 1, 'La asociacion no creo la copia sandbox del valor.');
 
     $entradaCompetidora = $entrada;
     $entradaCompetidora['movimiento_id'] = $movimientos[1];
@@ -158,6 +162,8 @@ try {
             'DELETE FROM global_temp.bancos_movimiento_extracto WHERE id IN (:primero, :segundo)'
         );
         $consulta->execute([':primero' => $movimientos[0], ':segundo' => $movimientos[1] ?? $movimientos[0]]);
+        $consulta = $pdo->prepare('DELETE FROM global_temp.valor WHERE id=:valor_id');
+        $consulta->execute([':valor_id' => $valorId]);
         $pdo->commit();
     }
 }

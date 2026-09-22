@@ -134,6 +134,17 @@ body:has(.bancos-app),
     color: var(--ui-texto);
 }
 
+.importacion-formulario input[type="file"]::file-selector-button {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto);
+}
+
+.importacion-formulario input[type="file"]::file-selector-button:hover {
+    border-color: var(--ui-acento);
+    color: var(--ui-acento);
+}
+
 .importacion-formulario button {
     border-color: var(--ui-acento);
     background: var(--ui-acento);

@@ -23,6 +23,9 @@ $comprobar(strpos($paleta, '@import url("compatibilidad_colores.css")') !== fals
 $comprobar(strpos($compatibilidad, '--color-principal-500: var(--paleta-principal1)') !== false, 'Los alias históricos deben derivar de la paleta.');
 $comprobar(strpos($temaClaro, '--color-secundario1: #ffffff') !== false, 'Faltan las bases del tema claro.');
 $comprobar(strpos($temaOscuro, 'color-scheme: dark') !== false, 'Falta el tema oscuro real.');
+$comprobar(strpos($temaClaro, '--ui-error-texto: var(--color-secundario1)') === false
+    && strpos($temaOscuro, '--ui-error-texto: var(--color-secundario2)') === false,
+    'Las acciones de error deben conservar contraste en ambos temas.');
 $comprobar(strpos($temaComponentes, 'var(--ui-superficie)') !== false, 'La apariencia debe consumir tokens semánticos.');
 $comprobar(strpos($vista, 'data-alternar-tema') === false, 'La bandeja no debe tener una segunda autoridad de tema.');
 $comprobar(strpos($javascript, 'localStorage') === false, 'La preferencia de tema ya no pertenece al JavaScript de la bandeja.');
@@ -37,6 +40,20 @@ $comprobar(strpos($encabezadosInternos[1], 'position: static') !== false && strp
 $comprobar(strpos($css, '.bancos-app header::before') !== false, 'Los encabezados internos no deben heredar la franja decorativa del shell.');
 $comprobar(strpos($css, '.importacion-formulario > *') !== false && strpos($css, 'min-width: 0') !== false, 'Los formularios operativos no deben forzar desborde horizontal.');
 $comprobar(strpos($css, '.configuracion-selector > *') !== false, 'El selector de configuracion debe poder contraerse en pantallas angostas.');
+$comprobar(preg_match('/\.bandeja-shell\s*\{([^}]*)\}/s', $css, $anchoBandeja) === 1
+    && strpos($anchoBandeja[1], 'width: 100%') !== false
+    && strpos($anchoBandeja[1], 'max-width') === false,
+    'La bandeja debe usar todo el ancho disponible.');
+foreach (['importacion-page', 'configuracion-page'] as $clasePagina) {
+    $comprobar(preg_match('/\.' . $clasePagina . '\s*\{([^}]*)\}/s', $css, $anchoPagina) === 1
+        && strpos($anchoPagina[1], 'width: 100%') !== false
+        && strpos($anchoPagina[1], 'max-width') === false,
+        'La vista ' . $clasePagina . ' no debe limitarse a una columna central.');
+}
+$comprobar(strpos($css, '.bancos-app select,') !== false
+    && strpos($css, '.bancos-app textarea {') !== false
+    && strpos($css, 'min-width: 0') !== false,
+    'Los controles de la aplicación deben ajustarse al ancho de sus celdas.');
 $comprobar(strpos(file_get_contents(__DIR__ . '/../app/html/importaciones.php'), '<header class="importacion-encabezado">') !== false, 'La importacion debe conservar un encabezado semantico visible.');
 $comprobar(strpos(file_get_contents(__DIR__ . '/../app/html/configuraciones.php'), '<header class="configuracion-encabezado">') !== false, 'La configuracion debe conservar un encabezado semantico visible.');
 $comprobar(strpos($header, '.dropdown-menu .selector_tema') !== false, 'El selector de tema debe ocupar una fila propia dentro del menú.');

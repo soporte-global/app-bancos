@@ -37,6 +37,6 @@
     --ui-advertencia-texto: color-mix(in srgb, var(--paleta-advertencia3) 76%, var(--color-secundario2));
     --ui-error: var(--paleta-error2);
     --ui-error-fondo: color-mix(in srgb, var(--paleta-error2) 8%, var(--color-secundario1));
-    --ui-error-texto: var(--color-secundario1);
+    --ui-error-texto: color-mix(in srgb, var(--paleta-error2) 72%, var(--color-secundario2));
     --ui-overlay: color-mix(in srgb, var(--color-secundario2) 54%, transparent);
 }

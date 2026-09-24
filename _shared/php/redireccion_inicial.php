@@ -154,7 +154,9 @@ function renderizar_aplicacion(
             $incluirFooter = false;
             $cargarDatos = false;
         } elseif ($sesion !== null) {
-            $paginaAutorizada = false;
+            // La documentación es de solo lectura y requiere acceso general a la app,
+            // sin sumar un permiso operativo por cada usuario.
+            $paginaAutorizada = $pagina === 'about';
             foreach ($permisos_app as $permiso) {
                 if ($pagina === $permiso->nombreInterno()) {
                     $paginaAutorizada = true;

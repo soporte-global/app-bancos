@@ -120,6 +120,103 @@ body.bandeja-detalle-activo {
     min-width: 0;
 }
 
+.about-page {
+    display: grid;
+    gap: 18px;
+}
+
+.about-encabezado,
+.about-documentos a,
+.about-indice,
+.about-documento {
+    min-width: 0;
+    padding: clamp(16px, 2vw, 26px);
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.about-encabezado p:last-child {
+    margin-bottom: 0;
+}
+
+.about-documentos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.about-documentos a {
+    display: grid;
+    gap: 7px;
+    text-decoration: none;
+}
+
+.about-documentos a strong {
+    font-size: 1rem;
+}
+
+.about-documentos a span {
+    line-height: 1.45;
+}
+
+.about-contenido {
+    display: grid;
+    grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.about-indice ol {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.about-indice li + li {
+    margin-top: 9px;
+}
+
+.about-documento {
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.about-documento h1 {
+    margin-bottom: 18px;
+}
+
+.about-documento h2 {
+    margin: 28px 0 10px;
+    font-size: 1.2rem;
+}
+
+.about-documento h3 {
+    margin: 20px 0 8px;
+}
+
+.about-documento li + li {
+    margin-top: 8px;
+}
+
+.about-documento pre {
+    max-width: 100%;
+    padding: 14px;
+    overflow-x: auto;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.about-documento code {
+    overflow-wrap: anywhere;
+}
+
+.about-documento :focus-visible,
+.about-indice a:focus-visible,
+.about-documentos a:focus-visible {
+    outline: 3px solid;
+    outline-offset: 2px;
+}
+
 .bancos-app h1,
 .bancos-app h2,
 .bancos-app h3,
@@ -1275,6 +1372,10 @@ body.bandeja-detalle-activo {
         padding-inline: 16px;
     }
 
+    .about-contenido {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .bandeja-contexto {
         align-items: flex-start;
         flex-direction: column;
@@ -1296,6 +1397,10 @@ body.bandeja-detalle-activo {
 @media (max-width: 650px) {
     .bancos-app {
         padding: 20px 12px 48px;
+    }
+
+    .about-documentos {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .bandeja-introduccion {

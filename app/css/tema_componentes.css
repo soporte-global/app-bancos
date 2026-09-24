@@ -15,6 +15,38 @@ body:has(.bancos-app),
     color: var(--ui-texto);
 }
 
+.about-encabezado,
+.about-documentos a,
+.about-indice,
+.about-documento {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie);
+    color: var(--ui-texto);
+}
+
+.about-documentos a:hover,
+.about-documentos a[aria-current="page"] {
+    border-color: var(--ui-acento);
+    background: var(--ui-hover);
+}
+
+.about-indice a {
+    color: var(--ui-acento);
+}
+
+.about-documento pre,
+.about-documento code {
+    border-color: var(--ui-borde);
+    background: var(--ui-superficie-hundida);
+    color: var(--ui-texto);
+}
+
+.about-documento :focus-visible,
+.about-indice a:focus-visible,
+.about-documentos a:focus-visible {
+    outline-color: var(--ui-foco);
+}
+
 .bancos-app h1,
 .bancos-app h2,
 .bancos-app h3,

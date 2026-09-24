@@ -1,5 +1,7 @@
 # Tarea actual
 
+La documentación de uso y soporte técnico ya puede consultarse desde **Acerca de · Documentación** en el menú de la app. Los fuentes están en `docs/manual-de-uso.md` y `docs/manual-tecnico.md`; el acceso requiere sesión y permiso general de APP BANCOS, sin un permiso adicional para leer la ayuda.
+
 La migración completa de los datos legacy a las tablas canónicas `global_prod.bancos_*` fue realizada. Incluye configuración, períodos/importaciones, movimientos, historial de asignación, asociaciones, reservas, borradores, mensajes y la semántica de asientos compartidos. La aplicación aún no usa estas tablas para atender tráfico funcional: el siguiente ciclo es de conciliación post-migración y corte controlado.
 
 Diseño vigente:

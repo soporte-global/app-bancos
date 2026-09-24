@@ -36,10 +36,14 @@ $temaOscuro = TEMAS_DISPONIBLES && TEMA_ACTUAL === 'oscuro';
                     $homeExiste = is_file(RUTA . '/app/html/home.html')
                         || is_file(RUTA . '/app/html/home.php');
                     $homeEnPermisos = false;
+                    $aboutEnPermisos = false;
                     foreach ($permisosMenu as $permisoMenu) {
-                        if (strtolower(trim((string) $permisoMenu->nombreInterno())) === 'home') {
+                        $nombrePermisoMenu = strtolower(trim((string) $permisoMenu->nombreInterno()));
+                        if ($nombrePermisoMenu === 'home') {
                             $homeEnPermisos = true;
-                            break;
+                        }
+                        if ($nombrePermisoMenu === 'about') {
+                            $aboutEnPermisos = true;
                         }
                     }
                     ?>
@@ -56,6 +60,9 @@ $temaOscuro = TEMAS_DISPONIBLES && TEMA_ACTUAL === 'oscuro';
                             <i class="<?php echo $icono; ?>"></i> <?php echo $descripcion; ?>
                         </a>
                     <?php endforeach; ?>
+                    <?php if (is_file(RUTA . '/app/html/about.php') && !$aboutEnPermisos): ?>
+                        <a href="index.php?pag=about"><i class="fas fa-info-circle"></i> ACERCA DE · DOCUMENTACIÓN</a>
+                    <?php endif; ?>
                     <?php if (DIAGNOSTICO_HABILITADO): ?>
                         <a href="index.php?shared=diagnostico">
                             <i class="fas fa-stethoscope"></i> DIAGNOSTICO

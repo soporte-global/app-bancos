@@ -1,7 +1,13 @@
 <?php
-$vista = ($_GET['vista'] ?? 'importaciones') === 'configuraciones'
-    ? 'configuraciones'
+$vistaSolicitada = (string) ($_GET['vista'] ?? 'importaciones');
+$vista = in_array($vistaSolicitada, ['importaciones', 'configuraciones', 'about'], true)
+    ? $vistaSolicitada
     : 'importaciones';
+$rutaFixture = dirname(__DIR__, 2);
+if (!defined('RUTA')) {
+    define('RUTA', $rutaFixture);
+}
+require_once RUTA . '/src/autoload.php';
 $tema = ($_GET['tema'] ?? 'claro') === 'oscuro' ? 'oscuro' : 'claro';
 
 $contextoApp = [

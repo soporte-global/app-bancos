@@ -1,5 +1,7 @@
 # Estado actual
 
+La aplicación dispone ahora de `?pag=about`, visible en el menú para cualquier usuario con acceso general a APP BANCOS. Presenta dentro de la interfaz `docs/manual-de-uso.md` y `docs/manual-tecnico.md`, con índice por secciones y renderizado HTML escapado. La guía cubre bandeja, detalle, preparación, cierre, cheques, importaciones, configuraciones, errores habituales y límites del sandbox; el documento técnico resume arquitectura, permisos, esquemas, transacciones y sincronización. Esta página es de solo lectura y no concede permisos operativos.
+
 Descubrimiento estático completado para BANCOS, GESTION_USUARIOS y BANCOS_MENSUAL, más las referencias `nueva_app` y `hQuery`. El 2026-08-25 se completó además un relevamiento y una validación agregada de solo lectura del catálogo productivo de las tablas `bancos_*`, `bancos_mes_*` y entidades ERP relacionadas; la evidencia y el modelo objetivo actualizado se documentaron en `docs/database/`. Las tablas canónicas se encuentran en el esquema `global_prod`, con prefijo `bancos_` y nombres en español.
 
 También se incorporó la base de estructura de `nueva_app` dentro de `app-bancos` (directorios `_shared`, `app`, `src`, `lib`, `vendor`, `tests`, configuración de bootstrap y entrypoints), sin modificar los legados ni sobreescribir documentación preexistente.

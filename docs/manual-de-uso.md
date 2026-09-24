@@ -16,11 +16,11 @@ Abrí **Bandeja mensual**. Elegí una cuenta bancaria y luego un período dispon
 
 La bandeja permite filtrar por estado, responsable, presencia de asociación, mensajes y situación de conciliación de cheque. También podés elegir el límite de filas. Los filtros forman parte de la URL, por lo que una recarga conserva la consulta. **Anterior** y **Siguiente** recorren páginas sin pedir el conjunto completo de movimientos. El enlace de paginación contiene un cursor opaco: no hay que editarlo manualmente.
 
-Cada fila resume fecha, referencia, descripción, crédito o débito, estado, asociación, borrador y último mensaje. **Ver detalle** abre un panel lateral sin perder la posición de la bandeja. En móvil, la misma información se organiza en tarjetas. Si el resultado está vacío, revisá cuenta, período y filtros antes de asumir que faltan importaciones.
+Cada fila resume fecha, referencia, descripción, crédito o débito, estado, asociación, borrador y último mensaje. **Ver detalle** abre un espacio de trabajo de pantalla completa sin perder la posición de la bandeja. En móvil, las filas se reorganizan para facilitar la lectura. Si el resultado está vacío, revisá cuenta, período y filtros antes de asumir que faltan importaciones.
 
 ## 3. Detalle del movimiento
 
-El panel muestra el contexto completo: asociaciones activas a valor o asiento, borradores y líneas contables, mensajes, historial de estados y, cuando existe, trazabilidad de conciliación de cheque. Cerralo con el botón de la cabecera o con Escape para volver a la lista.
+El espacio de trabajo muestra el contexto completo: **Operaciones** para las acciones permitidas y **Seguimiento** para asociaciones, mensajes, borradores, historial y trazabilidad de cheque. En pantallas amplias ambas zonas se ven en paralelo; en pantallas pequeñas se apilan. Usá **Volver a la bandeja** o Escape para regresar a la lista sin perder el contexto.
 
 Las acciones visibles cambian según el estado del movimiento. Un movimiento **ABIERTO** puede recibir asociaciones o borradores y pasar a **PARA_CERRAR**. Un movimiento **PARA_CERRAR** puede volver a **ABIERTO** con motivo o entrar al circuito de validación de cierre. **CERRADO** es terminal: no existe reapertura desde la aplicación. Los mensajes y la consulta del historial siguen disponibles en cualquier estado.
 

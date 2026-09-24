@@ -12,7 +12,8 @@ $comprobar = static function ($condicion, $mensaje) {
 
 $comprobar(strpos($vista, 'data-abrir-detalle') !== false, 'Falta el acceso al detalle desde la fila.');
 $comprobar(strpos($vista, '<template data-detalle-movimiento>') !== false, 'El detalle debe reutilizar los datos ya renderizados.');
-$comprobar(strpos($vista, 'data-panel-detalle hidden') !== false, 'Falta el panel lateral inicialmente cerrado.');
+$comprobar(strpos($vista, 'data-panel-detalle hidden') !== false, 'Falta el espacio de trabajo inicialmente cerrado.');
+$comprobar(strpos($vista, 'bandeja-detalle-columnas') !== false && strpos($vista, 'bandeja-detalle-operaciones') !== false && strpos($vista, 'bandeja-detalle-seguimiento') !== false, 'El detalle debe separar operaciones y seguimiento.');
 $comprobar(strpos($vista, '<h3>Asociaciones</h3>') !== false, 'Falta la sección Asociaciones.');
 $comprobar(strpos($vista, '<h3>Mensajes</h3>') !== false, 'Falta la sección Mensajes.');
 $comprobar(strpos($vista, 'data-agregar-mensaje') !== false, 'Falta la acción para publicar mensajes.');
@@ -27,7 +28,8 @@ $comprobar(strpos($vista, 'data-conciliacion-estado=') !== false, 'Falta el indi
 $comprobar(strpos($vista, 'valor_resultante_zetti_id') !== false, 'La trazabilidad no muestra el valor resultante.');
 $comprobar(strpos($vista, 'Sin eventos históricos adicionales.') !== false, 'La ausencia de historial adicional debe ser explícita.');
 $comprobar(strpos($css, '.bandeja-resumen-texto') !== false && strpos($css, '-webkit-line-clamp: 2') !== false, 'La fila debe resumir el contenido extenso.');
-$comprobar(strpos($css, '.bandeja-detalle') !== false && strpos($css, 'right: 0') !== false, 'El detalle debe abrir como panel lateral.');
+$comprobar(preg_match('/\.bandeja-detalle\s*\{[^}]*inset:\s*0;[^}]*width:\s*100vw;/s', $css) === 1, 'El detalle debe ocupar el viewport completo.');
+$comprobar(strpos($css, '.bandeja-detalle-columnas') !== false && strpos($css, 'grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr)') !== false, 'El detalle debe aprovechar el ancho con dos zonas de trabajo.');
 $comprobar(strpos(file_get_contents(__DIR__ . '/../app/css/tema_componentes.css'), '.bandeja-conciliacion') !== false, 'La trazabilidad debe respetar el tema visual compartido.');
 $comprobar(substr_count($css, 'height: 100dvh') >= 2, 'El panel y su fondo deben cubrir el viewport aunque la tabla tenga pocas filas.');
 $comprobar(strpos($css, 'body:has(.bancos-app)') !== false && strpos($css, 'min-height: 100dvh') !== false, 'El shell filtrado debe conservar como mínimo la altura visible.');
@@ -52,6 +54,7 @@ $comprobar(strpos($html, 'Borrador #731 · COMISIONES') !== false, 'La fila debe
 $comprobar(strpos($html, 'Pendiente de revisión documental por Tesorería.') !== false, 'El detalle debe conservar el cuerpo completo del mensaje.');
 $comprobar(strpos($html, '<th>Debe</th><th>Haber</th>') !== false && strpos($html, '<td>18.250,00</td>') !== false, 'El detalle debe conservar las líneas del borrador.');
 $comprobar(strpos($html, 'Conciliación #91') !== false, 'El detalle no muestra la conciliación registrada.');
+$comprobar(strpos($html, '← Volver a la bandeja') !== false, 'Falta la navegación visible para volver a la bandeja.');
 $comprobar(strpos($html, 'data-conciliacion-estado="CONCILIADO"') !== false, 'La fila no muestra el estado conciliado.');
 $comprobar(strpos($html, 'data-conciliacion-estado="NO_REQUIERE"') !== false, 'La fila no muestra que el movimiento no requiere conciliación.');
 $comprobar(strpos($html, 'Operación</dt><dd>#800001') !== false, 'El detalle no muestra la operación de conciliación.');

@@ -504,6 +504,45 @@ body:has(.bancos-app),
     background: var(--ui-hover);
 }
 
+.bandeja-detalle-resumen,
+.bandeja-detalle-seccion {
+    background: transparent;
+}
+
+.bandeja-detalle-lista li,
+.bandeja-borrador,
+.bandeja-conciliacion,
+.bandeja-borrador-linea {
+    background: transparent;
+}
+
+.bandeja-detalle-lista .mensaje-no-leido {
+    border-left: 3px solid var(--ui-info);
+    padding-left: 10px;
+}
+
+.bandeja-mensajeria textarea {
+    border-color: var(--ui-borde);
+    background: var(--ui-campo);
+    color: var(--ui-texto);
+}
+
+.bandeja-mensajeria button {
+    border-color: var(--ui-acento);
+    background: var(--ui-acento);
+    color: var(--ui-acento-texto);
+}
+
+.bandeja-mensajeria button:hover {
+    background: var(--ui-acento-hover);
+}
+
+.bandeja-mensajeria textarea:focus-visible,
+.bandeja-mensajeria button:focus-visible {
+    outline: 2px solid var(--ui-foco);
+    outline-offset: 1px;
+}
+
 .bandeja-detalle-datos {
     background: var(--ui-borde);
 }
@@ -512,15 +551,37 @@ body:has(.bancos-app),
     background: var(--ui-superficie-hundida);
 }
 
+.about-encabezado,
+.about-documentos a,
+.about-indice,
+.about-documento,
+.bandeja-contexto,
+.bandeja-panel,
+.bandeja-paginacion,
+.importacion-encabezado,
+.importacion-formulario,
+.importacion-formato,
+.importacion-resultado,
+.importacion-metricas div,
+.configuracion-encabezado,
+.configuracion-selector,
+.configuracion-detalle,
+.configuracion-cuentas,
+.configuracion-editor {
+    border-color: var(--ui-borde);
+    background: transparent;
+    color: var(--ui-texto);
+}
+
 @media (max-width: 650px) {
     .bandeja-tabla tbody {
-        background: var(--ui-borde);
+        background: transparent;
     }
 
     .bandeja-tabla tbody tr,
     .bandeja-tabla tbody tr:nth-child(even) {
         border-color: var(--ui-borde);
-        background: var(--ui-superficie);
+        background: transparent;
     }
 
     .bandeja-tabla td {

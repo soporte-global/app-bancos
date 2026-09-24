@@ -158,6 +158,10 @@ $contextoApp = [
         ]),
     ],
 ];
+if (($_GET['fixture_acciones'] ?? '') === '1') {
+    $contextoApp['data']->bandeja_mensual->escritura_habilitada = true;
+    $contextoApp['sesion'] = ['nivel_acceso' => 1];
+}
 ?><!doctype html>
 <html lang="es">
 <head>

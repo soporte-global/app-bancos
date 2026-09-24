@@ -637,22 +637,20 @@ body.bandeja-detalle-activo {
 .bandeja-detalle {
     position: fixed;
     z-index: 9999;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     display: flex;
-    width: min(92vw, 560px);
+    width: 100vw;
     height: 100vh;
     height: 100dvh;
     max-height: 100dvh;
     flex-direction: column;
-    border-left: 1px solid;
-    box-shadow: -10px 0 30px var(--black-a25);
+    border: 0;
+    box-shadow: none;
 }
 
-.bandeja-detalle-cabecera {
-    position: static;
-    z-index: auto;
+.bancos-app .bandeja-detalle-cabecera {
+    position: relative;
+    z-index: 1;
     display: flex;
     width: 100%;
     height: auto;
@@ -660,7 +658,7 @@ body.bandeja-detalle-activo {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 10px clamp(16px, 2vw, 36px);
     border-bottom: 1px solid;
 }
 
@@ -674,14 +672,13 @@ body.bandeja-detalle-activo {
 }
 
 .bandeja-detalle-cabecera button {
-    display: grid;
-    width: 38px;
-    height: 38px;
+    display: inline-flex;
+    min-height: 38px;
     flex: 0 0 auto;
-    padding: 0;
-    place-items: center;
+    align-items: center;
+    padding: 0 12px;
     border: 1px solid;
-    border-radius: 50%;
+    border-radius: var(--radio-control);
     background: transparent;
 }
 
@@ -692,35 +689,64 @@ body.bandeja-detalle-activo {
 }
 
 .bandeja-detalle-contenido {
-    padding: 14px;
+    width: 100%;
+    padding: 0 clamp(16px, 2vw, 36px) 48px;
 }
 
 .bandeja-detalle-resumen,
 .bandeja-detalle-seccion {
-    padding: 14px;
-    border-style: solid;
-    border-width: 1px;
+    padding: 20px 0;
+    border: 0;
+    border-bottom: 1px solid;
+    border-radius: 0;
 }
 
-.bandeja-detalle-resumen {
-    position: static;
-    z-index: auto;
-    display: block;
-    width: auto;
-    height: auto;
-    border-radius: var(--radio-control) var(--radio-control) 0 0;
+.bancos-app .bandeja-detalle-resumen {
+    padding: 22px 0;
 }
 
 .bandeja-detalle-resumen::before {
     display: none;
 }
 
-.bandeja-detalle-seccion {
-    border-top: 0;
+.bandeja-detalle-columnas {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+    gap: clamp(28px, 4vw, 72px);
+    align-items: start;
 }
 
-.bandeja-detalle-seccion:last-child {
-    border-radius: 0 0 var(--radio-control) var(--radio-control);
+.bandeja-detalle-columnas > div {
+    min-width: 0;
+}
+
+.bandeja-detalle-columnas:has(.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+
+.bandeja-detalle-estados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.bandeja-detalle-grupo-titulo {
+    margin: 20px 0 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child::after {
+    display: block;
+    margin-top: 18px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    content: "No hay operaciones disponibles para este movimiento.";
 }
 
 .bandeja-detalle-resumen h2,
@@ -859,9 +885,10 @@ body.bandeja-detalle-activo {
 .bandeja-borrador-linea {
     grid-template-columns: repeat(2, minmax(82px, 0.75fr)) minmax(120px, 1.25fr) 38px;
     align-items: end;
-    padding: 8px;
-    border: 1px solid;
-    border-radius: var(--radio-control);
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid;
+    border-radius: 0;
 }
 
 .bandeja-selector-cuenta {
@@ -942,9 +969,10 @@ body.bandeja-detalle-activo {
 .bandeja-detalle-lista li,
 .bandeja-borrador,
 .bandeja-conciliacion {
-    padding: 9px;
-    border: 1px solid;
-    border-radius: var(--radio-control);
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px solid;
+    border-radius: 0;
     font-size: 0.7rem;
     line-height: 1.45;
 }
@@ -1358,6 +1386,68 @@ body.bandeja-detalle-activo {
     text-align: right;
 }
 
+/* Las pantallas se organizan por secciones continuas, no por tarjetas. */
+.about-encabezado,
+.about-documentos a,
+.about-indice,
+.about-documento,
+.bandeja-contexto,
+.bandeja-panel,
+.bandeja-paginacion,
+.importacion-encabezado,
+.importacion-formulario,
+.importacion-formato,
+.importacion-resultado,
+.configuracion-encabezado,
+.configuracion-selector,
+.configuracion-detalle,
+.configuracion-cuentas,
+.configuracion-editor,
+.importacion-metricas div {
+    padding-inline: 0;
+    border: 0;
+    border-bottom: 1px solid;
+    border-radius: 0;
+}
+
+.about-documentos a,
+.importacion-metricas div {
+    padding-inline: 12px;
+}
+
+.bandeja-detalle-contenido .bandeja-accion > label:not(.bandeja-opcion-compartida) {
+    max-width: 760px;
+}
+
+.bandeja-mensajeria label {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.bandeja-mensajeria textarea {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+}
+
+.bandeja-mensajeria button {
+    min-height: var(--alto-control);
+    margin: 10px 8px 0 0;
+    padding: 0 14px;
+    border: 1px solid;
+    border-radius: var(--radio-control);
+    font-weight: 800;
+}
+
+.bandeja-detalle-contenido .bandeja-accion-borrador > .bandeja-borrador-datos,
+.bandeja-detalle-contenido .bandeja-accion-borrador > .bandeja-borrador-lineas {
+    max-width: none;
+}
+
 @keyframes bandeja-girar {
     to { transform: rotate(360deg); }
 }
@@ -1454,13 +1544,14 @@ body.bandeja-detalle-activo {
 
     .bandeja-tabla tbody {
         display: grid;
-        gap: 1px;
+        gap: 0;
     }
 
     .bandeja-tabla tbody tr {
         display: block;
-        padding: 10px 12px;
-        border: 1px solid;
+        padding: 10px 0;
+        border: 0;
+        border-bottom: 1px solid;
     }
 
     .bandeja-tabla td {
@@ -1507,12 +1598,15 @@ body.bandeja-detalle-activo {
         width: 100%;
     }
 
-    .bandeja-detalle {
-        width: min(100vw, 560px);
-    }
-
     .bandeja-detalle-datos {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .bandeja-detalle-columnas {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
     }
 }
 

@@ -48,7 +48,7 @@ Conciliación de cheques               (módulo separado)
 2. Elegir cuenta y período; si no hay contexto, mostrar un estado inicial con búsqueda, no una tabla vacía.
 3. Mostrar una barra de contexto con cuenta, período, cantidad de resultados cargados y filtros activos.
 4. Recorrer por cursor con controles **Anterior** y **Siguiente**. El cursor sigue siendo opaco; el usuario ve “Página” o rango visible, no IDs internos.
-5. Abrir el detalle en panel lateral o ruta hija, sin perder la lista ni el cursor.
+5. Abrir el detalle en un espacio de trabajo de pantalla completa, sin perder la lista ni el cursor.
 6. Desde el detalle, las acciones futuras se agrupan como `Preparar`, `Asociar`, `Mensajes` y `Cierre`; las no autorizadas se explican, no se ocultan silenciosamente.
 
 ## Diseño de la tabla
@@ -98,6 +98,8 @@ El estado se expresa con texto y color, nunca sólo color. Mensajes y borradores
 ### Correcciones posteriores a la secuencia
 
 La revisión visual final del usuario ajustó cinco decisiones: la barra de contexto dejó de ser sticky; el panel de detalle bloquea el scroll del documento mientras permanece abierto y contiene su propio desplazamiento sólo cuando resulta necesario; la bandeja incorpora modo oscuro persistente; el formulario de cuenta/período/límite reutiliza el footer existente de la estructura; y `Anterior` recupera la URL previa o la primera página del mismo contexto cuando se entra con un cursor sin historial de sesión. Todos los colores de ambos temas referencian exclusivamente variables existentes en `_shared/css/paleta_colores.css`.
+
+La ampliación posterior de acciones hizo insuficiente el drawer original. El detalle operativo ocupa ahora el viewport completo, divide operaciones y seguimiento en columnas en escritorio, conserva un único desplazamiento interno y vuelve a la misma fila de la bandeja. Las pantallas principales usan secciones continuas con divisores en lugar de tarjetas anidadas; esta decisión sustituye únicamente la presentación, no los permisos ni los casos de uso.
 
 ### Sistema visual objetivo
 

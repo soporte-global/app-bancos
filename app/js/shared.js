@@ -1399,9 +1399,11 @@
                 return;
             }
             if (evento.key === 'Tab') {
-                var enfocables = panel.querySelectorAll(
+                var enfocables = Array.prototype.filter.call(panel.querySelectorAll(
                     'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-                );
+                ), function (control) {
+                    return control.getClientRects().length > 0;
+                });
                 if (enfocables.length === 0) {
                     evento.preventDefault();
                     return;

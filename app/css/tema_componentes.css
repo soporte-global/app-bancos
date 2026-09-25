@@ -514,6 +514,30 @@ body:has(.bancos-app),
     background: var(--ui-superficie);
 }
 
+.bandeja-detalle-resumen {
+    background: var(--ui-info-fondo);
+}
+
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion:nth-of-type(odd),
+.bandeja-detalle-seguimiento > .bandeja-detalle-seccion:nth-of-type(odd) {
+    background: var(--ui-info-fondo);
+}
+
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion:nth-of-type(even),
+.bandeja-detalle-seguimiento > .bandeja-detalle-seccion:nth-of-type(even) {
+    background: var(--ui-superficie-hundida);
+}
+
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-crear-borrador] {
+    background: color-mix(in srgb, var(--color-detalle1) 10%, var(--ui-superficie));
+}
+
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-revertir],
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-prevalidar-cierre],
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-prevalidar-cheque] {
+    background: var(--ui-advertencia-fondo);
+}
+
 .bandeja-detalle-operaciones,
 .bandeja-detalle-seccion,
 .bandeja-detalle-resumen,
@@ -599,6 +623,18 @@ body:has(.bancos-app),
 .configuracion-cuentas,
 .about-indice {
     background: var(--ui-info-fondo);
+}
+
+.configuracion-mapeos {
+    background: color-mix(in srgb, var(--color-detalle1) 10%, var(--ui-superficie));
+}
+
+.configuracion-asignaciones {
+    background: color-mix(in srgb, var(--color-principal2) 14%, var(--ui-superficie));
+}
+
+.configuracion-editor {
+    background: var(--ui-superficie-hundida);
 }
 
 @media (max-width: 650px) {

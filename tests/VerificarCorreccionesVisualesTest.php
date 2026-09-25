@@ -40,6 +40,16 @@ $comprobar(strpos($css, 'padding: 0 0 48px') !== false && strpos($css, '--seccio
 $comprobar(strpos($css, '.bancos-app .importacion-encabezado') !== false && strpos($css, '.bancos-app .configuracion-encabezado') !== false, 'Los encabezados de importación y configuración deben conservar padding frente al shell compartido.');
 $comprobar(strpos($temaClaro, '--ui-superficie: var(--color-secundario1)') !== false, 'El tema claro debe ofrecer una superficie blanca que contraste con el fondo.');
 $comprobar(strpos($temaComponentes, '.bandeja-detalle-columnas') !== false && strpos($temaComponentes, 'background: var(--ui-superficie)') !== false, 'El detalle debe mantener sus zonas sobre una superficie diferenciada.');
+$comprobar(strpos($temaComponentes, '.bandeja-detalle-operaciones > .bandeja-detalle-seccion:nth-of-type(odd)') !== false
+    && strpos($temaComponentes, '.bandeja-detalle-seguimiento > .bandeja-detalle-seccion:nth-of-type(even)') !== false,
+    'Las secciones del detalle deben alternar superficies sin volver a tarjetas.');
+$comprobar(strpos($temaComponentes, '.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-prevalidar-cierre]') !== false
+    && strpos($temaComponentes, 'background: var(--ui-advertencia-fondo)') !== false,
+    'Las acciones de cierre deben distinguirse con la paleta de atención.');
+$comprobar(strpos($temaComponentes, '.configuracion-mapeos') !== false
+    && strpos($temaComponentes, '.configuracion-asignaciones') !== false
+    && strpos($temaComponentes, 'var(--color-detalle1)') !== false,
+    'Cuentas, mapeos y responsables deben distinguirse dentro de la paleta compartida.');
 $comprobar(preg_match('/\.bancos-app header\s*\{([^}]*)\}/s', $css, $encabezadosInternos) === 1, 'Los encabezados internos deben quedar aislados del header fijo compartido.');
 $comprobar(strpos($encabezadosInternos[1], 'position: static') !== false && strpos($encabezadosInternos[1], 'box-shadow: none') !== false, 'Los encabezados internos deben permanecer en el flujo de la pagina y sin la sombra del shell.');
 $comprobar(strpos($css, '.bancos-app header::before') !== false, 'Los encabezados internos no deben heredar la franja decorativa del shell.');

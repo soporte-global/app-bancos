@@ -743,6 +743,11 @@ body.bandeja-detalle-activo {
     padding-left: clamp(18px, 2vw, 36px);
 }
 
+.bandeja-detalle-operaciones > .bandeja-detalle-seccion,
+.bandeja-detalle-seguimiento > .bandeja-detalle-seccion {
+    padding: 20px clamp(12px, 1.4vw, 20px);
+}
+
 .bandeja-detalle-columnas:has(.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child) {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;

@@ -103,6 +103,8 @@ La ampliación posterior de acciones hizo insuficiente el drawer original. El de
 
 La revisión siguiente recupera contraste sin volver a limitar el ancho: cada pantalla usa franjas rectangulares de superficie clara que llegan a ambos bordes del contenido, con un gutter sólo para texto y controles. El gris queda como separación entre franjas; el contexto y algunos bloques informativos emplean el tono informativo suave, y una línea de acento identifica los encabezados. El tema oscuro conserva la misma jerarquía con sus tokens propios.
 
+En el detalle operativo, el resumen y las secciones alternan tonos suaves de la paleta; preparación y prevalidaciones usan el tono de atención y el borrador un matiz derivado del verde. Configuraciones diferencia visualmente cuentas vinculadas, mapeos y asignaciones con tres tintes discretos. Las etiquetas textuales y las confirmaciones siguen expresando el significado de cada estado o acción; el color sólo facilita el recorrido visual.
+
 ### Sistema visual objetivo
 
 El 2026-09-09 se relevó el front de `rrhh_consulta` como nueva referencia visual. El paquete [rrhh-style/README.md](rrhh-style/README.md) especifica la réplica para bancos: paleta derivada, tema claro/oscuro compartido, paneles contiguos, densidad, componentes, responsive, estados, accesibilidad, implementación y QA.

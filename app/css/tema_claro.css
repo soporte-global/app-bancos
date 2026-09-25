@@ -12,7 +12,7 @@
 .bancos-app {
     color-scheme: light;
     --ui-fondo-app: color-mix(in srgb, var(--color-secundario1) 88%, var(--color-secundario2));
-    --ui-superficie: color-mix(in srgb, var(--color-secundario1) 97%, var(--color-secundario2));
+    --ui-superficie: var(--color-secundario1);
     --ui-superficie-hundida: color-mix(in srgb, var(--color-secundario1) 93%, var(--color-secundario2));
     --ui-campo: var(--color-secundario1);
     --ui-borde: color-mix(in srgb, var(--color-secundario2) 15%, transparent);

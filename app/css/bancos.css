@@ -68,10 +68,11 @@ body.bandeja-detalle-activo {
     --alto-control: 38px;
     --radio-control: 8px;
     --espacio-chico: 6px;
+    --seccion-gutter: clamp(16px, 2vw, 36px);
     min-height: 100%;
     width: 100%;
     min-width: 0;
-    padding: 20px 20px 48px;
+    padding: 0 0 48px;
     font-family: inherit;
 }
 
@@ -118,6 +119,17 @@ body.bandeja-detalle-activo {
 .bandeja-shell {
     width: 100%;
     min-width: 0;
+}
+
+.bancos-app .bandeja-encabezado {
+    padding: 20px var(--seccion-gutter) 16px;
+    border-bottom: 1px solid;
+}
+
+.bandeja-shell > .bandeja-encabezado,
+.bandeja-shell > .bandeja-contexto,
+.bandeja-shell > .bandeja-panel {
+    margin-bottom: 12px;
 }
 
 .about-page {
@@ -235,7 +247,7 @@ body.bandeja-detalle-activo {
 
 .bandeja-introduccion {
     max-width: 78ch;
-    margin: 6px 0 18px;
+    margin: 6px 0 0;
     font-size: 0.76rem;
     line-height: 1.5;
 }
@@ -690,7 +702,7 @@ body.bandeja-detalle-activo {
 
 .bandeja-detalle-contenido {
     width: 100%;
-    padding: 0 clamp(16px, 2vw, 36px) 48px;
+    padding: 0 0 48px;
 }
 
 .bandeja-detalle-resumen,
@@ -702,7 +714,8 @@ body.bandeja-detalle-activo {
 }
 
 .bancos-app .bandeja-detalle-resumen {
-    padding: 22px 0;
+    margin-bottom: 12px;
+    padding: 22px var(--seccion-gutter);
 }
 
 .bandeja-detalle-resumen::before {
@@ -712,17 +725,36 @@ body.bandeja-detalle-activo {
 .bandeja-detalle-columnas {
     display: grid;
     grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
-    gap: clamp(28px, 4vw, 72px);
+    gap: 0;
     align-items: start;
+    padding: 0 var(--seccion-gutter) 32px;
 }
 
 .bandeja-detalle-columnas > div {
     min-width: 0;
 }
 
+.bandeja-detalle-operaciones {
+    padding-right: clamp(18px, 2vw, 36px);
+    border-right: 1px solid;
+}
+
+.bandeja-detalle-seguimiento {
+    padding-left: clamp(18px, 2vw, 36px);
+}
+
 .bandeja-detalle-columnas:has(.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child) {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+}
+
+.bandeja-detalle-columnas:has(.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child) .bandeja-detalle-operaciones {
+    padding-right: 0;
+    border-right: 0;
+}
+
+.bandeja-detalle-columnas:has(.bandeja-detalle-operaciones > .bandeja-detalle-grupo-titulo:only-child) .bandeja-detalle-seguimiento {
+    padding-left: 0;
 }
 
 .bandeja-detalle-estados {
@@ -734,6 +766,8 @@ body.bandeja-detalle-activo {
 
 .bandeja-detalle-grupo-titulo {
     margin: 20px 0 0;
+    padding-left: 10px;
+    border-left: 4px solid;
     font-size: 0.85rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1082,6 +1116,15 @@ body.bandeja-detalle-activo {
     align-items: end;
 }
 
+.configuracion-detalle {
+    --detalle-gutter: clamp(16px, 2.5vw, 26px);
+}
+
+.configuracion-detalle > .configuracion-cuentas {
+    width: calc(100% + var(--detalle-gutter) + var(--detalle-gutter));
+    margin-inline: calc(0px - var(--detalle-gutter));
+}
+
 .configuracion-detalle > header p {
     margin-bottom: 0;
 }
@@ -1386,7 +1429,8 @@ body.bandeja-detalle-activo {
     text-align: right;
 }
 
-/* Las pantallas se organizan por secciones continuas, no por tarjetas. */
+/* Franjas de ancho completo, con contenido alineado por un gutter interno. */
+.bancos-app .bandeja-encabezado,
 .about-encabezado,
 .about-documentos a,
 .about-indice,
@@ -1404,15 +1448,36 @@ body.bandeja-detalle-activo {
 .configuracion-cuentas,
 .configuracion-editor,
 .importacion-metricas div {
-    padding-inline: 0;
+    padding-inline: var(--seccion-gutter);
     border: 0;
     border-bottom: 1px solid;
     border-radius: 0;
 }
 
+.bancos-app .bandeja-encabezado,
+.importacion-encabezado,
+.configuracion-encabezado,
+.about-encabezado {
+    border-top: 4px solid var(--ui-acento);
+}
+
+.bancos-app .importacion-encabezado,
+.bancos-app .configuracion-encabezado,
+.bancos-app .about-encabezado {
+    padding: 20px var(--seccion-gutter);
+}
+
+.about-documentos {
+    gap: 0;
+}
+
+.about-documentos a + a {
+    border-left: 1px solid;
+}
+
 .about-documentos a,
 .importacion-metricas div {
-    padding-inline: 12px;
+    padding-inline: clamp(12px, 1.5vw, 24px);
 }
 
 .bandeja-detalle-contenido .bandeja-accion > label:not(.bandeja-opcion-compartida) {
@@ -1458,10 +1523,6 @@ body.bandeja-detalle-activo {
 }
 
 @media (max-width: 900px) {
-    .bancos-app {
-        padding-inline: 16px;
-    }
-
     .about-contenido {
         grid-template-columns: minmax(0, 1fr);
     }
@@ -1485,10 +1546,6 @@ body.bandeja-detalle-activo {
 }
 
 @media (max-width: 650px) {
-    .bancos-app {
-        padding: 20px 12px 48px;
-    }
-
     .about-documentos {
         grid-template-columns: minmax(0, 1fr);
     }
@@ -1607,6 +1664,15 @@ body.bandeja-detalle-activo {
     .bandeja-detalle-columnas {
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
+    }
+
+    .bandeja-detalle-operaciones {
+        padding-right: 0;
+        border-right: 0;
+    }
+
+    .bandeja-detalle-seguimiento {
+        padding-left: 0;
     }
 }
 

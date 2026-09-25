@@ -509,6 +509,26 @@ body:has(.bancos-app),
     background: transparent;
 }
 
+.bandeja-detalle-resumen,
+.bandeja-detalle-columnas {
+    background: var(--ui-superficie);
+}
+
+.bandeja-detalle-operaciones,
+.bandeja-detalle-seccion,
+.bandeja-detalle-resumen,
+.bandeja-detalle-lista li,
+.bandeja-borrador,
+.bandeja-conciliacion,
+.bandeja-borrador-linea,
+.about-documentos a + a {
+    border-color: var(--ui-borde);
+}
+
+.bandeja-detalle-grupo-titulo {
+    border-color: var(--ui-acento);
+}
+
 .bandeja-detalle-lista li,
 .bandeja-borrador,
 .bandeja-conciliacion,
@@ -555,6 +575,7 @@ body:has(.bancos-app),
 .about-documentos a,
 .about-indice,
 .about-documento,
+.bancos-app .bandeja-encabezado,
 .bandeja-contexto,
 .bandeja-panel,
 .bandeja-paginacion,
@@ -569,8 +590,15 @@ body:has(.bancos-app),
 .configuracion-cuentas,
 .configuracion-editor {
     border-color: var(--ui-borde);
-    background: transparent;
+    background: var(--ui-superficie);
     color: var(--ui-texto);
+}
+
+.bandeja-contexto,
+.importacion-formato,
+.configuracion-cuentas,
+.about-indice {
+    background: var(--ui-info-fondo);
 }
 
 @media (max-width: 650px) {

@@ -151,8 +151,8 @@ $describirAsociacion = static function (array $asociacion) {
 <main class="afterheader bandeja-page">
 <div class="bandeja-mensual bancos-app" data-bandeja aria-busy="false">
     <div class="bandeja-shell">
-        <h1>Bandeja mensual</h1>
-        <p class="bandeja-introduccion"><?php echo $escrituraHabilitada && ($puedePreparar || $puedeRevertirPreparacion || $puedeAsociarValor || $puedeCrearBorrador || $puedeAgregarMensaje || $puedeAsignarResponsable) ? 'Consulta de extractos y preparación controlada en el sandbox.' : 'Consulta de sólo lectura de los extractos y su seguimiento.'; ?></p>
+        <header class="bandeja-encabezado"><h1>Bandeja mensual</h1>
+        <p class="bandeja-introduccion"><?php echo $escrituraHabilitada && ($puedePreparar || $puedeRevertirPreparacion || $puedeAsociarValor || $puedeCrearBorrador || $puedeAgregarMensaje || $puedeAsignarResponsable) ? 'Consulta de extractos y preparación controlada en el sandbox.' : 'Consulta de sólo lectura de los extractos y su seguimiento.'; ?></p></header>
 
         <nav class="bandeja-contexto" aria-label="Contexto de la bandeja" data-bandeja-contexto data-estado="<?php echo $estadoContexto; ?>">
             <ol class="bandeja-contexto-miga">

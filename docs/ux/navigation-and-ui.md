@@ -101,6 +101,8 @@ La revisión visual final del usuario ajustó cinco decisiones: la barra de cont
 
 La ampliación posterior de acciones hizo insuficiente el drawer original. El detalle operativo ocupa ahora el viewport completo, divide operaciones y seguimiento en columnas en escritorio, conserva un único desplazamiento interno y vuelve a la misma fila de la bandeja. Las pantallas principales usan secciones continuas con divisores en lugar de tarjetas anidadas; esta decisión sustituye únicamente la presentación, no los permisos ni los casos de uso.
 
+La revisión siguiente recupera contraste sin volver a limitar el ancho: cada pantalla usa franjas rectangulares de superficie clara que llegan a ambos bordes del contenido, con un gutter sólo para texto y controles. El gris queda como separación entre franjas; el contexto y algunos bloques informativos emplean el tono informativo suave, y una línea de acento identifica los encabezados. El tema oscuro conserva la misma jerarquía con sus tokens propios.
+
 ### Sistema visual objetivo
 
 El 2026-09-09 se relevó el front de `rrhh_consulta` como nueva referencia visual. El paquete [rrhh-style/README.md](rrhh-style/README.md) especifica la réplica para bancos: paleta derivada, tema claro/oscuro compartido, paneles contiguos, densidad, componentes, responsive, estados, accesibilidad, implementación y QA.

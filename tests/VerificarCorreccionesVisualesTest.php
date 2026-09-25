@@ -35,6 +35,11 @@ $comprobar(strpos($css, 'overscroll-behavior: contain') !== false, 'El panel no 
 $comprobar(strpos($vista, 'data-controles-bandeja') === false, 'El formulario debe permanecer en su landmark original.');
 $comprobar(strpos($javascript, 'footer.appendChild(controles)') === false, 'El formulario no debe moverse al footer.');
 $comprobar(strpos($css, '.bancos-app') !== false, 'Los estilos propios deben quedar encapsulados.');
+$comprobar(strpos($vista, '<header class="bandeja-encabezado">') !== false, 'La bandeja debe agrupar su título en una franja de ancho completo.');
+$comprobar(strpos($css, 'padding: 0 0 48px') !== false && strpos($css, '--seccion-gutter:') !== false, 'Las franjas deben ocupar el viewport y aplicar espacio sólo a su contenido.');
+$comprobar(strpos($css, '.bancos-app .importacion-encabezado') !== false && strpos($css, '.bancos-app .configuracion-encabezado') !== false, 'Los encabezados de importación y configuración deben conservar padding frente al shell compartido.');
+$comprobar(strpos($temaClaro, '--ui-superficie: var(--color-secundario1)') !== false, 'El tema claro debe ofrecer una superficie blanca que contraste con el fondo.');
+$comprobar(strpos($temaComponentes, '.bandeja-detalle-columnas') !== false && strpos($temaComponentes, 'background: var(--ui-superficie)') !== false, 'El detalle debe mantener sus zonas sobre una superficie diferenciada.');
 $comprobar(preg_match('/\.bancos-app header\s*\{([^}]*)\}/s', $css, $encabezadosInternos) === 1, 'Los encabezados internos deben quedar aislados del header fijo compartido.');
 $comprobar(strpos($encabezadosInternos[1], 'position: static') !== false && strpos($encabezadosInternos[1], 'box-shadow: none') !== false, 'Los encabezados internos deben permanecer en el flujo de la pagina y sin la sombra del shell.');
 $comprobar(strpos($css, '.bancos-app header::before') !== false, 'Los encabezados internos no deben heredar la franja decorativa del shell.');

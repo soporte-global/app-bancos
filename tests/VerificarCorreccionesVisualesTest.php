@@ -46,6 +46,10 @@ $comprobar(strpos($temaComponentes, '.bandeja-detalle-operaciones > .bandeja-det
 $comprobar(strpos($temaComponentes, '.bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-prevalidar-cierre]') !== false
     && strpos($temaComponentes, 'background: var(--ui-advertencia-fondo)') !== false,
     'Las acciones de cierre deben distinguirse con la paleta de atención.');
+$comprobar(strpos($temaComponentes, '.bandeja-detalle .estado-etiqueta--cerrado') !== false
+    && strpos($temaComponentes, '.bandeja-detalle .conciliacion-etiqueta--conciliado') !== false
+    && strpos($temaComponentes, '.bandeja-detalle .bandeja-preflight-resultado.es-correcto') !== false,
+    'Los indicadores positivos del detalle no deben usar verde.');
 $comprobar(strpos($temaComponentes, '.configuracion-mapeos') !== false
     && strpos($temaComponentes, '.configuracion-asignaciones') !== false
     && strpos($temaComponentes, 'background: color-mix(in srgb, var(--color-secundario3) 12%, var(--ui-superficie))') !== false

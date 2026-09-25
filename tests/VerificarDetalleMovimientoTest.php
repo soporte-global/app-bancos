@@ -42,6 +42,14 @@ $comprobar(strpos($javascript, "evento.key === 'Tab'") !== false, 'El diálogo d
 $comprobar(strpos($javascript, 'movimiento.agregar-mensaje') !== false, 'El cliente no publica mensajes por el endpoint esperado.');
 $comprobar(strpos($javascript, 'movimiento.marcar-mensajes-leidos') !== false, 'El cliente no registra lecturas por el endpoint esperado.');
 $comprobar(strpos($javascript, 'movimiento.asignar-responsable') !== false, 'El cliente no asigna responsables por el endpoint esperado.');
+$comprobar(strpos($javascript, "new Intl.NumberFormat('es-AR'") !== false
+    && strpos($javascript, 'minimumFractionDigits: 2') !== false
+    && strpos($javascript, 'maximumFractionDigits: 2') !== false
+    && strpos($javascript, 'mostrarImporte(datos.monto_principal)') !== false
+    && strpos($javascript, 'mostrarImporte(datos.importe_maximo)') !== false
+    && strpos($javascript, 'mostrarImporte(datos.credito_total)') !== false
+    && strpos($javascript, 'mostrarImporte(fila.credito)') !== false,
+    'Búsquedas e importación deben formatear importes sólo para la presentación.');
 $comprobar(!preg_match('/(?:history\.(?:pushState|replaceState)|location\.(?:assign|replace))/', $javascript), 'Abrir detalle no debe modificar URL ni cursor.');
 
 $_GET = [];
@@ -53,6 +61,10 @@ $comprobar(substr_count($html, 'data-abrir-detalle') === 2, 'Cada movimiento deb
 $comprobar(strpos($html, 'Borrador #731 · COMISIONES') !== false, 'La fila debe mostrar un resumen compacto del borrador.');
 $comprobar(strpos($html, 'Pendiente de revisión documental por Tesorería.') !== false, 'El detalle debe conservar el cuerpo completo del mensaje.');
 $comprobar(strpos($html, '<th>Debe</th><th>Haber</th>') !== false && strpos($html, '<td>18.250,00</td>') !== false, 'El detalle debe conservar las líneas del borrador.');
+$comprobar(strpos($html, 'Crédito 125.430,50 · Débito 0,00') !== false
+    && strpos($html, 'Crédito 0,00 · Débito 18.250,00') !== false
+    && strpos($html, '18250.00000') === false,
+    'Bandeja, resumen y asociaciones deben mostrar exactamente dos decimales sin exponer la precisión de BD.');
 $comprobar(strpos($html, 'Conciliación #91') !== false, 'El detalle no muestra la conciliación registrada.');
 $comprobar(strpos($html, '← Volver a la bandeja') !== false, 'Falta la navegación visible para volver a la bandeja.');
 $comprobar(strpos($html, 'data-conciliacion-estado="CONCILIADO"') !== false, 'La fila no muestra el estado conciliado.');

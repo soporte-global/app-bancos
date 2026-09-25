@@ -538,7 +538,7 @@ body:has(.bancos-app),
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion:nth-of-type(odd),
 .bandeja-detalle-seguimiento > .bandeja-detalle-seccion:nth-of-type(odd) {
-    background: var(--ui-info-fondo);
+    background: color-mix(in srgb, var(--color-principal2) 9%, var(--ui-superficie));
 }
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion:nth-of-type(even),
@@ -548,6 +548,17 @@ body:has(.bancos-app),
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-crear-borrador] {
     background: color-mix(in srgb, var(--color-principal2) 16%, var(--ui-superficie));
+}
+
+.bandeja-detalle .estado-etiqueta--cerrado,
+.bandeja-detalle .conciliacion-etiqueta--conciliado {
+    border-color: var(--ui-info);
+    background: var(--ui-info-fondo);
+    color: var(--ui-info-texto);
+}
+
+.bandeja-detalle .bandeja-preflight-resultado.es-correcto {
+    color: var(--ui-info-texto);
 }
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-revertir],

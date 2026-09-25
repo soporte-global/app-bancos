@@ -1,6 +1,16 @@
 (function () {
     'use strict';
 
+    var formatoImporte = new Intl.NumberFormat('es-AR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    function mostrarImporte(valor) {
+        var numero = Number(valor);
+        return Number.isFinite(numero) ? formatoImporte.format(numero) : String(valor);
+    }
+
     function periodoLegible(valor) {
         var coincidencia = /^(\d{4})-(\d{2})-\d{2}$/.exec(valor);
         if (!coincidencia) {
@@ -449,7 +459,7 @@
                 if (datos.cheque) {
                     lineas.push('Cheque #' + datos.cheque.valor_zetti_id
                         + ', estado ERP ' + datos.cheque.estado_erp
-                        + ', diferencia ' + datos.cheque.diferencia + '.');
+                        + ', diferencia ' + mostrarImporte(datos.cheque.diferencia) + '.');
                 }
                 if (datos.contexto_contable && datos.contexto_contable.cuenta_banco
                     && datos.contexto_contable.cuenta_valor) {
@@ -665,13 +675,13 @@
             if (tipo === 'valor') {
                 boton.dataset.seleccionarValor = datos.id;
                 titulo.textContent = '#' + datos.id + ' · ' + (datos.subtipo || datos.tipo || 'Valor ERP');
-                detalle.textContent = datos.monto_principal + ' · ' + (datos.estado || 'Estado #' + datos.estado_id) +
+                detalle.textContent = mostrarImporte(datos.monto_principal) + ' · ' + (datos.estado || 'Estado #' + datos.estado_id) +
                     (datos.fecha_emision ? ' · ' + datos.fecha_emision.slice(0, 10) : '') +
                     (datos.codigo_externo ? ' · ' + datos.codigo_externo : '');
             } else if (tipo === 'asiento') {
                 boton.dataset.seleccionarAsiento = datos.id;
                 titulo.textContent = '#' + datos.id + ' · ' + (datos.nombre || 'Asiento ERP');
-                detalle.textContent = datos.importe_maximo + ' · ' + datos.cantidad_lineas + ' líneas' +
+                detalle.textContent = mostrarImporte(datos.importe_maximo) + ' · ' + datos.cantidad_lineas + ' líneas' +
                     (datos.fecha ? ' · ' + datos.fecha.slice(0, 10) : '') +
                     (datos.nodo ? ' · ' + datos.nodo : '') +
                     (datos.tiene_usos === true || datos.tiene_usos === 't' ? ' · con usos compartidos' : '');
@@ -1014,7 +1024,7 @@
                 boton.textContent = 'Valor asociado';
                 if (estado) {
                     estado.textContent = 'Valor #' + contenido.data.valor_zetti_id +
-                        ' asociado por ' + contenido.data.monto_asociado + '. Actualizando…';
+                        ' asociado por ' + mostrarImporte(contenido.data.monto_asociado) + '. Actualizando…';
                 }
                 window.setTimeout(function () {
                     if (formularioBandeja && typeof formularioBandeja.requestSubmit === 'function') {
@@ -1077,7 +1087,7 @@
                 boton.textContent = 'Asiento asociado';
                 if (estado) {
                     estado.textContent = 'Asiento #' + contenido.data.asiento_zetti_id +
-                        ' asociado por ' + contenido.data.monto_asociado +
+                        ' asociado por ' + mostrarImporte(contenido.data.monto_asociado) +
                         (contenido.data.compartido ? ' como compartido. ' : '. ') + 'Actualizando…';
                 }
                 window.setTimeout(function () {
@@ -1107,7 +1117,7 @@
             var nueva = referencia.cloneNode(true);
             Array.prototype.forEach.call(nueva.querySelectorAll('input'), function (control) {
                 control.value = control.hasAttribute('data-linea-debe') || control.hasAttribute('data-linea-haber')
-                    ? '0'
+                    ? '0.00'
                     : '';
             });
             Array.prototype.forEach.call(nueva.querySelectorAll('[data-resultados-cuentas]'), function (resultados) {
@@ -1474,8 +1484,8 @@
             agregarMetrica('Válidas', datos.filas_validas);
             agregarMetrica('Errores', datos.total_errores);
             agregarMetrica('Hash SHA-256', datos.hash_sha256.slice(0, 16) + '…');
-            agregarMetrica('Crédito', datos.credito_total);
-            agregarMetrica('Débito', datos.debito_total);
+            agregarMetrica('Crédito', mostrarImporte(datos.credito_total));
+            agregarMetrica('Débito', mostrarImporte(datos.debito_total));
             agregarMetrica('Delimitador', datos.delimitador);
             agregarMetrica('Configuraciones', datos.configuraciones_disponibles);
             agregarMetrica('Clasificación unívoca', datos.clasificacion.univocas);
@@ -1524,7 +1534,7 @@
                         clasificacionFila = 'SIN CÓDIGO';
                     }
                     [fila.numero_fila_origen, fila.fecha_operacion, fila.referencia || '', fila.descripcion,
-                        fila.credito, fila.debito, clasificacionFila].forEach(function (valor) {
+                        mostrarImporte(fila.credito), mostrarImporte(fila.debito), clasificacionFila].forEach(function (valor) {
                         var td = document.createElement('td');
                         td.textContent = valor;
                         tr.appendChild(td);

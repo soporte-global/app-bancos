@@ -103,7 +103,7 @@ La ampliación posterior de acciones hizo insuficiente el drawer original. El de
 
 La revisión siguiente recupera contraste sin volver a limitar el ancho: cada pantalla usa franjas rectangulares de superficie clara que llegan a ambos bordes del contenido, con un gutter sólo para texto y controles. El gris queda como separación entre franjas; el contexto y algunos bloques informativos emplean el tono informativo suave, y una línea de acento identifica los encabezados. El tema oscuro conserva la misma jerarquía con sus tokens propios.
 
-En el detalle operativo, el resumen y las secciones alternan tonos suaves de la paleta; preparación y prevalidaciones usan el tono de atención y el borrador un matiz derivado del verde. Configuraciones diferencia visualmente cuentas vinculadas, mapeos y asignaciones con tres tintes discretos. Las etiquetas textuales y las confirmaciones siguen expresando el significado de cada estado o acción; el color sólo facilita el recorrido visual.
+En el detalle operativo, el resumen y las secciones alternan tonos suaves de la paleta; preparación y prevalidaciones usan el tono de atención y el borrador un matiz azul pizarra. Configuraciones diferencia visualmente cuentas vinculadas, mapeos y asignaciones con tintes informativo, pizarra y ámbar discretos. Las tablas del detalle y de Configuraciones comparten con la bandeja mensual la cabecera de alto contraste, filas alternadas y divisores horizontales. Las etiquetas textuales y las confirmaciones siguen expresando el significado de cada estado o acción; el color sólo facilita el recorrido visual.
 
 ### Sistema visual objetivo
 

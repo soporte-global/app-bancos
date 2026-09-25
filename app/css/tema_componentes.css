@@ -132,6 +132,7 @@ body:has(.bancos-app),
 .bandeja-detalle-lista li,
 .bandeja-borrador,
 .bandeja-conciliacion,
+.bandeja-lineas-region,
 .bandeja-lineas th,
 .bandeja-lineas td {
     border-color: var(--ui-borde);
@@ -139,9 +140,26 @@ body:has(.bancos-app),
 
 .bandeja-detalle-lista li,
 .bandeja-borrador,
-.bandeja-conciliacion,
-.bandeja-lineas th {
+.bandeja-conciliacion {
     background: var(--ui-superficie-hundida);
+}
+
+.bandeja-lineas-region,
+.bandeja-lineas tbody tr {
+    background: var(--ui-superficie);
+}
+
+.bandeja-lineas th {
+    background: var(--ui-tabla-cabecera);
+    color: var(--ui-tabla-cabecera-texto);
+}
+
+.bandeja-lineas tbody tr:nth-child(even) {
+    background: var(--ui-superficie-hundida);
+}
+
+.bandeja-lineas tbody tr:hover {
+    background: var(--ui-hover);
 }
 
 .bandeja-detalle-lista .mensaje-no-leido {
@@ -529,7 +547,7 @@ body:has(.bancos-app),
 }
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-crear-borrador] {
-    background: color-mix(in srgb, var(--color-detalle1) 10%, var(--ui-superficie));
+    background: color-mix(in srgb, var(--color-principal2) 16%, var(--ui-superficie));
 }
 
 .bandeja-detalle-operaciones > .bandeja-detalle-seccion[data-accion-revertir],
@@ -626,11 +644,11 @@ body:has(.bancos-app),
 }
 
 .configuracion-mapeos {
-    background: color-mix(in srgb, var(--color-detalle1) 10%, var(--ui-superficie));
+    background: color-mix(in srgb, var(--color-secundario3) 12%, var(--ui-superficie));
 }
 
 .configuracion-asignaciones {
-    background: color-mix(in srgb, var(--color-principal2) 14%, var(--ui-superficie));
+    background: color-mix(in srgb, var(--ui-advertencia) 7%, var(--ui-superficie));
 }
 
 .configuracion-editor {

@@ -1414,6 +1414,8 @@ body.bandeja-detalle-activo {
     margin-top: 8px;
     max-width: 100%;
     overflow-x: auto;
+    border: 1px solid;
+    border-radius: var(--radio-control) var(--radio-control) 0 0;
 }
 
 .bandeja-lineas {
@@ -1424,14 +1426,38 @@ body.bandeja-detalle-activo {
 
 .bandeja-lineas th,
 .bandeja-lineas td {
-    padding: 6px;
-    border: 1px solid;
+    padding: 8px 9px;
+    border-bottom: 1px solid;
     text-align: left;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.bandeja-lineas th {
+    font-size: 0.64rem;
+    font-weight: 900;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+}
+
+.bandeja-lineas tbody tr:last-child td {
+    border-bottom: 0;
 }
 
 .bandeja-lineas th:nth-child(n + 2),
 .bandeja-lineas td:nth-child(n + 2) {
     text-align: right;
+}
+
+.configuracion-vinculos th:nth-child(n + 2),
+.configuracion-vinculos td:nth-child(n + 2),
+.configuracion-mapeos-tabla th:nth-child(n + 2),
+.configuracion-mapeos-tabla td:nth-child(n + 2),
+.configuracion-asignaciones-tabla th:nth-child(n + 2),
+.configuracion-asignaciones-tabla td:nth-child(n + 2),
+.configuracion-reglas th:nth-child(n + 2),
+.configuracion-reglas td:nth-child(n + 2) {
+    text-align: left;
 }
 
 /* Franjas de ancho completo, con contenido alineado por un gutter interno. */

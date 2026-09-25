@@ -48,8 +48,14 @@ $comprobar(strpos($temaComponentes, '.bandeja-detalle-operaciones > .bandeja-det
     'Las acciones de cierre deben distinguirse con la paleta de atención.');
 $comprobar(strpos($temaComponentes, '.configuracion-mapeos') !== false
     && strpos($temaComponentes, '.configuracion-asignaciones') !== false
-    && strpos($temaComponentes, 'var(--color-detalle1)') !== false,
+    && strpos($temaComponentes, 'background: color-mix(in srgb, var(--color-secundario3) 12%, var(--ui-superficie))') !== false
+    && strpos($temaComponentes, 'background: color-mix(in srgb, var(--color-principal2) 16%, var(--ui-superficie))') !== false,
     'Cuentas, mapeos y responsables deben distinguirse dentro de la paleta compartida.');
+$comprobar(strpos($css, '.bandeja-lineas tbody tr:last-child td') !== false
+    && strpos($temaComponentes, '.bandeja-lineas tbody tr:nth-child(even)') !== false
+    && strpos($temaComponentes, '.bandeja-lineas th {') !== false
+    && strpos($temaComponentes, 'background: var(--ui-tabla-cabecera)') !== false,
+    'Las tablas internas deben compartir cabecera y filas alternadas con la bandeja mensual.');
 $comprobar(preg_match('/\.bancos-app header\s*\{([^}]*)\}/s', $css, $encabezadosInternos) === 1, 'Los encabezados internos deben quedar aislados del header fijo compartido.');
 $comprobar(strpos($encabezadosInternos[1], 'position: static') !== false && strpos($encabezadosInternos[1], 'box-shadow: none') !== false, 'Los encabezados internos deben permanecer en el flujo de la pagina y sin la sombra del shell.');
 $comprobar(strpos($css, '.bancos-app header::before') !== false, 'Los encabezados internos no deben heredar la franja decorativa del shell.');
